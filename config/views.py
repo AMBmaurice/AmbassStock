@@ -1112,19 +1112,25 @@ def page_deconnexion(request):
 
 def modifier_mouvement(request, mouvement_id):
     mouvement = get_object_or_404(MouvementStock, id=mouvement_id)
+    tous_les_produits = Produit.objects.all().order_by('objet')
     
     if request.method == 'POST':
-        mouvement.objet = request.POST.get('objet', mouvement.objet)
+        produit_id = request.POST.get('produit_id')
+        if produit_id:
+            produit_choisi = get_object_or_404(Produit, id=produit_id)
+            mouvement.produit = produit_choisi
+            mouvement.objet = produit_choisi.objet
+            mouvement.reference = produit_choisi.reference
+        
         mouvement.quantite = int(request.POST.get('quantite', mouvement.quantite))
         mouvement.service = request.POST.get('service', mouvement.service)
         mouvement.date_mouvement = request.POST.get('date_mouvement', mouvement.date_mouvement)
         
-        if mouvement.produit:
-            mouvement.produit.reference = request.POST.get('reference', mouvement.produit.reference)
-            mouvement.produit.save()
-            
         mouvement.save()
         messages.success(request, "Le mouvement a été modifié avec succès.")
         return redirect('/historique/')
         
-    return render(request, 'modifier_mouvement.html', {'mouvement': mouvement})
+    return render(request, 'modifier_mouvement.html', {
+        'mouvement': mouvement,
+        'produits': tous_les_produits
+    })
