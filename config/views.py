@@ -204,7 +204,7 @@ def page_inventaire(request):
             recherche_term = request.POST.get('q', '')
             statut_filtre = request.POST.get('statut', 'all')
             tri_filtre = request.POST.get('tri', 'alpha')   
-                
+                    
             try:
                 produit = Produit.objects.get(id=produit_id)
                 nom_produit_supprime = produit.objet
@@ -233,15 +233,12 @@ def page_inventaire(request):
             from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             
-            # 1. Sélection et filtrage strict des produits en stock actif (> 0)
             produits_actifs = Produit.objects.exclude(emplacement="Archivé").filter(quantite__gt=0).order_by('emplacement', 'objet')
             
-            # 2. Préparation du flux binaire ReportLab
             buffer = io.BytesIO()
             doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
             story = []
             
-            # 3. Définition des styles graphiques
             styles = getSampleStyleSheet()
             style_titre = ParagraphStyle(
                 'TitrePDF',
@@ -276,12 +273,10 @@ def page_inventaire(request):
                 textColor=colors.white
             )
             
-            # 4. Ajout des éléments textuels
             date_generation = timezone.now().strftime('%d/%m/%Y à %H:%M')
             story.append(Paragraph("Récapitulatif officiel de l'inventaire", style_titre))
             story.append(Paragraph(f"Document généré le {date_generation} — Uniquement les articles disponibles en réserve", style_meta))
             
-            # 5. Construction de la table des matières physiques
             donnees_table = [[
                 Paragraph("Référence", style_entete),
                 Paragraph("Désignation de l'objet", style_entete),
@@ -299,7 +294,6 @@ def page_inventaire(request):
                     Paragraph(str(prod.quantite), style_cellule)
                 ])
             
-            # Configuration de la grille structurelle (Largeurs relatives des colonnes)
             tableau_inventaire = Table(donnees_table, colWidths=[80, 160, 110, 120, 50])
             tableau_inventaire.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
@@ -316,7 +310,6 @@ def page_inventaire(request):
             story.append(tableau_inventaire)
             doc.build(story)
             
-            # 6. Structuration de la réponse HTTP
             buffer.seek(0)
             date_fichier = timezone.now().strftime('%Y_%m_%d')
             response = HttpResponse(buffer.read(), content_type='application/pdf')
@@ -411,7 +404,7 @@ def page_gestion_stocks(request):
             reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
             quantite_initiale = int(request.POST.get('quantite') or request.POST.get('quantite_initiale') or 0)
             
-            Produit.objects.create(
+            nouveau_produit = Produit.objects.create(
                 reference=reference_finale,
                 objet=objet_nom,
                 categorie=categorie_nom,
@@ -425,6 +418,7 @@ def page_gestion_stocks(request):
                     type_mouvement='ENTREE',
                     objet=objet_nom,
                     reference=reference_finale,
+                    produit=nouveau_produit,
                     quantite=quantite_initiale,
                     service="Administration"
                 )
@@ -445,6 +439,7 @@ def page_gestion_stocks(request):
                     type_mouvement='ENTREE',
                     objet=produit.objet,
                     reference=produit.reference,
+                    produit=produit,
                     quantite=quantite_ajoutee,
                     service="Administration",
                     date_mouvement=request.POST.get('date_entree') or date.today()
@@ -469,6 +464,7 @@ def page_gestion_stocks(request):
                         type_mouvement='SORTIE',
                         objet=produit.objet,
                         reference=produit.reference,
+                        produit=produit,
                         quantite=quantite_retiree,
                         service=service_demandeur,
                         date_mouvement=request.POST.get('date_sortie') or date.today()
@@ -515,6 +511,7 @@ def page_historique(request):
     sortie_debut = request.GET.get('sortie_debut')
     sortie_fin = request.GET.get('sortie_fin')
     sortie_service = request.GET.get('sortie_service')
+    
     if sortie_debut:
         flux_sorties = flux_sorties.filter(date_mouvement__gte=sortie_debut)
     if sortie_fin:
@@ -522,12 +519,22 @@ def page_historique(request):
     if sortie_service:
         flux_sorties = flux_sorties.filter(service=sortie_service)
         
+    # CORRECTION : SECURISATION SANS EFFACER LES DONNEES SI LE PRODUIT N'EST PAS LIE
+    for mouvement in flux_entrees:
+        if m.produit:
+            mouvement.objet = m.produit.objet
+            mouvement.reference = m.produit.reference
+
+    for mouvement in flux_sorties:
+        if m.produit:
+            mouvement.objet = m.produit.objet
+            mouvement.reference = m.produit.reference
+        
     return render(request, 'historique.html', {
         'profil_actif': profil_actif,
         'entrees': flux_entrees,
         'sorties': flux_sorties
     })
-
 
 def executer_moteur_analyse(annee, mois):
     produits_actifs = Produit.objects.exclude(emplacement="Archivé")
@@ -606,13 +613,19 @@ def executer_moteur_analyse(annee, mois):
         else:
             recommandations.append({"priorite": "Conseil", "action": "Planifier une commande de routine pour les articles sous le seuil."})
             
-    produits_sollicites = sorties_periode.values('objet', 'reference').annotate(total_sorti=Sum('quantite')).order_by('-total_sorti')
+    # CORRECTION DES STATS SUR REF/PRODUIT SANS TEXTE BRUT
+    produits_sollicites = sorties_periode.values('objet', 'reference', 'produit__objet', 'produit__reference').annotate(total_sorti=Sum('quantite')).order_by('-total_sorti')
     for ps in produits_sollicites[:3]:
+        # Tente de trouver par clé primaire liée d'abord pour le renommage, sinon se rabat sur la référence
         try:
-            prod_obj = produits_actifs.get(reference=ps['reference'])
+            if ps.get('produit'):
+                prod_obj = produits_actifs.get(id=ps['produit'])
+            else:
+                prod_obj = produits_actifs.get(reference=ps['reference'])
+                
             if prod_obj.quantite <= prod_obj.quota_minimum:
                 observations.append(f"Anomalie détectée : La référence {prod_obj.objet} subit une forte demande ({ps['total_sorti']} unités sorties) mais son stock actuel est insuffisant.")
-                recommandations.append({"priorite": "Urgent", "action": f"Ajuster le quota minimum et sécuriser l'approvisionnement de : {prod_obj.objet}."})
+                recommandations.append({"priorite": "Urgent", "action": f"Ajuster le quota minimum and sécuriser l'approvisionnement de : {prod_obj.objet}."})
         except Produit.DoesNotExist:
             pass
 
@@ -637,7 +650,6 @@ def executer_moteur_analyse(annee, mois):
         'recommandations': recommandations,
         'produits_dormants': produits_dormants[:10]
     }
-
 
 def generer_pdf_rapport(titre_rapport, analyse, annee, mois_nom):
     buffer = io.BytesIO()
@@ -704,7 +716,6 @@ def generer_pdf_rapport(titre_rapport, analyse, annee, mois_nom):
     buffer.seek(0)
     return buffer
 
-
 def page_statistiques(request):
     profil_actif = get_profil_actif(request.user)
     if not request.user.is_authenticated:
@@ -746,13 +757,11 @@ def page_statistiques(request):
     
     analyse = executer_moteur_analyse(int(annee_selectionnee), int(mois_selectionne))
     
-    # Filtrage dynamique des mouvements pour la période sélectionnée
     mouvements_periode = MouvementStock.objects.filter(
         date_mouvement__year=parsed_date.year,
         date_mouvement__month=parsed_date.month
     )
     
-    # Indicateurs globaux filtrés par période avec sécurité (0 si aucune donnée)
     total_operations = mouvements_periode.filter(type_mouvement='SORTIE').count()
     
     data_entrees = mouvements_periode.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))
@@ -764,7 +773,6 @@ def page_statistiques(request):
     stock_total_actuel = Produit.objects.aggregate(total=Sum('quantite'))['total'] or 0
     taux_rotation = round((total_sorties / stock_total_actuel) * 100, 1) if stock_total_actuel > 0 else 0
     
-    # Graphiques et Analyse
     if view_mode == 'mensuel':
         chart_labels = ['Semaine 1', 'Semaine 2', 'Semaine 3', 'Semaine 4+']
         chart_sorties = [0, 0, 0, 0]  
@@ -797,8 +805,13 @@ def page_statistiques(request):
     category_labels, category_data = [], []
     for cat in categories_uniques:
         if not cat or cat.strip() == "": continue
-        noms_objets = Produit.objects.filter(categorie=cat).values_list('objet', flat=True)
-        total_cat = mouvements_periode.filter(type_mouvement='SORTIE', objet__in=noms_objets).aggregate(total=Sum('quantite'))['total'] or 0
+        
+        # CORRECTION CATEGORIES DANS LES STATISTIQUES SANS ECRASEMENT DES OBJECTS
+        total_cat = mouvements_periode.filter(type_mouvement='SORTIE', produit__categorie=cat).aggregate(total=Sum('quantite'))['total']
+        if total_cat is None:
+            noms_objets = Produit.objects.filter(categorie=cat).values_list('objet', flat=True)
+            total_cat = mouvements_periode.filter(type_mouvement='SORTIE', objet__in=noms_objets).aggregate(total=Sum('quantite'))['total'] or 0
+            
         if total_cat > 0:
             category_labels.append(cat)
             category_data.append(total_cat)
@@ -806,6 +819,7 @@ def page_statistiques(request):
     if not category_labels:
         category_labels, category_data = ['Aucune activité'], [0]
     
+    # CORRECTION COMPATIBILITE POUR LES COMPTEURS ANCIENS/NOUVEAUX DU TOP/FLOP PROD
     produits_perf = mouvements_periode.filter(type_mouvement='SORTIE').values('objet').annotate(total_sorti=Sum('quantite'))
     top_produits = produits_perf.order_by('-total_sorti')[:3]
     flop_produits = produits_perf.order_by('total_sorti')[:3]
@@ -814,7 +828,6 @@ def page_statistiques(request):
     seuil_dormant = timezone.now() - timedelta(days=180)
     produits_dormants = Produit.objects.filter(derniere_activite__lte=seuil_dormant).order_by('derniere_activite')
     
-    # Gestion POST pour rapport PDF
     if request.method == "POST" and request.POST.get('type_analyse'):
         label_mapping = {
             'mensuel': "Audit Mensuel Spécifique", 'annuel': "Bilan Annuel Spécifique",
@@ -1043,7 +1056,7 @@ def page_factures(request):
         return redirect('/accueil/')
         
     profil_actif = get_profil_actif(request.user)
-                
+                    
     if request.method == "POST":
         date_cmd = request.POST.get('date_commande')
         montant = request.POST.get('montant_total')
