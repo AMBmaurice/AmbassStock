@@ -519,16 +519,15 @@ def page_historique(request):
     if sortie_service:
         flux_sorties = flux_sorties.filter(service=sortie_service)
         
-    # CORRECTION : Remplacement de m.produit par mouvement.produit pour éviter le NameError
-    for mouvement in flux_entrees:
-        if mouvement.produit:
-            mouvement.objet = mouvement.produit.objet
-            mouvement.reference = mouvement.produit.reference
+    for movimiento in flux_entrees:
+        if movimiento.produit:
+            movimiento.objet = movimiento.produit.objet
+            movimiento.reference = movimiento.produit.reference
 
-    for mouvement in flux_sorties:
-        if mouvement.produit:
-            mouvement.objet = mouvement.produit.objet
-            mouvement.reference = mouvement.produit.reference
+    for movimiento in flux_sorties:
+        if movimiento.produit:
+            movimiento.objet = movimiento.produit.objet
+            movimiento.reference = movimiento.produit.reference
         
     return render(request, 'historique.html', {
         'profil_actif': profil_actif,
@@ -613,13 +612,11 @@ def executer_moteur_analyse(annee, mois):
         else:
             recommandations.append({"priorite": "Conseil", "action": "Planifier une commande de routine pour les articles sous le seuil."})
             
-    # CORRECTION DES STATS SUR REF/PRODUIT SANS TEXTE BRUT
-    produits_sollicites = sorties_periode.values('objet', 'reference', 'produit__objet', 'produit__reference').annotate(total_sorti=Sum('quantite')).order_by('-total_sorti')
+    produits_sollicites = sorties_periode.values('objet', 'reference', 'produit__id').annotate(total_sorti=Sum('quantite')).order_by('-total_sorti')
     for ps in produits_sollicites[:3]:
-        # Tente de trouver par clé primaire liée d'abord pour le renommage, sinon se rabat sur la référence
         try:
-            if ps.get('produit'):
-                prod_obj = produits_actifs.get(id=ps['produit'])
+            if ps.get('produit__id'):
+                prod_obj = produits_actifs.get(id=ps['produit__id'])
             else:
                 prod_obj = produits_actifs.get(reference=ps['reference'])
                 
@@ -806,7 +803,6 @@ def page_statistiques(request):
     for cat in categories_uniques:
         if not cat or cat.strip() == "": continue
         
-        # CORRECTION CATEGORIES DANS LES STATISTIQUES SANS ECRASEMENT DES OBJECTS
         total_cat = mouvements_periode.filter(type_mouvement='SORTIE', produit__categorie=cat).aggregate(total=Sum('quantite'))['total']
         if total_cat is None:
             noms_objets = Produit.objects.filter(categorie=cat).values_list('objet', flat=True)
@@ -819,7 +815,6 @@ def page_statistiques(request):
     if not category_labels:
         category_labels, category_data = ['Aucune activité'], [0]
     
-    # CORRECTION COMPATIBILITE POUR LES COMPTEURS ANCIENS/NOUVEAUX DU TOP/FLOP PROD
     produits_perf = mouvements_periode.filter(type_mouvement='SORTIE').values('objet').annotate(total_sorti=Sum('quantite'))
     top_produits = produits_perf.order_by('-total_sorti')[:3]
     flop_produits = produits_perf.order_by('total_sorti')[:3]
@@ -1132,4 +1127,4 @@ def modifier_mouvement(request, mouvement_id):
         messages.success(request, "Le mouvement a été modifié avec succès.")
         return redirect('/historique/')
         
-    return render(request, 'modifier_mouvement.html', {'mouvement': mouvement})
+    return render(request, 'modifier_mouvement.html', {'mouvement': movimiento})
