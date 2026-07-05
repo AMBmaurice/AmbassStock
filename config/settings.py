@@ -11,7 +11,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-_9r&5hdo!!k(*@-*0#nrg
 DEBUG = True
 
 # MODIFICATION : Autoriser localhost pour tes tests et ton adresse URL Render exacte
-**ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'ambassstock.onrender.com', '.onrender.com']**
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'ambassstock.onrender.com', '.onrender.com']
 
 # Application definition 
 INSTALLED_APPS = [
