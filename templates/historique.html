@@ -231,8 +231,24 @@ function toggleSidebar() {
                     {% for entry in entrees %}
                     <tr class="item-row">
                         <td>ENTRÉE</td>
-                        <td class="search-name"><strong>{{ entry.produit.objet|default:entry.objet }}</strong></td>
-                        <td><span class="ref-tag">{{ entry.produit.reference|default:entry.reference }}</span></td>
+                        <td class="search-name">
+                            <strong>
+                                {% if entry.produit %}
+                                    {{ entry.produit.objet }}
+                                {% else %}
+                                    {{ entry.objet }}
+                                {% endif %}
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="ref-tag">
+                                {% if entry.produit %}
+                                    {{ entry.produit.reference }}
+                                {% else %}
+                                    {{ entry.reference }}
+                                {% endif %}
+                            </span>
+                        </td>
                         <td style="font-weight: 600; color: #5E6D3E;">+{{ entry.quantite }}</td>
                         <td>{{ entry.date_mouvement }}</td>
                     </tr>
@@ -324,8 +340,24 @@ function toggleSidebar() {
                             {% for out in service_group.list %}
                             <tr class="item-row">
                                 <td>SORTIE</td>
-                                <td class="search-name"><strong>{{ out.produit.objet|default:out.objet }}</strong></td>
-                                <td><span class="ref-tag">{{ out.produit.reference|default:out.reference }}</span></td>
+                                <td class="search-name">
+                                    <strong>
+                                        {% if out.produit %}
+                                            {{ out.produit.objet }}
+                                        {% else %}
+                                            {{ out.objet }}
+                                        {% endif %}
+                                    </strong>
+                                </td>
+                                <td>
+                                    <span class="ref-tag">
+                                        {% if out.produit %}
+                                            {{ out.produit.reference }}
+                                        {% else %}
+                                            {{ out.reference }}
+                                        {% endif %}
+                                    </span>
+                                </td>
                                 <td style="color: #8C4A32; font-weight: 600;">-{{ out.quantite }}</td>
                                 <td>{{ out.date_mouvement }}</td>
                             </tr>
