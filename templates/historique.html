@@ -65,6 +65,9 @@
         
         /* Message d'absence de données noir grisé homogène pour les deux sections */
         .empty-state { text-align: center; padding: 40px; color: #9A9F98; font-style: italic; font-size: 0.95rem; }
+        
+        .btn-edit-flux { background-color: #5E6D3E; color: white; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: background 0.2s; }
+        .btn-edit-flux:hover { background-color: #495430; }
     </style>
 </head>
 <body>
@@ -225,6 +228,7 @@ function toggleSidebar() {
                         <th>Référence</th>
                         <th>Quantité Ajoutée</th>
                         <th>Date</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>  
                 <tbody>
@@ -232,13 +236,24 @@ function toggleSidebar() {
                     <tr class="item-row">
                         <td>ENTRÉE</td>
                         <td class="search-name"><strong>{{ entry.objet }}</strong></td>
-                        <td><span class="ref-tag">{{ entry.reference }}</span></td>
+                        <td>
+                            <span class="ref-tag">
+                                {% if entry.produit %}
+                                    {{ entry.produit.reference }}
+                                {% else %}
+                                    {{ entry.reference }}
+                                {% endif %}
+                            </span>
+                        </td>
                         <td style="font-weight: 600; color: #5E6D3E;">+{{ entry.quantite }}</td>
                         <td>{{ entry.date_mouvement }}</td>
+                        <td>
+                            <a href="/historique/modifier/{{ entry.id }}/" class="btn-edit-flux">Modifier</a>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>  
-                        <td colspan="5" class="empty-state">Aucune entrée enregistrée.</td>
+                        <td colspan="6" class="empty-state">Aucune entrée enregistrée.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -318,6 +333,7 @@ function toggleSidebar() {
                                 <th>Référence</th>
                                 <th>Quantité Retirée</th>
                                 <th>Date</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -325,9 +341,20 @@ function toggleSidebar() {
                             <tr class="item-row">
                                 <td>SORTIE</td>
                                 <td class="search-name"><strong>{{ out.objet }}</strong></td>
-                                <td><span class="ref-tag">{{ out.reference }}</span></td>
+                                <td>
+                                    <span class="ref-tag">
+                                        {% if out.produit %}
+                                            {{ out.produit.reference }}
+                                        {% else %}
+                                            {{ out.reference }}
+                                        {% endif %}
+                                    </span>
+                                </td>
                                 <td style="color: #8C4A32; font-weight: 600;">-{{ out.quantite }}</td>
                                 <td>{{ out.date_mouvement }}</td>
+                                <td>
+                                    <a href="/historique/modifier/{{ out.id }}/" class="btn-edit-flux">Modifier</a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
