@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Corriger un flux</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { min-height: 100vh; background-color: #F4F6F3; color: #333333; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        
+        .container { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px 45px; width: 100%; max-width: 550px; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.05); }
+        
+        h2 { font-size: 1.4rem; font-weight: 600; color: #2c351c; margin-bottom: 25px; border-bottom: 2px solid #FAFBF9; padding-bottom: 15px; }
+        
+        .form-group { margin-bottom: 22px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+        
+        label { font-size: 0.8rem; color: #7A8278; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        input[type="text"], input[type="number"], input[type="date"], select { height: 46px; width: 100%; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; color: #2c351c; background-color: #ffffff; outline: none; transition: all 0.2s; appearance: none; -webkit-appearance: none; }
+        
+        input:focus, select:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
+        
+        select { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%235E6D3E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>"); background-repeat: no-repeat; background-position: right 16px center; background-size: 16px; padding-right: 45px; cursor: pointer; font-weight: 500; }
+        
+        .readonly-input { background-color: #FAFBF9 !important; border-color: #ECEFEA !important; color: #7A8278 !important; font-family: monospace; font-weight: 600; cursor: not-allowed; }
+        
+        .btn-group { display: flex; gap: 12px; margin-top: 30px; }
+        
+        .btn { height: 46px; flex: 1; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+        
+        .btn-submit { background-color: #5E6D3E; color: #ffffff; }
+        .btn-submit:hover { background-color: #495430; }
+        
+        .btn-cancel { background-color: #ECEFEA; color: #5E6D3E; }
+        .btn-cancel:hover { background-color: #E2E6E1; }
+        
+        small { color: #8C4A32; font-size: 0.8rem; font-weight: 500; margin-top: 2px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Modifier le Mouvement #{{ mouvement.id }}</h2>
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label>Nom du Produit</label>
+            <select name="produit_id" id="produitSelect" onchange="remplirReference()">
+                <option value="">-- Sélectionner l'article dans l'inventaire --</option>
+                {% for prod in produits %}
+                    <option value="{{ prod.id }}" {% if mouvement.produit.id == prod.id %}selected{% endif %}>{{ prod.objet }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Référence (Auto-remplie)</label>
+            <input type="text" name="reference" id="referenceInput" class="readonly-input" value="{% if mouvement.produit %}{{ mouvement.produit.reference }}{% else %}{{ mouvement.reference }}{% endif %}" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label>Quantité modifiée</label>
+            <input type="number" name="quantite" value="{{ mouvement.quantite }}">
+        </div>
+        
+        <div class="form-group">
+            <label>Service assigné</label>
+            <input type="text" name="service" value="{{ mouvement.service }}">
+        </div>
+        
+        <div class="form-group">
+            <label>Date de l'opération</label>
+            <input type="date" name="date_mouvement" value="{{ mouvement.date_mouvement|date:'Y-m-d' }}">
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="btn btn-submit">Enregistrer les modifications</button>
+            <a href="/historique/" class="btn btn-cancel">Annuler</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const produitReferences = {
+        {% for prod in produits %}
+            "{{ prod.id }}": "{{ prod.reference }}",
+        {% endfor %}
+    };
+
+    function remplirReference() {
+        const select = document.getElementById('produitSelect');
+        const input = document.getElementById('referenceInput');
+        const selectedId = select.value;
+        
+        if (selectedId && produitReferences[selectedId]) {
+            input.value = produitReferences[selectedId];
+        } else {
+            input.value = "{% if mouvement.produit %}{{ mouvement.produit.reference }}{% else %}{{ mouvement.reference }}{% endif %}";
+        }
+    }
+</script>
+</body>
+</html>
