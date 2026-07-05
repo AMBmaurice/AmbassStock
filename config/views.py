@@ -519,16 +519,16 @@ def page_historique(request):
     if sortie_service:
         flux_sorties = flux_sorties.filter(service=sortie_service)
         
-    # CORRECTION : SECURISATION SANS EFFACER LES DONNEES SI LE PRODUIT N'EST PAS LIE
+    # CORRECTION : Remplacement de m.produit par mouvement.produit pour éviter le NameError
     for mouvement in flux_entrees:
-        if m.produit:
-            mouvement.objet = m.produit.objet
-            mouvement.reference = m.produit.reference
+        if mouvement.produit:
+            mouvement.objet = mouvement.produit.objet
+            mouvement.reference = mouvement.produit.reference
 
     for mouvement in flux_sorties:
-        if m.produit:
-            mouvement.objet = m.produit.objet
-            mouvement.reference = m.produit.reference
+        if mouvement.produit:
+            mouvement.objet = mouvement.produit.objet
+            mouvement.reference = mouvement.produit.reference
         
     return render(request, 'historique.html', {
         'profil_actif': profil_actif,
