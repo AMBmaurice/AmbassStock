@@ -151,14 +151,12 @@
 </div>
 
 <script>
-
 function toggleSidebar() {
     const sidebar = document.getElementById('appSidebar');
     const openBtn = document.getElementById('sidebarToggleOpen');
     const mainContent = document.querySelector('.main-content');
         
     if (sidebar.style.transform === 'translateX(-290px)') {
-        // Mode Normal (Sidebar Ouverte)
         sidebar.style.transform = 'translateX(0px)';
         sidebar.style.opacity = '1';
         openBtn.style.display = 'none';
@@ -168,7 +166,6 @@ function toggleSidebar() {
             mainContent.style.paddingTop = '0px';
         }
     } else {
-        // Mode Plein Écran (Sidebar Fermée)
         sidebar.style.transform = 'translateX(-290px)';
         sidebar.style.opacity = '0';
         openBtn.style.display = 'flex';
@@ -179,12 +176,10 @@ function toggleSidebar() {
         }
     }
 }
-
 </script>
     
     <div class="main-content">
    
-        <!-- CADRE N°1 : ENTRÉES -->
         <div class="form-container-box">
             <div class="section-header-glide">
                 <h4 class="section-title">Historique des entrées</h4>
@@ -236,8 +231,8 @@ function toggleSidebar() {
                     {% for entry in entrees %}
                     <tr class="item-row">
                         <td>ENTRÉE</td>
-                        <td class="search-name"><strong>{{ entry.objet }}</strong></td>
-                        <td><span class="ref-tag">{{ entry.reference }}</span></td>
+                        <td class="search-name"><strong>{{ entry.produit.objet|default:entry.objet }}</strong></td>
+                        <td><span class="ref-tag">{{ entry.produit.reference|default:entry.reference }}</span></td>
                         <td style="font-weight: 600; color: #5E6D3E;">+{{ entry.quantite }}</td>
                         <td>{{ entry.date_mouvement }}</td>
                     </tr>
@@ -250,7 +245,6 @@ function toggleSidebar() {
             </table>  
         </div>
             
-        <!-- CADRE N°2 : SORTIES REGROUPÉES -->
         <div class="form-container-box">
             <div class="section-header-glide">
                 <h4 class="section-title">Historique des sorties</h4>
@@ -330,8 +324,8 @@ function toggleSidebar() {
                             {% for out in service_group.list %}
                             <tr class="item-row">
                                 <td>SORTIE</td>
-                                <td class="search-name"><strong>{{ out.objet }}</strong></td>
-                                <td><span class="ref-tag">{{ out.reference }}</span></td>
+                                <td class="search-name"><strong>{{ out.produit.objet|default:out.objet }}</strong></td>
+                                <td><span class="ref-tag">{{ out.produit.reference|default:out.reference }}</span></td>
                                 <td style="color: #8C4A32; font-weight: 600;">-{{ out.quantite }}</td>
                                 <td>{{ out.date_mouvement }}</td>
                             </tr>
@@ -353,7 +347,6 @@ function toggleSidebar() {
             const btn = menu.parentElement.querySelector('.custom-dropdown-btn');
             const isOpen = menu.style.display === 'block';
                             
-            // Fermer tous les autres menus ouverts
             document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.style.display = 'none');
             document.querySelectorAll('.custom-dropdown-btn').forEach(b => b.classList.remove('open'));
                             
@@ -366,7 +359,6 @@ function toggleSidebar() {
         function selectFilterOption(panel, value, label) {
             document.getElementById('inputFiltre' + panel).value = value;
             
-            // Si c'est Aucun filtre, on force la couleur grisâtre transparente
             if (value === 'aucun') {
                 document.getElementById('btnFiltre' + panel).innerHTML = '<span style="color: rgba(0, 0, 0, 0.45);">' + label + '</span>';
             } else {
@@ -386,7 +378,6 @@ function toggleSidebar() {
             document.getElementById('btnServiceList').innerText = label;
         }
             
-        // Fermer les menus lors d'un clic extérieur
         document.addEventListener('click', function() {
             document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.style.display = 'none');
             document.querySelectorAll('.custom-dropdown-btn').forEach(b => b.classList.remove('open'));

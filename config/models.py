@@ -18,23 +18,23 @@ class Produit(models.Model):
     def __str__(self):
         return self.objet
 
-@property
-def statut(self):
-    # Si le quota n'est pas défini, on met la puce au vert par défaut
-    if self.quota_minimum is None:
-        return 'green'
-        
-    # ALERTE ROUGE : Stock inférieur ou égal au quota minimum
-    if self.quantite <= self.quota_minimum:
-        return 'red'
-        
-    # ZONE JAUNE : Stock proche de la rupture (quota + 10 articles restants)
-    elif self.quantite <= (self.quota_minimum + 10):
-        return 'yellow'
-        
-    # TOUT EST VERT
-    else:
-        return 'green'
+    @property
+    def statut(self):
+        # Si le quota n'est pas défini, on met la puce au vert par défaut
+        if self.quota_minimum is None:
+            return 'green'
+            
+        # ALERTE ROUGE : Stock inférieur ou égal au quota minimum
+        if self.quantite <= self.quota_minimum:
+            return 'red'
+            
+        # ZONE JAUNE : Stock proche de la rupture (quota + 10 articles restants)
+        elif self.quantite <= (self.quota_minimum + 10):
+            return 'yellow'
+            
+        # TOUT EST VERT
+        else:
+            return 'green'
 
 class ProfilUtilisateur(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profil')
@@ -125,7 +125,7 @@ class MouvementStock(models.Model):
     ]
     type_mouvement = models.CharField(max_length=10, choices=CHOIX_TYPES)
     objet = models.CharField(max_length=200)
-    reference = models.CharField(max_length=100)
+    produit = models.ForeignKey(Produit, on_delete=models.CASCADE, related_name='mouvements', null=True, blank=True)
     quantite = models.IntegerField()
     service = models.CharField(max_length=100, default="Administration")
     date_mouvement = models.DateField(default=timezone.now)
