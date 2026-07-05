@@ -364,9 +364,9 @@ def page_inventaire(request):
     })
 
 def page_gestion_stocks(request): 
-profil_actif = get_profil_actif(request.user)
-if not request.user.is_authenticated:
-    return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
                     
     COMPTEURS_DEPART = {
         'ECR': 26, 'BUR': 52, 'PAP': 32, 'CLA': 40,
@@ -417,7 +417,6 @@ if not request.user.is_authenticated:
                 MouvementStock.objects.create(
                     type_mouvement='ENTREE',
                     objet=objet_nom,
-                    # **Le champ reference a été retiré ici**
                     produit=nouveau_produit,
                     quantite=quantite_initiale,
                     service="Administration"
@@ -438,7 +437,6 @@ if not request.user.is_authenticated:
                 MouvementStock.objects.create(
                     type_mouvement='ENTREE',
                     objet=produit.objet,   
-                    # **Le champ reference a été retiré ici**
                     produit=produit,
                     quantite=quantite_ajoutee,
                     service="Administration",
@@ -463,7 +461,6 @@ if not request.user.is_authenticated:
                     MouvementStock.objects.create(   
                         type_mouvement='SORTIE',
                         objet=produit.objet,
-                        # **Le champ reference a été retiré ici**
                         produit=produit,
                         quantite=quantite_retiree,
                         service=service_demandeur,
@@ -473,7 +470,6 @@ if not request.user.is_authenticated:
             except Produit.DoesNotExist:
                 pass
             return redirect('/gestion-stocks/')
-            # **Le second return redirect en doublon a été supprimé ici**
             
         elif action_type == "archivage_produit":
             ref_produit = request.POST.get('produit_a_archiver')
