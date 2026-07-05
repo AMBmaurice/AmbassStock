@@ -3,7 +3,7 @@ import re
 import unicodedata
 from datetime import date, datetime, timedelta
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
@@ -1114,3 +1114,22 @@ def page_profil(request):
 def page_deconnexion(request):
     logout(request)
     return redirect('/connexion/')
+
+def modifier_mouvement(request, mouvement_id):
+    mouvement = get_object_or_404(MouvementStock, id=mouvement_id)
+    
+    if request.method == 'POST':
+        mouvement.objet = request.POST.get('objet', mouvement.objet)
+        mouvement.quantite = int(request.POST.get('quantite', mouvement.quantite))
+        mouvement.service = request.POST.get('service', mouvement.service)
+        mouvement.date_mouvement = request.POST.get('date_mouvement', mouvement.date_mouvement)
+        
+        if mouvement.produit:
+            mouvement.produit.reference = request.POST.get('reference', mouvement.produit.reference)
+            mouvement.produit.save()
+            
+        mouvement.save()
+        messages.success(request, "Le mouvement a été modifié avec succès.")
+        return redirect('/historique/')
+        
+    return render(request, 'modifier_mouvement.html', {'mouvement': mouvement})
