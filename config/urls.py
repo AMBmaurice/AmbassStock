@@ -12,7 +12,7 @@ from .views import (
     page_factures,
     page_profil,
     page_deconnexion,
-    **modifier_mouvement**
+    modifier_mouvement
 )
 
 urlpatterns = [
