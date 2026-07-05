@@ -5,7 +5,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
-SECRET_KEY = 'django-insecure-_9r&5hdo!!k(*@-*0#nrg-qrg2vzt%smr-(#kuj(=_rwuhdm=j'
+# Récupère la clé depuis l'environnement Render, sinon prend la clé locale par défaut
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-_9r&5hdo!!k(*@-*0#nrg-qrg2vzt%smr-(#kuj(=_rwuhdm=j')
+
 DEBUG = True
 
 # Autoriser localhost pour tes tests et les serveurs de Render en production
