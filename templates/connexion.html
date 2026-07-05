@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Connexion</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(-45deg, #495430, #74854C, #495430, #74854C); background-size: 400% 400%; animation: gradientMovement 15s ease infinite; overflow: hidden; }
+        @keyframes gradientMovement { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        h1 { color: #ffffff; font-size: 2.5rem; font-weight: 600; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); text-align: center; transition: all 0.5s ease; }
+        h1.loading-active { font-size: 4.5rem; margin-bottom: 40px; }
+        .login-container { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.25); padding: 40px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); transition: opacity 0.4s ease; }
+        .input-group { margin-bottom: 22px; text-align: left; }
+        .input-group label { display: block; color: rgba(255, 255, 255, 0.9); font-size: 1rem; margin-bottom: 8px; }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-group input { width: 100%; padding: 14px 16px; padding-right: 50px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: #ffffff; font-size: 1.05rem; outline: none; }
+        .toggle-password { position: absolute; right: 14px; background: none; border: none; color: rgba(255, 255, 255, 0.7); cursor: pointer; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
+        .submit-btn { width: 100%; padding: 15px; background: #ffffff; border: none; border-radius: 12px; color: #495430; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .loading-box { display: none; opacity: 0; flex-direction: column; align-items: center; text-align: center; transition: opacity 0.5s ease; }
+        .welcome-title { color: rgba(255, 255, 255, 0.75); font-size: 1.6rem; font-weight: 400; margin-bottom: 8px; }
+        .welcome-user { color: #ffffff; font-size: 2.2rem; font-weight: 600; margin-bottom: 35px; text-transform: capitalize; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top: 5px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <h1 id="siteTitle">AmbassStock</h1>
+    <div class="login-container" id="loginContainer">
+        <form id="loginForm" method="POST" action="" onsubmit="event.preventDefault(); startFakeLoading();">
+            {% csrf_token %} <div class="input-group">
+                <label for="username">Identifiant</label>
+                <div class="input-wrapper"><input type="text" id="username" name="username" placeholder="Entrez votre identifiant" required></div>
+            </div>
+            <div class="input-group">
+                <label for="password">Mot de passe</label>
+                <div class="input-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Entrez votre mot de passe" required>
+                    <button type="button" id="togglePassword" class="toggle-password">Voir</button>
+                </div>
+            </div>
+            <button type="submit" class="submit-btn">Se connecter</button>
+        </form>
+    </div>
+    <div class="loading-box" id="loadingBox">
+        <div class="welcome-title">Bienvenue</div>
+        <div class="welcome-user" id="welcomeUser">Utilisateur</div>
+        <div class="spinner"></div>
+    </div>
+    <script>
+        const passwordInput = document.getElementById('password');
+        const togglePasswordButton = document.getElementById('togglePassword');
+        togglePasswordButton.addEventListener('click', function () {
+            if (passwordInput.type === 'password') { passwordInput.type = 'text'; togglePasswordButton.textContent = 'Masquer'; }
+            else { passwordInput.type = 'password'; togglePasswordButton.textContent = 'Voir'; }
+        });
+        function startFakeLoading() {
+            const username = document.getElementById('username').value;
+            const siteTitle = document.getElementById('siteTitle');
+            const loginContainer = document.getElementById('loginContainer');
+            const loadingBox = document.getElementById('loadingBox');
+            const welcomeUser = document.getElementById('welcomeUser');
+            const loginForm = document.getElementById('loginForm');
+            
+            welcomeUser.textContent = username;
+            loginContainer.style.opacity = '0';
+            setTimeout(() => {
+                loginContainer.style.display = 'none';
+                siteTitle.classList.add('loading-active');
+                loadingBox.style.display = 'flex';
+                setTimeout(() => { loadingBox.style.opacity = '1'; }, 50);
+            }, 400);
+            
+            // CORRECTION : Au lieu de tricher avec un href, on valide pour de vrai le formulaire
+            setTimeout(() => {
+                loginForm.submit(); 
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

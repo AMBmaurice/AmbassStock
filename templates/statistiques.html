@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Centre de Rapports et Statistiques</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        
+        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
+        .sidebar-menu { list-style: none; padding: 0 15px; }
+        .sidebar-item { margin-bottom: 10px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; }
+        h3 { font-size: 2rem; font-weight: 600; color: #2c351c; }
+        
+        .stat-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px 45px; width: 100%; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); margin-bottom: 35px; }
+        
+        .card-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .card-title { font-size: 1.25rem; font-weight: 600; color: #2c351c; margin-bottom: 30px; }
+        .card-header-flex .card-title { margin-bottom: 0; }
+        
+        .report-generation-bar { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+        .report-group { display: flex; flex-direction: column; gap: 8px; }
+        .report-label { font-size: 0.8rem; color: #7A8278; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .select-custom, .input-custom { height: 44px; padding: 0 14px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.95rem; color: #2c351c; background-color: #ffffff; outline: none; cursor: pointer; min-width: 200px; }
+        .select-custom:focus, .input-custom:focus { border-color: #5E6D3E; }
+        
+        .btn-generate { height: 44px; padding: 0 22px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; display: inline-flex; align-items: center; }
+        .btn-generate:hover { background-color: #495430; }
+
+        .big-numbers-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .number-card { background-color: #FAFBF9; border: 1px solid #ECEFEA; border-radius: 16px; padding: 25px 20px; }
+        .number-label { font-size: 0.8rem; color: #7A8278; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        .number-value { font-size: 2.2rem; font-weight: 700; color: #2c351c; }
+        
+        .chart-container { position: relative; width: 100%; height: 350px; }
+        
+        .distribution-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; }
+        .chart-donut-wrapper { position: relative; height: 260px; width: 100%; }
+
+        .top-flop-flex { display: flex; gap: 40px; }
+        .top-flop-column { flex: 1; }
+        .column-title { font-size: 0.9rem; font-weight: 700; color: #7A8278; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .stat-list { list-style: none; }
+        .stat-list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #ECEFEA; font-size: 0.95rem; }
+        .stat-list-item:last-child { border-bottom: none; }
+        .item-identity { display: flex; align-items: center; gap: 12px; }
+        
+        .rank-badge { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; }
+        .rank-top { background-color: #EBF2E9; color: #5E6D3E; }
+        .rank-flop { background-color: #F9EBEB; color: #8C4A32; }
+        
+        .item-name { font-weight: 600; color: #333333; }
+        .item-count { font-weight: 700; font-family: monospace; font-size: 0.95rem; }
+        
+        .stat-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .stat-table th { background-color: #FAFBF9; padding: 14px 16px; font-size: 0.82rem; color: #7A8278; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #E2E6E1; }
+        .stat-table td { padding: 14px 16px; font-size: 0.95rem; color: #333333; border-bottom: 1px solid #ECEFEA; }
+        .ref-tag { font-family: monospace; font-weight: 600; color: #5E6D3E; background: #EBF2E9; padding: 4px 8px; border-radius: 6px; }
+        
+        .empty-state { text-align: center; padding: 40px; color: #A0A69F; font-style: italic; font-size: 0.95rem; }
+    </style>
+</head>
+<body>
+
+<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
+</button>
+        
+<div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
+        
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
+        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
+        <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+    </div>
+        
+    <ul class="sidebar-menu" style="list-style: none; padding: 0 15px; flex-grow: 1; overflow-y: auto;">
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
+        </li>
+        
+        {% if profil_actif.acces_inventaire %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
+        </li>
+        {% endif %}
+        
+        {% if profil_actif.acces_stocks %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a>
+        </li>
+        {% endif %}
+    
+        {% if profil_actif.acces_historique %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a>
+        </li>
+        {% endif %}
+        
+        {% if profil_actif.acces_gestion_utilisateurs %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a>
+        </li>
+        {% endif %}
+    
+        {% if profil_actif.acces_statistiques %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a>
+        </li>
+        {% endif %}
+        
+        {% if profil_actif.acces_gestion_utilisateurs %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a>
+        </li>
+        {% endif %}
+        
+        {% if profil_actif.acces_factures %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a>
+        </li>
+        {% endif %}
+    </ul>
+            
+    <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">
+            <a href="/mon-profil/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; flex-grow: 1;">
+                <div style="width: 36px; height: 36px; background-color: #FAFBF9; color: #495430; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="color: #ffffff; font-size: 0.88rem; font-weight: 600; line-height: 1.2;">{{ request.user.username }}</span>
+                    <span style="color: {% if request.path == '/mon-profil/' %}#ffffff{% else %}rgba(255, 255, 255, 0.5){% endif %}; font-size: 0.75rem;">Mon Profil</span>
+                </div>
+            </a>
+        </div>
+
+        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 82, 82, 0.15)'" onmouseout="this.style.background='transparent'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Déconnexion
+        </a>
+    </div>
+</div>
+
+    <div class="main-content">
+        <div class="header-section">
+            <h3>Statistiques</h3>
+        </div>
+
+        <div class="stat-container-box">
+            <h4 class="card-title">Configuration et Périmètre du Rapport Stratégique</h4>
+            <form method="POST" action="" style="display: flex; flex-direction: column; gap: 25px;">
+                {% csrf_token %}
+                
+                <div class="report-generation-bar">
+                    <div class="report-group">
+                        <label class="report-label">Type de Rapport</label>
+                        <select class="select-custom" id="reportScope" name="type_analyse" onchange="adjustReportFields()">
+                            <option value="mensuel">Audit Mensuel Spécifique</option>
+                            <option value="annuel">Bilan Annuel Spécifique</option>
+                            <option value="comparaison_mois">Comparaison Évolution (Mois A vs Mois B)</option>
+                            <option value="comparaison_ans">Comparaison Interannuelle (Année A vs Année B)</option>
+                        </select>
+                    </div>
+
+                    <div id="periodA" class="report-group">
+                        <label class="report-label" id="labelA">Période cible</label>
+                        <div style="display: flex; gap: 10px;">
+                            <select name="periode_annee" class="select-custom" style="min-width: 110px;">
+                                {% for annee in liste_annees %}
+                                    <option value="{{ annee }}" {% if annee == annee_selectionnee %}selected{% endif %}>{{ annee }}</option>
+                                {% endfor %}
+                            </select>
+                            <select name="periode_mois" class="select-custom" style="min-width: 140px;">
+                                {% for m in liste_mois %}
+                                    <option value="{{ m.valeur }}" {% if m.valeur == mois_selectionne %}selected{% endif %}>{{ m.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="periodB" class="report-group" style="display: none;">
+                        <label class="report-label" id="labelB">Période de comparaison</label>
+                        <input type="month" name="periode_b" class="input-custom">
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 30px; padding-top: 15px; border-top: 1px solid rgba(230, 234, 228, 0.7);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" name="inclure_graphiques" id="incGraph" value="true" checked style="width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer;">
+                        <label for="incGraph" style="font-size: 0.95rem; color: #333333; cursor: pointer;">Intégrer les graphiques de répartition</label>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" name="inclure_dormants" id="incDorm" value="true" checked style="width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer;">
+                        <label for="incDorm" style="font-size: 0.95rem; color: #333333; cursor: pointer;">Inclure la liste des produits dormants</label>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" name="inclure_remarques" id="incRem" value="true" checked style="width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer;">
+                        <label for="incRem" style="font-size: 0.95rem; color: #333333; cursor: pointer;">Générer les conclusions et recommandations</label>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
+                    <button type="submit" class="btn-generate">Générer le rapport personnalisé</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="stat-container-box">
+            <h4 class="card-title">Indicateurs d'activité globaux</h4>
+            <div class="big-numbers-grid">
+                <div class="number-card">
+                    <div class="number-label">Opérations réalisées</div>
+                    <div class="number-value">{{ total_operations }}</div>
+                </div>
+                <div class="number-card">
+                    <div class="number-label">Volume total entré</div>
+                    <div class="number-value">{{ total_entrees }}</div>
+                </div>
+                <div class="number-card">
+                    <div class="number-label">Volume total sorti</div>
+                    <div class="number-value">{{ total_sorties }}</div>
+                </div>
+                <div class="number-card">
+                    <div class="number-label">Taux de rotation</div>
+                    <div class="number-value">{{ taux_rotation }}%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-container-box">
+            <div class="card-header-flex" style="margin-bottom: 25px;">
+                <h4 class="section-title" id="chartMainTitle">Flux analytique des mouvements physiques</h4>
+                
+                <form method="GET" action="" id="chartFilterForm" style="display: flex; align-items: center; gap: 15px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <select name="view_mode" id="viewModeSelect" class="select-custom" style="min-width: 160px; height: 38px;" onchange="toggleMonthInput()">
+                            <option value="hebdomadaire" {% if view_mode == 'hebdomadaire' %}selected{% endif %}>Vue Semaine</option>
+                            <option value="mensuel" {% if view_mode == 'mensuel' %}selected{% endif %}>Vue Mois</option>
+                        </select>
+                    </div>
+                    
+                    <div id="chartMonthGroup" style="display: {% if view_mode == 'mensuel' %}flex{% else %}none{% endif %}; align-items: center; gap: 10px;">
+                        <select name="target_year" id="chartYearInput" class="select-custom" style="min-width: 110px; height: 38px;" onchange="document.getElementById('chartFilterForm').submit()">
+                            {% for annee in liste_annees %}
+                                <option value="{{ annee }}" {% if annee == annee_selectionnee %}selected{% endif %}>{{ annee }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <select name="target_month" id="chartMonthInput" class="select-custom" style="min-width: 140px; height: 38px;" onchange="document.getElementById('chartFilterForm').submit()">
+                            {% for m in liste_mois %}
+                                <option value="{{ m.valeur }}" {% if m.valeur == mois_selectionne %}selected{% endif %}>{{ m.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="metricsBarChart"></canvas>
+            </div>
+        </div>
+
+        <div class="stat-container-box">
+            <div class="distribution-grid">
+                <div>
+                    <h4 class="card-title">Consommation par service</h4>
+                    <div class="chart-donut-wrapper">
+                        <canvas id="serviceDonutChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="card-title">Répartition par catégorie</h4>
+                    <div class="chart-donut-wrapper">
+                        <canvas id="categoryDonutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-container-box">
+            <h4 class="card-title">Analyse de performance des produits</h4>
+            {% if pas_de_donnees_mouvement %}
+                <div class="empty-state">Aucune donnée de mouvement enregistrée pour la période sélectionnée.</div>
+            {% else %}
+                <div class="top-flop-flex">
+                    <div class="top-flop-column">
+                        <div class="column-title">Top 3 des produits les plus demandés</div>
+                        <ul class="stat-list">
+                            {% for item in top_produits %}
+                            <li class="stat-list-item">
+                                <div class="item-identity">
+                                    <span class="rank-badge rank-top">{{ forloop.counter }}</span>
+                                    <span class="item-name">{{ item.objet }}</span>
+                                </div>
+                                <span class="item-count" style="color: #5E6D3E;">{{ item.total_sorti }} unités</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div style="border-left: 1px solid rgba(230, 234, 228, 0.7);"></div>
+                    
+                    <div class="top-flop-column">
+                        <div class="column-title">Flop 3 des produits les moins demandés</div>
+                        <ul class="stat-list">
+                            {% for item in flop_produits %}
+                            <li class="stat-list-item">
+                                <div class="item-identity">
+                                    <span class="rank-badge rank-flop">{{ forloop.counter }}</span>
+                                    <span class="item-name">{{ item.objet }}</span>
+                                </div>
+                                <span class="item-count" style="color: #8C4A32;">{{ item.total_sorti }} unités</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="stat-container-box">
+            <h4 class="card-title">Produits dormants (Aucune activité depuis 6 mois)</h4>
+            <table class="stat-table">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Nom de l'objet</th>
+                        <th>Catégorie</th>
+                        <th>Stock Actuel</th>
+                        <th>Dernier mouvement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produits_dormants %}
+                    <tr>
+                        <td><span class="ref-tag">{{ p.reference }}</span></td>
+                        <td><strong>{{ p.objet }}</strong></td>
+                        <td>{{ p.categorie }}</td>
+                        <td>{{ p.quantite }}</td>
+                        <td style="color: #7A8278; font-style: italic;">{{ p.derniere_activite|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-state">Aucun produit dormant détecté dans la réserve active.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('appSidebar');
+            const openBtn = document.getElementById('sidebarToggleOpen');
+            const mainContent = document.querySelector('.main-content');
+                
+            if (sidebar.style.transform === 'translateX(-290px)') {
+                sidebar.style.transform = 'translateX(0px)';
+                sidebar.style.opacity = '1';
+                openBtn.style.display = 'none';
+                if (mainContent) {
+                    mainContent.style.marginLeft = '290px';
+                    mainContent.style.paddingLeft = '0px';
+                    mainContent.style.paddingTop = '0px';
+                }
+            } else {
+                sidebar.style.transform = 'translateX(-290px)';
+                sidebar.style.opacity = '0';
+                openBtn.style.display = 'flex';
+                if (mainContent) {
+                    mainContent.style.marginLeft = '15px';
+                    mainContent.style.paddingLeft = '65px';
+                    mainContent.style.paddingTop = '12px';
+                }
+            }
+        }
+
+        function toggleMonthInput() {
+            const selectMode = document.getElementById('viewModeSelect').value;
+            const monthGroup = document.getElementById('chartMonthGroup');
+            
+            if (selectMode === 'mensuel') {
+                monthGroup.style.display = 'flex';
+            } else {
+                monthGroup.style.display = 'none';
+                document.getElementById('chartFilterForm').submit();
+            }
+        }
+
+        function adjustReportFields() {
+            const selectElement = document.getElementById('reportScope');
+            const categorieSelectionnee = selectElement.value;
+            const labelA = document.getElementById('labelA');
+            const periodA = document.getElementById('periodA');
+            const periodB = document.getElementById('periodB');
+            
+            if (categorieSelectionnee === 'mensuel') {
+                periodA.style.display = 'flex'; periodB.style.display = 'none';
+                labelA.innerText = "Période cible";
+            } else if (categorieSelectionnee === 'annuel') {
+                periodA.style.display = 'flex'; periodB.style.display = 'none';
+                labelA.innerText = "Sélectionner l'année";
+            } else if (categorieSelectionnee === 'comparaison_mois') {
+                periodA.style.display = 'flex'; periodB.style.display = 'flex';
+                labelA.innerText = "Mois de référence (A)";
+            } else if (categorieSelectionnee === 'comparaison_ans') {
+                periodA.style.display = 'flex'; periodB.style.display = 'flex';
+                labelA.innerText = "Année de référence (A)";
+            }
+        }
+
+        const ctxBar = document.getElementById('metricsBarChart').getContext('2d');
+        const metricsBarChart = new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels|safe }},
+                datasets: [
+                    {
+                        label: 'Quantité de produits sortis',
+                        data: {{ chart_sorties|safe }},
+                        backgroundColor: '#8C4A32',
+                        borderRadius: 6,
+                        yAxisID: 'y_quantite'
+                    },
+                    {
+                        label: 'Nombre d\'opérations',
+                        data: {{ chart_operations|safe }},
+                        backgroundColor: '#5E6D3E',
+                        borderRadius: 6,
+                        yAxisID: 'y_operations'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y_quantite: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Quantité Retirée', color: '#8C4A32', font: { weight: 'bold' } },
+                        grid: { color: 'rgba(230, 234, 228, 0.5)' }
+                    },
+                    y_operations: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Nombre d\'Opérations', color: '#5E6D3E', font: { weight: 'bold' } },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+
+        const ctxService = document.getElementById('serviceDonutChart').getContext('2d');
+        new Chart(ctxService, {
+            type: 'doughnut',
+            data: {
+                labels: {{ service_labels|safe }},
+                datasets: [{
+                    data: {{ service_data|safe }},
+                    backgroundColor: ['#5E6D3E', '#495430', '#8C4A32', '#A0A69F', '#D0D6CE'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+
+        const ctxCategory = document.getElementById('categoryDonutChart').getContext('2d');
+        new Chart(ctxCategory, {
+            type: 'doughnut',
+            data: {
+                labels: {{ category_labels|safe }},
+                datasets: [{
+                    data: {{ category_data|safe }},
+                    backgroundColor: [
+                        '#5E6D3E', '#8C4A32', '#A0A69F', '#495430', '#D0D6CE', 
+                        '#7A8278', '#3B4426', '#8C5832', '#B4BCB3', '#2C351C', 
+                        '#5A2715', '#636E62'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+    </script>
+</body>
+</html>

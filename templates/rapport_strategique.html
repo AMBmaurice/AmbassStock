@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>AmbassStock - Rapport d'Audit Institutionnel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #ffffff; color: #333333; padding: 50px; max-width: 900px; margin: 0 auto; line-height: 1.5; }
+        
+        /* Actions de navigation et d'impression */
+        .btn-back-actions { display: flex; gap: 15px; margin-bottom: 40px; }
+        .btn-nav { height: 44px; padding: 0 20px; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: background-color 0.2s; }
+        .btn-return { background-color: #ECEFEA; color: #5E6D3E; }
+        .btn-return:hover { background-color: #E2E6E1; }
+        .btn-print-now { background-color: #5E6D3E; color: #ffffff; }
+        .btn-print-now:hover { background-color: #495430; }
+        
+        /* En-tête Lettre Officielle Institutionnelle */
+        .diplomatic-header { border-bottom: 2px solid #5E6D3E; padding-bottom: 20px; margin-bottom: 40px; }
+        .institution-title { font-size: 1.35rem; font-weight: 700; color: #2c351c; text-transform: uppercase; letter-spacing: 0.5px; }
+        .document-nature { font-size: 1.1rem; color: #7A8278; margin-top: 5px; font-weight: 500; }
+        
+        /* Métadonnées de l'audit */
+        .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; background-color: #FAFBF9; padding: 20px; border-radius: 12px; border: 1px solid #ECEFEA; margin-bottom: 35px; font-size: 0.95rem; }
+        
+        h2 { font-size: 1.25rem; font-weight: 600; color: #495430; margin: 35px 0 15px 0; border-bottom: 1px solid #ECEFEA; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+        p { font-size: 1rem; color: #444444; margin-bottom: 20px; text-align: justify; }
+        
+        /* Tableaux de bord logistiques */
+        .report-table { width: 100%; border-collapse: collapse; text-align: left; margin: 20px 0 30px 0; }
+        .report-table th { background-color: #FAFBF9; padding: 12px 14px; font-size: 0.82rem; color: #7A8278; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #D0D6CE; letter-spacing: 0.5px; }
+        .report-table td { padding: 14px; font-size: 0.95rem; border-bottom: 1px solid #ECEFEA; color: #333333; }
+        
+        .badge-status { font-weight: 600; padding: 4px 8px; border-radius: 6px; font-size: 0.85rem; text-transform: uppercase; }
+        .status-ok { background-color: #EBF2E9; color: #5E6D3E; }
+        .status-alert { background-color: #F9EBEB; color: #8C4A32; }
+
+        /* Conteneurs pour graphiques de répartition */
+        .distribution-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin: 30px 0; }
+        .chart-donut-wrapper { position: relative; height: 240px; width: 100%; }
+
+        .ref-tag { font-family: monospace; font-weight: 600; color: #5E6D3E; background: #EBF2E9; padding: 4px 8px; border-radius: 6px; }
+
+        @media print {
+            .btn-back-actions { display: none !important; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="btn-back-actions">
+        <a href="/statistiques/" class="btn-nav btn-return">Retour aux statistiques</a>
+        <button class="btn-nav btn-print-now" onclick="window.print()">Lancer l'impression officielle</button>
+    </div>
+
+    <div class="diplomatic-header">
+        <div class="institution-title">Délégation Permanente de la République de Maurice auprès de l'UNESCO</div>
+        <div class="document-nature">Rapport d'Audit Stratégique et Logistique des Stocks</div>
+    </div>
+
+    <div class="meta-grid">
+        <div><strong>Type d'Analyse :</strong> {{ type_analyse|capfirst }}</div>
+        <div><strong>Période de Référence :</strong> {{ periode_a }} {% if periode_b %}vs {{ periode_b }}{% endif %}</div>
+        <div><strong>Généré Automatiquement le :</strong> Document Certifié AmbassStock</div>
+        <div><strong>Statut de la Mission :</strong> Confidentiel / Usage Interne</div>
+    </div>
+
+    <h2>1. Synthèse Générale et Indicateurs de Performance (KPIs)</h2>
+    <p>Ce chapitre comptabilise la réactivité des mouvements de matériels et fournitures enregistrés sur la période. Les seuils cibles permettent d'évaluer l'alignement des stocks avec l'activité réelle de la délégation.</p>
+    
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Indicateur Logistique</th>
+                <th>Valeur Constatée</th>
+                <th>Seuil de Vigilance</th>
+                <th>Diagnostic Automatique</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Volume Global des Mouvements</td>
+                <td>{{ total_operations }} fiches</td>
+                <td>--</td>
+                <td><span class="badge-status status-ok">{{ statut_general }}</span></td>
+            </tr>
+            <tr>
+                <td>Taux de Rotation Global</td>
+                <td>{{ taux_rotation }}%</td>
+                <td>&gt; 15%</td>
+                <td><span class="badge-status status-ok">Suivi</span></td>
+            </tr>
+            <tr>
+                <td>Immobilisation des Ressources (+6 mois)</td>
+                <td>{{ produits_dormants|length }} références</td>
+                <td>Maximum 15%</td>
+                <td><span class="badge-status {% if statut_dormant == 'Optimal' %}status-ok{% else %}status-alert{% endif %}">{{ statut_dormant }}</span></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    {% if inclure_remarques %}
+    <p><strong>Remarque de l'auditeur automatisé :</strong> {{ synthese_generale }}</p>
+    {% endif %}
+
+    {% if inclure_graphiques %}
+    <h2>2. Analyse Sectorielle et Répartition des Consommations</h2>
+    <p>Les données suivantes mettent en évidence la répartition des sorties par service demandeur ainsi que le poids des différentes catégories d'objets dans l'inventaire global, afin d'anticiper la planification des dotations.</p>
+
+    <div class="distribution-grid">
+        <div>
+            <div class="chart-donut-wrapper">
+                <canvas id="repService"></canvas>
+            </div>
+        </div>
+        <div>
+            <div class="chart-donut-wrapper">
+                <canvas id="repCat"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if inclure_remarques %}
+        {% if not inclure_graphiques %}
+        <h2>2. Analyse Sectorielle et Répartition des Consommations</h2>
+        {% endif %}
+        <p><strong>Analyse automatique de la demande :</strong> {{ remarque_sectorielle }}</p>
+        <p><strong>Constat d'immobilisation des ressources :</strong> {{ remarque_dormant }}</p>
+    {% endif %}
+
+    {% if inclure_dormants %}
+    <h2>3. Diagnostic Fin d'Inventaire : Matériels Dormants</h2>
+    <p>Cette section isole les dysfonctionnements logistiques constatés en réserve, notamment les articles n'ayant enregistré aucun flux d'entrée ni de sortie depuis plus de 180 jours.</p>
+    
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Référence</th>
+                <th>Désignation de l'objet</th>
+                <th>Emplacement actuel</th>
+                <th>Quantité en Réserve</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in produits_dormants %}
+            <tr>
+                <td><span class="ref-tag">{{ p.reference }}</span></td>
+                <td><strong>{{ p.objet }}</strong></td>
+                <td>{{ p.emplacement }}</td>
+                <td>{{ p.quantite }} unités</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #A0A69F; font-style: italic; padding: 30px;">Aucun produit dormant détecté dans les réserves sur cette période.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if inclure_graphiques %}
+    <script>
+        const ctxS = document.getElementById('repService').getContext('2d');
+        new Chart(ctxS, {
+            type: 'doughnut',
+            data: {
+                labels: {{ service_labels|safe }},
+                datasets: [{ 
+                    data: {{ service_data }}, 
+                    backgroundColor: ['#5E6D3E', '#495430', '#8C4A32', '#A0A69F', '#D0D6CE'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { title: { display: true, text: 'Consommation par Service (%)', color: '#2c351c', font: { weight: 'bold', size: 12 } } } 
+            }
+        });
+
+        const ctxC = document.getElementById('repCat').getContext('2d');
+        new Chart(ctxC, {
+            type: 'doughnut',
+            data: {
+                labels: {{ category_labels|safe }},
+                datasets: [{ 
+                    data: {{ category_data }}, 
+                    backgroundColor: ['#5E6D3E', '#8C4A32', '#A0A69F'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { title: { display: true, text: 'Répartition par Catégorie (%)', color: '#2c351c', font: { weight: 'bold', size: 12 } } } 
+            }
+        });
+    </script>
+    {% endif %}
+</body>
+</html>
