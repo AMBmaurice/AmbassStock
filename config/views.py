@@ -609,17 +609,18 @@ def executer_moteur_analyse(annee, mois):
         else:
             recommandations.append({"priorite": "Conseil", "action": "Planifier une commande de routine pour les articles sous le seuil."})
             
-    produits_sollicites = sorties_periode.values('objet', 'reference', 'produit__id').annotate(total_sorti=Sum('quantite')).order_by('-total_sorti')
+    # CORRECTION DU REGEMENT ICI : Utilisation de produit__reference au lieu de reference
+    produits_sollicites = sorties_periode.values('objet', 'produit__reference', 'produit__id').annotate(total_sorti=Sum('quantite')).order_by('-total_sorti')
     for ps in produits_sollicites[:3]:
         try:
             if ps.get('produit__id'):
                 prod_obj = produits_actifs.get(id=ps['produit__id'])
             else:
-                prod_obj = produits_actifs.get(reference=ps['reference'])
+                prod_obj = produits_actifs.get(reference=ps['produit__reference'])
                 
             if prod_obj.quantite <= prod_obj.quota_minimum:
                 observations.append(f"Anomalie détectée : La référence {prod_obj.objet} subit une forte demande ({ps['total_sorti']} unités sorties) mais son stock actuel est insuffisant.")
-                recommandations.append({"priorite": "Urgent", "action": f"Ajuster le quota minimum and sécuriser l'approvisionnement de : {prod_obj.objet}."})
+                recommandations.append({"priorite": "Urgent", "action": f"Ajuster le quota minimum et sécuriser l'approvisionnement de : {prod_obj.objet}."})
         except Produit.DoesNotExist:
             pass
 
