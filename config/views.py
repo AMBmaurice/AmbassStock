@@ -364,9 +364,9 @@ def page_inventaire(request):
     })
 
 def page_gestion_stocks(request): 
-    profil_actif = get_profil_actif(request.user)
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
+profil_actif = get_profil_actif(request.user)
+if not request.user.is_authenticated:
+    return redirect('/connexion/')
                     
     COMPTEURS_DEPART = {
         'ECR': 26, 'BUR': 52, 'PAP': 32, 'CLA': 40,
