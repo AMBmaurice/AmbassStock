@@ -1127,4 +1127,4 @@ def modifier_mouvement(request, mouvement_id):
         messages.success(request, "Le mouvement a été modifié avec succès.")
         return redirect('/historique/')
         
-    return render(request, 'modifier_mouvement.html', {'mouvement': movimiento})
+    return render(request, 'modifier_mouvement.html', {'mouvement': mouvement})
