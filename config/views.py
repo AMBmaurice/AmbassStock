@@ -375,35 +375,35 @@ def page_gestion_stocks(request):
                 
     if request.method == "POST":
         action_type = request.POST.get('action_type')
-            
+                    
         if action_type == "creation" or action_type == "creation_produit":
             categorie_nom = request.POST.get('categorie')
             objet_nom = request.POST.get('objet') or request.POST.get('nom')
     
             match = re.search(r'\((.*?)\)', categorie_nom)
             code_categorie = match.group(1).upper() if match else "GEN"
-        
+    
             depart_historique = COMPTEURS_DEPART.get(code_categorie, 0)
             nb_existants = Produit.objects.filter(categorie=categorie_nom).count()
         
             prochain_numero = depart_historique + nb_existants + 1
             suffixe_numerique = f"{prochain_numero:02d}"
-                
+        
             marque_brute = request.POST.get('marque') or request.POST.get('marque_texte') or "GEN"
             spec_brute = request.POST.get('specification') or request.POST.get('spec_texte') or "MAG"
-    
+
             def extraire_trigramme(texte):
                 if not texte: return "XXX"
                 clean = "".join(c for c in unicodedata.normalize('NFD', texte) if unicodedata.category(c) != 'Mn')
                 clean = re.sub(r'[^a-zA-Z0-9]', '', clean).upper()
                 return clean[:3].ljust(3, 'X') if len(clean) < 3 else clean[:3]
-                
+        
             code_marque = extraire_trigramme(marque_brute)
             code_spec = extraire_trigramme(spec_brute)
-            
+                
             reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
             quantite_initiale = int(request.POST.get('quantite') or request.POST.get('quantite_initiale') or 0)
-            
+                    
             nouveau_produit = Produit.objects.create(
                 reference=reference_finale,
                 objet=objet_nom,
@@ -412,33 +412,33 @@ def page_gestion_stocks(request):
                 quantite=quantite_initiale,
                 quota_minimum=int(request.POST.get('quota_minimum', 0))
             )
-        
+            
             if quantite_initiale > 0:
                 MouvementStock.objects.create(
                     type_mouvement='ENTREE',
                     objet=objet_nom,
-                    reference=reference_finale,
+                    # **Le champ reference a été retiré ici**
                     produit=nouveau_produit,
                     quantite=quantite_initiale,
                     service="Administration"
                 )
-            
+                
             messages.success(request, "Nouveau produit ajouté à l'inventaire")
             return redirect('/gestion-stocks/')
-
+        
         elif action_type == "mouvement_entree":
-            ref_produit = request.POST.get('produit')
+            ref_produit = request.POST.get('produit') 
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             
             try:
                 produit = Produit.objects.get(reference=ref_produit)
-                produit.quantite += quantite_ajoutee
+                produit.quantite += quantite_ajoutee 
                 produit.save()
                 
                 MouvementStock.objects.create(
                     type_mouvement='ENTREE',
-                    objet=produit.objet,
-                    reference=produit.reference,
+                    objet=produit.objet,   
+                    # **Le champ reference a été retiré ici**
                     produit=produit,
                     quantite=quantite_ajoutee,
                     service="Administration",
@@ -448,22 +448,22 @@ def page_gestion_stocks(request):
             except Produit.DoesNotExist:
                 pass
             return redirect('/gestion-stocks/')
-                
+                    
         elif action_type == "sortie":
-            ref_produit = request.POST.get('produit') 
+            ref_produit = request.POST.get('produit')
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = request.POST.get('service') or "Administration"
-            
+        
             try:
                 produit = Produit.objects.get(reference=ref_produit)
                 if produit.quantite >= quantite_retiree:
                     produit.quantite -= quantite_retiree
                     produit.save()
                 
-                    MouvementStock.objects.create(
+                    MouvementStock.objects.create(   
                         type_mouvement='SORTIE',
                         objet=produit.objet,
-                        reference=produit.reference,
+                        # **Le champ reference a été retiré ici**
                         produit=produit,
                         quantite=quantite_retiree,
                         service=service_demandeur,
@@ -473,10 +473,11 @@ def page_gestion_stocks(request):
             except Produit.DoesNotExist:
                 pass
             return redirect('/gestion-stocks/')
-
+            # **Le second return redirect en doublon a été supprimé ici**
+            
         elif action_type == "archivage_produit":
             ref_produit = request.POST.get('produit_a_archiver')
-            try:
+            try:    
                 produit = Produit.objects.get(reference=ref_produit)
                 produit.delete()
                 messages.success(request, "Produit supprimé")
@@ -486,8 +487,8 @@ def page_gestion_stocks(request):
                 
     liste_produits = Produit.objects.all().order_by('objet')
     aujourd_hui = date.today().strftime('%Y-%m-%d')
-        
-    return render(request, 'gestion_stocks.html', {   
+                    
+    return render(request, 'gestion_stocks.html', {
         'profil_actif': profil_actif,
         'produits': liste_produits,
         'date_du_jour': aujourd_hui
