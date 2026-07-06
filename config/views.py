@@ -40,21 +40,32 @@ def get_profil_actif(user):
         return None
 
 def page_connexion(request):
-    if request.user.is_authenticated:
+    if request.user.is_authenticated: 
         return redirect('/accueil/')
 
     if request.method == "POST":
         nom_utilisateur = request.POST.get('username')
+        if nom_utilisateur:
+            nom_utilisateur = nom_utilisateur.lower().strip()
+            
         mot_de_passe = request.POST.get('password')
 
         user = authenticate(request, username=nom_utilisateur, password=mot_de_passe)
-
+    
         if user is not None:
             login(request, user)
+            
+            # Sécurité : Création automatique du profil s'il n'existe pas dans la nouvelle base
+            from .models import Profil
+            Profil.objects.get_or_create(
+                user=user,
+                defaults={'role': 'Administrateur', 'nom_complet': user.username.capitalize()}
+            )
+            
             return redirect('/accueil/')
         else:
             return render(request, 'connexion.html', {'erreur': 'Identifiant ou mot de passe incorrect.'})
-
+            
     return render(request, 'connexion.html')
 
 def page_accueil(request):
