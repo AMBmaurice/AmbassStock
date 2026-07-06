@@ -46,7 +46,7 @@ def page_connexion(request):
     if request.method == "POST":
         nom_utilisateur = request.POST.get('username')
         if nom_utilisateur:
-            nom_utilisateur = nom_utilisateur.lower().strip()
+            nom_utilisateur = nom_utilisateur.strip()
             
         mot_de_passe = request.POST.get('password')
 
@@ -59,7 +59,6 @@ def page_connexion(request):
             return render(request, 'connexion.html', {'erreur': 'Identifiant ou mot de passe incorrect.'})
             
     return render(request, 'connexion.html')
-
 
 def page_accueil(request):
     if not request.user.is_authenticated:
