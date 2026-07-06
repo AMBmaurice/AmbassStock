@@ -72,9 +72,18 @@ def page_accueil(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
         
-    profil_actif = get_profil_actif(request.user)
-    
-    est_role_admin = request.user.is_superuser or (profil_actif and profil_actif.type_profil == 'admin')
+    try:
+        profil_actif = get_profil_actif(request.user)
+    except Exception:
+        profil_actif = None
+        
+    # Vérification ultra-sécurisée du rôle admin (gère les deux cas de champs possibles)
+    est_role_admin = request.user.is_superuser or (
+        profil_actif and (
+            getattr(profil_actif, 'type_profil', '') == 'admin' or 
+            getattr(profil_actif, 'role', '') == 'Administrateur'
+        )
+    )
     
     maintenant = timezone.now()
     jour_semaine = maintenant.weekday()
@@ -167,7 +176,7 @@ def page_accueil(request):
         'is_admin': est_role_admin,
         'demandes': DemandeService.objects.all().order_by('-id'),
         'produits_alerte': page_obj_alerte
-    })                    
+    })
 
 def page_inventaire(request):
     profil_actif = get_profil_actif(request.user)
