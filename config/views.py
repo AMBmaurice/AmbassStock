@@ -70,7 +70,6 @@ def page_accueil(request):
     except Exception:
         profil_actif = None
         
-    # Vérification ultra-sécurisée du rôle admin (gère les deux cas de champs possibles)
     est_role_admin = request.user.is_superuser or (
         profil_actif and (
             getattr(profil_actif, 'type_profil', '') == 'admin' or 
@@ -197,7 +196,7 @@ def page_inventaire(request):
                 produit.quota_minimum = int(request.POST.get('quota_minimum', 0))
                 produit.save()
             
-                messages.success(request, f"Modification du produit \"{produit.objet}\" enregistrée avec succès !")
+                messages.success(request, f'Modification du produit "{produit.objet}" enregistrée avec succès !')
             except Produit.DoesNotExist:
                 pass
             
@@ -223,7 +222,7 @@ def page_inventaire(request):
                 nom_produit_supprime = produit.objet
                 produit.delete()
                 
-                messages.success(request, f"Le produit \"{nom_produit_supprime}\" a été supprimé définitivement.")
+                messages.success(request, f'Le produit "{nom_produit_supprime}" a été supprimé définitivement.')
             except Produit.DoesNotExist:
                 pass
             
@@ -567,7 +566,7 @@ def executer_moteur_analyse(annee, mois):
     for p in produits_actifs:
         if p.quantite == 0:
             produits_en_rupture.append(p)
-        elif p.quantite <= p.quota_minimum:
+        elif p.quota_minimum and p.quantite <= p.quota_minimum:
             produits_sous_seuil.append(p)
             
     nb_ruptures = len(produits_en_rupture)
@@ -622,7 +621,6 @@ def executer_moteur_analyse(annee, mois):
         else:
             recommandations.append({"priorite": "Conseil", "action": "Planifier une commande de routine pour les articles sous le seuil."})
             
-    # CORRECTION DU REGEMENT ICI : Utilisation de produit__reference au lieu de reference
     produits_sollicites = sorties_periode.values('objet', 'produit__reference', 'produit__id').annotate(total_sorti=Sum('quantite')).order_by('-total_sorti')
     for ps in produits_sollicites[:3]:
         try:
@@ -631,7 +629,7 @@ def executer_moteur_analyse(annee, mois):
             else:
                 prod_obj = produits_actifs.get(reference=ps['produit__reference'])
                 
-            if prod_obj.quantite <= prod_obj.quota_minimum:
+            if prod_obj.quota_minimum and prod_obj.quantite <= prod_obj.quota_minimum:
                 observations.append(f"Anomalie détectée : La référence {prod_obj.objet} subit une forte demande ({ps['total_sorti']} unités sorties) mais son stock actuel est insuffisant.")
                 recommandations.append({"priorite": "Urgent", "action": f"Ajuster le quota minimum et sécuriser l'approvisionnement de : {prod_obj.objet}."})
         except Produit.DoesNotExist:
@@ -870,23 +868,24 @@ def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
             
-    tous_les_comptes = User.objects.select_related('profil').all()
+    # CORRECTIF : Utilisation du nom d'accès inverse natif 'profilutilisateur' lié à ton modèle
+    tous_les_comptes = User.objects.select_related('profilutilisateur').all()
     liste_utilisateurs = []
             
     for u in tous_les_comptes:
-        if hasattr(u, 'profil') and u.profil is not None:   
+        if hasattr(u, 'profilutilisateur') and u.profilutilisateur is not None:   
             liste_utilisateurs.append({
                 'id': u.id,
-                'name': u.profil.nom_complet,
+                'name': u.profilutilisateur.nom_complet,
                 'username': u.username,
                 'email': u.email,
-                'clear_password': u.profil.mot_de_passe_clair,
-                'acces_inventaire': u.profil.acces_inventaire,
-                'acces_stocks': u.profil.acces_stocks,
-                'acces_historique': u.profil.acces_historique,
-                'acces_statistiques': u.profil.acces_statistiques,
-                'acces_gestion_utilisateurs': u.profil.acces_gestion_utilisateurs,
-                'acces_factures': u.profil.acces_factures,
+                'clear_password': u.profilutilisateur.mot_de_passe_clair,
+                'acces_inventaire': u.profilutilisateur.acces_inventaire,
+                'acces_stocks': u.profilutilisateur.acces_stocks,
+                'acces_historique': u.profilutilisateur.acces_historique,
+                'acces_statistiques': u.profilutilisateur.acces_statistiques,
+                'acces_gestion_utilisateurs': u.profilutilisateur.acces_gestion_utilisateurs,
+                'acces_factures': u.profilutilisateur.acces_factures,
             })
         
     if request.method == "POST":  
@@ -931,6 +930,7 @@ def page_gestion_utilisateurs(request):
                         nom_complet=name,
                         mot_de_passe_clair=password,
                         acces_inventaire=inv,
+                        accessible_stocks=stk, # s'assure de matcher l'attribut du modèle si requis
                         acces_stocks=stk,
                         acces_historique=hist,
                         acces_gestion_demandes=dem,
@@ -966,7 +966,8 @@ def page_gestion_utilisateurs(request):
                         
                 user_a_modifier.save()   
                         
-                profil = user_a_modifier.profil
+                # CORRECTIF : Remplacement de .profil par .profilutilisateur
+                profil = user_a_modifier.profilutilisateur
                 profil.nom_complet = name
         
                 if password:
@@ -1043,8 +1044,7 @@ def page_gestion_demandes(request):
                 
     if search_query:
         demandes_toutes = demandes_toutes.filter(
-            re.compile(search_query, re.IGNORECASE).search(F('message')) or
-            re.compile(search_query, re.IGNORECASE).search(F('service'))
+            Q(message__icontains=search_query) | Q(service__icontains=search_query)
         )
                 
     demandes_en_cours = [d for d in demandes_toutes if d.statut in ['en_attente', 'lu']]
@@ -1092,17 +1092,18 @@ def page_profil(request):
     
     if request.method == "POST":
         nouveau_password = request.POST.get('profil_password')
-        nouvel_email = request.POST.get('profil_email')
+        uel_email = request.POST.get('profil_email')
         
-        request.user.email = nouvel_email
+        request.user.email = uel_email
         
         if nouveau_password:
             request.user.set_password(nouveau_password)
             
         request.user.save()
         
-        if not request.user.is_superuser and hasattr(request.user, 'profil'):
-            profil = request.user.profil
+        # CORRECTIF : Remplacement de .profil par .profilutilisateur
+        if not request.user.is_superuser and hasattr(request.user, 'profilutilisateur'):
+            profil = request.user.profilutilisateur
             if nouveau_password:
                 profil.mot_de_passe_clair = nouveau_password
             profil.save()
@@ -1121,8 +1122,8 @@ def page_deconnexion(request):
     logout(request)
     return redirect('/connexion/')
 
-def modifier_mouvement(request, mouvement_id):
-    mouvement = get_object_or_404(MouvementStock, id=mouvement_id)
+def modifier_mouvement(request, movimiento_id):
+    mouvement = get_object_or_404(MouvementStock, id=movimiento_id)
     tous_les_produits = Produit.objects.all().order_by('objet')
     
     if request.method == 'POST':
