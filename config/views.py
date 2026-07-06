@@ -54,19 +54,12 @@ def page_connexion(request):
     
         if user is not None:
             login(request, user)
-            
-            # Sécurité : Création automatique du profil s'il n'existe pas dans la nouvelle base
-            from .models import Profil
-            Profil.objects.get_or_create(
-                user=user,
-                defaults={'role': 'Administrateur', 'nom_complet': user.username.capitalize()}
-            )
-            
             return redirect('/accueil/')
         else:
             return render(request, 'connexion.html', {'erreur': 'Identifiant ou mot de passe incorrect.'})
             
     return render(request, 'connexion.html')
+
 
 def page_accueil(request):
     if not request.user.is_authenticated:
