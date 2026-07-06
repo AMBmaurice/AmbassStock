@@ -502,45 +502,49 @@ def page_gestion_stocks(request):
     })
 
 def page_historique(request):
-    profil_actif = get_profil_actif(request.user)
+    profil_actif = get_profil_actif(request.user) 
     if not request.user.is_authenticated:
         return redirect('/connexion/')
-    
+                    
     flux_entrees = MouvementStock.objects.filter(type_mouvement='ENTREE').order_by('-id')
     flux_sorties = MouvementStock.objects.filter(type_mouvement='SORTIE').order_by('-id')
-    
+            
     entree_debut = request.GET.get('entree_debut')
-    entree_fin = request.GET.get('entree_fin')
+    entree_fin = request.GET.get('entree_fin')  
     if entree_debut:
         flux_entrees = flux_entrees.filter(date_mouvement__gte=entree_debut)
     if entree_fin:
         flux_entrees = flux_entrees.filter(date_mouvement__lte=entree_fin)
-        
+                
     sortie_debut = request.GET.get('sortie_debut')
     sortie_fin = request.GET.get('sortie_fin')
     sortie_service = request.GET.get('sortie_service')
-    
+            
     if sortie_debut:
         flux_sorties = flux_sorties.filter(date_mouvement__gte=sortie_debut)
-    if sortie_fin:
+    if sortie_fin:  
         flux_sorties = flux_sorties.filter(date_mouvement__lte=sortie_fin)
     if sortie_service:
         flux_sorties = flux_sorties.filter(service=sortie_service)
         
-    for movimiento in flux_entrees:
-        if movimiento.produit:
-            movimiento.objet = movimiento.produit.objet
-            movimiento.reference = movimiento.produit.reference
-
-    for movimiento in flux_sorties:
-        if movimiento.produit:
-            movimiento.objet = movimiento.produit.objet
-            movimiento.reference = movimiento.produit.reference
+    # Sécurité absolue : On transforme en vraies listes pour figer les données dans la mémoire
+    liste_entrees = list(flux_entrees)
+    liste_sorties = list(flux_sorties)
         
-    return render(request, 'historique.html', {
+    for movimiento in liste_entrees:
+        if movimiento.produit:
+            movimiento.objet = movimiento.produit.objet
+            movimiento.reference = movimiento.produit.reference
+    
+    for movimiento in liste_sorties:   
+        if movimiento.produit:
+            movimiento.objet = movimiento.produit.objet
+            movimiento.reference = movimiento.produit.reference
+            
+    return render(request, 'historique.html', {   
         'profil_actif': profil_actif,
-        'entrees': flux_entrees,
-        'sorties': flux_sorties
+        'entrees': liste_entrees,
+        'sorties': liste_sorties
     })
 
 def executer_moteur_analyse(annee, mois):
