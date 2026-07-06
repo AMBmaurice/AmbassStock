@@ -27,8 +27,9 @@
 <body>
     <h1 id="siteTitle">AmbassStock</h1>
     <div class="login-container" id="loginContainer">
-        <form id="loginForm" method="POST" action="" onsubmit="event.preventDefault(); startFakeLoading();">
-            {% csrf_token %} <div class="input-group">
+        <form id="loginForm" method="POST" action="" onsubmit="startFakeLoading(event);">
+            {% csrf_token %} 
+            <div class="input-group">
                 <label for="username">Identifiant</label>
                 <div class="input-wrapper"><input type="text" id="username" name="username" placeholder="Entrez votre identifiant" required></div>
             </div>
@@ -54,7 +55,10 @@
             if (passwordInput.type === 'password') { passwordInput.type = 'text'; togglePasswordButton.textContent = 'Masquer'; }
             else { passwordInput.type = 'password'; togglePasswordButton.textContent = 'Voir'; }
         });
-        function startFakeLoading() {
+
+        function startFakeLoading(event) {
+            event.preventDefault();
+            
             const username = document.getElementById('username').value;
             const siteTitle = document.getElementById('siteTitle');
             const loginContainer = document.getElementById('loginContainer');
@@ -71,9 +75,8 @@
                 setTimeout(() => { loadingBox.style.opacity = '1'; }, 50);
             }, 400);
             
-            // CORRECTION : Au lieu de tricher avec un href, on valide pour de vrai le formulaire
             setTimeout(() => {
-                loginForm.submit(); 
+                HTMLFormElement.prototype.submit.call(loginForm);
             }, 2000);
         }
     </script>
