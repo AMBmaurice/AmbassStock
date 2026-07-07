@@ -578,4 +578,4 @@ def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
-    return render(request, 'utilisateurs.html', {'profil_actif': profil_actif})
+    return render(request, 'gestion_utilisateurs.html', {'profil_actif': profil_actif})
