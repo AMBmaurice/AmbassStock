@@ -550,11 +550,11 @@ def page_historique(request):
 @require_POST
 def supprimer_mouvement(request, mouvement_id):
     if not request.user.is_authenticated:
-        return redirect('/connexion/':)
+        return redirect('/connexion/')
     mouvement = get_object_or_404(MouvementStock, id=mouvement_id)
     mouvement.delete()
     messages.success(request, "Mouvement de test supprimé de l'historique.")
-    return redirect('/historique/':)
+    return redirect('/historique/')
 
 def executer_moteur_analyse(annee, mois):
     produits_actifs = Produit.objects.exclude(emplacement="Archivé")
