@@ -25,5 +25,6 @@ urlpatterns = [
     path('historique/', views.page_historique, name='historique'),
     path('historique', views.page_historique),
     
+    path('modifier-mouvement/<int:mouvement_id>/', views.page_historique, name='modifier_mouvement'),
     path('supprimer-mouvement/<int:mouvement_id>/', views.supprimer_mouvement, name='supprimer_mouvement'),
 ]
