@@ -66,8 +66,9 @@
         /* Message d'absence de données noir grisé homogène pour les deux sections */
         .empty-state { text-align: center; padding: 40px; color: #9A9F98; font-style: italic; font-size: 0.95rem; }
         
-        .btn-edit-flux { background-color: #5E6D3E; color: white; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: background 0.2s; }
+        .btn-edit-flux { background-color: #5E6D3E; color: white; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: background 0.2s; display: inline-block; }
         .btn-edit-flux:hover { background-color: #495430; }
+        **.btn-delete-flux { color: #C82333; background: none; border: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; margin-left: 10px; }**
     </style>
 </head>
 <body>
@@ -248,7 +249,11 @@ function toggleSidebar() {
                         <td style="font-weight: 600; color: #5E6D3E;">+{{ entry.quantite }}</td>
                         <td>{{ entry.date_mouvement }}</td>
                         <td>
-                            <a href="/historique/modifier/{{ entry.id }}/" class="btn-edit-flux">Modifier</a>
+                            <a href="{% url 'modifier_mouvement' entry.id %}" class="btn-edit-flux">Modifier</a>
+                            <form action="{% url 'supprimer_mouvement' entry.id %}" method="POST" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-delete-flux" onclick="return confirm('Supprimer ce mouvement de test ?');">Supprimer</button>
+                            </form>
                         </td>
                     </tr>
                     {% empty %}
@@ -353,7 +358,11 @@ function toggleSidebar() {
                                 <td style="color: #8C4A32; font-weight: 600;">-{{ out.quantite }}</td>
                                 <td>{{ out.date_mouvement }}</td>
                                 <td>
-                                    <a href="/historique/modifier/{{ out.id }}/" class="btn-edit-flux">Modifier</a>
+                                    **<a href="{% url 'modifier_mouvement' out.id %}" class="btn-edit-flux">Modifier</a>**
+                                    **<form action="{% url 'supprimer_mouvement' out.id %}" method="POST" style="display:inline;">**
+                                        **{% csrf_token %}**
+                                        **<button type="submit" class="btn-delete-flux" onclick="return confirm('Supprimer ce mouvement de test ?');">Supprimer</button>**
+                                    **</form>**
                                 </td>
                             </tr>
                             {% endfor %}
@@ -373,16 +382,16 @@ function toggleSidebar() {
             const menu = document.getElementById(id);
             const btn = menu.parentElement.querySelector('.custom-dropdown-btn');
             const isOpen = menu.style.display === 'block';
-                            
+                                        
             document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.style.display = 'none');
             document.querySelectorAll('.custom-dropdown-btn').forEach(b => b.classList.remove('open'));
-                            
+                                        
             if (!isOpen) {
                 menu.style.display = 'block';
                 btn.classList.add('open');
             }
         }
-                            
+                                    
         function selectFilterOption(panel, value, label) {
             document.getElementById('inputFiltre' + panel).value = value;
             

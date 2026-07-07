@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db.models import F, Sum, Count, Q
 from django.contrib import messages
+from django.views.decorators.http import require_POST
 
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -527,7 +528,6 @@ def page_historique(request):
     if sortie_service:
         flux_sorties = flux_sorties.filter(service=sortie_service)
         
-    # Sécurité absolue : On transforme en vraies listes pour figer les données dans la mémoire
     liste_entrees = list(flux_entrees)
     liste_sorties = list(flux_sorties)
         
@@ -546,6 +546,15 @@ def page_historique(request):
         'entrees': liste_entrees,
         'sorties': liste_sorties
     })
+
+@require_POST
+def supprimer_mouvement(request, mouvement_id):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/':)
+    mouvement = get_object_or_404(MouvementStock, id=mouvement_id)
+    mouvement.delete()
+    messages.success(request, "Mouvement de test supprimé de l'historique.")
+    return redirect('/historique/':)
 
 def executer_moteur_analyse(annee, mois):
     produits_actifs = Produit.objects.exclude(emplacement="Archivé")
