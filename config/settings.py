@@ -1,4 +1,3 @@
-cat << 'EOF' > config/settings.py
 import os
 from pathlib import Path
 import dj_database_url
@@ -81,4 +80,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@ambassstock.local'
-EOF
