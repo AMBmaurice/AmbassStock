@@ -6,7 +6,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.page_connexion, name='connexion'),
     path('connexion/', views.page_connexion, name='connexion'),
-    **path('deconnexion/', views.page_connexion, name='deconnexion'),**
+    path('deconnexion/', views.page_connexion, name='deconnexion'),
     path('accueil/', views.page_accueil, name='accueil'),
     path('inventaire/', views.page_inventaire, name='inventaire'),
     path('gestion-stocks/', views.page_gestion_stocks, name='gestion_stocks'),
