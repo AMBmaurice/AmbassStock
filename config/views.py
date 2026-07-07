@@ -384,7 +384,7 @@ def page_gestion_stocks(request):
         'ECR': 26, 'BUR': 52, 'PAP': 32, 'CLA': 40,
         'CON': 35, 'INF': 17, 'ENV': 32, 'EQU': 18
     }
-                
+                    
     if request.method == "POST":
         action_type = request.POST.get('action_type')
                     
@@ -547,8 +547,6 @@ def page_historique(request):
         'sorties': liste_sorties
     })
 
-
-
 @require_POST
 def supprimer_mouvement(request, mouvement_id):
     if not request.user.is_authenticated:
@@ -557,3 +555,27 @@ def supprimer_mouvement(request, mouvement_id):
     mouvement.delete()
     messages.success(request, "Mouvement de test supprimé de l'historique.")
     return redirect('/historique/')
+
+def page_statistiques(request):
+ if not request.user.is_authenticated:
+ return redirect('/connexion/')
+ profil_actif = get_profil_actif(request.user)
+ return render(request, 'statistiques.html', {'profil_actif': profil_actif})
+
+def page_factures(request):
+ if not request.user.is_authenticated:
+ return redirect('/connexion/')
+ profil_actif = get_profil_actif(request.user)
+ return render(request, 'factures.html', {'profil_actif': profil_actif})
+
+def page_gestion_demandes(request):
+ if not request.user.is_authenticated:
+ return redirect('/connexion/')
+ profil_actif = get_profil_actif(request.user)
+ return render(request, 'demandes.html', {'profil_actif': profil_actif})
+
+def page_gestion_utilisateurs(request):
+ if not request.user.is_authenticated:
+ return redirect('/connexion/')
+ profil_actif = get_profil_actif(request.user)
+ return render(request, 'utilisateurs.html', {'profil_actif': profil_actif})
