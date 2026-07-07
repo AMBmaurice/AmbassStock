@@ -557,25 +557,25 @@ def supprimer_mouvement(request, mouvement_id):
     return redirect('/historique/')
 
 def page_statistiques(request):
- if not request.user.is_authenticated:
- return redirect('/connexion/')
- profil_actif = get_profil_actif(request.user)
- return render(request, 'statistiques.html', {'profil_actif': profil_actif})
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+    return render(request, 'statistiques.html', {'profil_actif': profil_actif})
 
 def page_factures(request):
- if not request.user.is_authenticated:
- return redirect('/connexion/')
- profil_actif = get_profil_actif(request.user)
- return render(request, 'factures.html', {'profil_actif': profil_actif})
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+    return render(request, 'factures.html', {'profil_actif': profil_actif})
 
 def page_gestion_demandes(request):
- if not request.user.is_authenticated:
- return redirect('/connexion/')
- profil_actif = get_profil_actif(request.user)
- return render(request, 'demandes.html', {'profil_actif': profil_actif})
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+    return render(request, 'demandes.html', {'profil_actif': profil_actif})
 
 def page_gestion_utilisateurs(request):
- if not request.user.is_authenticated:
- return redirect('/connexion/')
- profil_actif = get_profil_actif(request.user)
- return render(request, 'utilisateurs.html', {'profil_actif': profil_actif})
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+    return render(request, 'utilisateurs.html', {'profil_actif': profil_actif})
