@@ -24,10 +24,12 @@ urlpatterns = [
     path('gestion-stocks/', page_gestion_stocks, name='gestion_stocks'),
     path('historique/', page_historique, name='historique'),
     path('historique/modifier/<int:mouvement_id>/', modifier_mouvement, name='modifier_mouvement'),
+    path('historique/supprimer/<int:mouvement_id>/', supprimer_mouvement, name='supprimer_mouvement'),
     path('statistiques/', page_statistiques, name='statistiques'),
     path('gestion-utilisateurs/', page_gestion_utilisateurs, name='gestion_utilisateurs'),
     path('gestion-demandes/', page_gestion_demandes, name='gestion_demandes'),
     path('factures/', page_factures, name='factures'),
     path('mon-profil/', page_profil, name='page_profil'),
     path('deconnexion/', page_deconnexion, name='deconnexion'),
+
 ]
