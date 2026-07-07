@@ -1,20 +1,16 @@
+cat << 'EOF' > config/settings.py
 import os
 from pathlib import Path
 import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# Récupère la clé depuis l'environnement Render, sinon prend la clé locale par défaut
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-_9r&5hdo!!k(*@-*0#nrg-qrg2vzt%smr-(#kuj(=_rwuhdm=j')
 
 DEBUG = True
 
-# MODIFICATION : Autoriser localhost pour tes tests et ton adresse URL Render exacte
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'ambassstock.onrender.com', '.onrender.com']
 
-# Application definition 
 INSTALLED_APPS = [
     'config',
     'django.contrib.admin',
@@ -56,7 +52,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database - Connexion persistante Supabase (PostgreSQL) sur Render, se rabat sur SQLite en local
 DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -64,7 +59,6 @@ DATABASES = {
     )
 }
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -72,23 +66,19 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization - CORRIGÉ POUR LE FRANÇAIS
 LANGUAGE_CODE = 'fr-fr'
 TIME_ZONE = 'Europe/Paris'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# Configuration de stockage pour la production sur Render
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# EMAIL CONFIGURATION (Mode console pour tester les rapports sans envoyer de vrais emails)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@ambassstock.local'
+EOF
