@@ -6,7 +6,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.page_connexion, name='connexion'),
     path('connexion/', views.page_connexion, name='connexion'),
-    path('deconnexion/', views.page_connexion, name='deconnexion'),
+    path('deconnexion/', views.page_deconnexion, name='deconnexion'),
     path('accueil/', views.page_accueil, name='accueil'),
     
     # Liens connectés aux vraies fonctions dédiées
