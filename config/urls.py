@@ -9,13 +9,15 @@ urlpatterns = [
     path('deconnexion/', views.page_connexion, name='deconnexion'),
     path('accueil/', views.page_accueil, name='accueil'),
     
-    # Redirections de sécurité pour éviter les erreurs 404 sur les pages non configurées
+    # Redirections de sécurité temporaires vers l'accueil (évite les 404)
     path('statistiques/', views.page_accueil, name='statistiques'),
-    path('demandes/', views.page_accueil, name='gestion_demandes'),
     path('factures/', views.page_accueil, name='factures'),
-    path('utilisateurs/', views.page_accueil, name='gestion_utilisateurs'),
     
-    # Routes actives de l'application
+    # Alignement exact avec les chemins de tes boutons (gestion-demandes/ et gestion-utilisateurs/)
+    path('gestion-demandes/', views.page_accueil, name='gestion_demandes'),
+    path('gestion-utilisateurs/', views.page_accueil, name='gestion_utilisateurs'),
+    
+    # Routes actives de ton application AmbassStock
     path('inventaire/', views.page_inventaire, name='inventaire'),
     path('inventaire', views.page_inventaire),
     
