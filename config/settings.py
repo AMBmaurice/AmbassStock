@@ -1,4 +1,4 @@
- import os
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,11 +54,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', 'postgres'),
-        'USER': os.environ.get('DB_USER', 'postgres'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'VOTRE_MOT_DE_PASSE_SUPABASE'),
-        'HOST': os.environ.get('DB_HOST', 'db.votre-id-projet.supabase.co'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'VOTRE_MOT_DE_PASSE_SUPABASE',
+        'HOST': 'db.votre-id-projet.supabase.co',
+        'PORT': '5432',
     }
 }
 
