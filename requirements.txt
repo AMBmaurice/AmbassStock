@@ -65,3 +65,4 @@ urllib3==1.26.20
 websockets==15.0.1
 whitenoise==6.11.0
 yarl==1.22.0
+psycopg2-binary>=2.9.0
