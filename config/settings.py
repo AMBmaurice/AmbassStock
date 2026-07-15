@@ -1,4 +1,4 @@
-import os
+ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -50,11 +50,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Configuration standard sans dj_database_url
+# Configuration de la base de données PostgreSQL dans le Cloud (Supabase)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'postgres'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'VOTRE_MOT_DE_PASSE_SUPABASE'),
+        'HOST': os.environ.get('DB_HOST', 'db.votre-id-projet.supabase.co'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
