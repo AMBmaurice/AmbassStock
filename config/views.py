@@ -18,6 +18,9 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from django.http import HttpResponse
+from .models import Produit
+
 
 from .models import Produit, ProfilUtilisateur, DeclarationHebdomadaire, DemandeService, Facture, MouvementStock
 
@@ -593,3 +596,16 @@ def page_deconnexion(request):
     logout(request)
     messages.success(request, "Vous avez été déconnecté avec succès.")
     return redirect('/connexion/')
+
+def test_database(request):
+    produit = Produit.objects.create(
+        reference="TEST123",
+        objet="Test",
+        categorie="Test",
+        quantite=1,
+        emplacement="Test"
+    )
+
+    return HttpResponse(
+        f"Produit créé avec l'ID {produit.id}"
+    )
