@@ -4,9 +4,15 @@ from django.contrib.auth.models import User
 from datetime import timedelta
 
 class Produit(models.Model):
-    reference = models.CharField(max_length=100, unique=True)
-    objet = models.CharField(max_length=200)
-    quantite = models.IntegerField(default=0)
+    reference = models.CharField(
+    max_length=100,
+    unique=True,
+    db_index=True
+)
+    objet = models.CharField(
+    max_length=200,
+    db_index=True
+)    quantite = models.IntegerField(default=0)
     categorie = models.CharField(max_length=100)
     emplacement = models.CharField(max_length=100, blank=True, null=True)
 
@@ -35,6 +41,9 @@ class Produit(models.Model):
         # TOUT EST VERT
         else:
             return 'green'
+
+class Meta:
+    ordering = ["objet"]
 
 class ProfilUtilisateur(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profil')
