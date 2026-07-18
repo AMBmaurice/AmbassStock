@@ -50,15 +50,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Configuration de la base de données PostgreSQL dans le Cloud (Supabase)
+# Configuration de la base de données PostgreSQL dans le Cloud (Supabase) avec IPv4 Pooler
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'gFkgjX2K8qZ8P4EK',
-        'HOST': 'db.thdejgdwiatuhlrzlhxh.supabase.co',
-        'PORT': '5432',
+        'HOST': 'aws-0-eu-central-1.pooler.supabase.com',
+        'PORT': '6543',
     }
 }
 
