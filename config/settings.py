@@ -61,6 +61,7 @@ DATABASES = {
         "CONN_MAX_AGE": 600,
         "OPTIONS": {
             "sslmode": "require",
+        }
     }
 }
 
