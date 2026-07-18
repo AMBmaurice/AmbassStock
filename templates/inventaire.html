@@ -190,7 +190,7 @@
                     class="search-input" 
                     placeholder="Rechercher un produit (Ex: trombone)..." 
                     style="width: 100%; height: 46px; padding: 0 18px; border-radius: 12px; border: 1px solid rgba(73, 84, 48, 0.3); background: #FAFBF9; font-size: 1.05rem; font-weight: 500; color: #2c351c;"
-                    oninput="filtrerInventaireLocalement()">
+                    **oninput="filtrerToutInventaireFlou()">**
             </div>
         </div>
             
@@ -220,8 +220,9 @@
     </div>
             
     <div class="inventory-list" id="inventoryList" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <!-- Conserver les éléments initiaux de la page Django pour le premier chargement -->
         {% for produit in page_obj %}
-        <div class="inventory-card" id="card-{{ produit.reference }}" data-status="{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum }}')">
+        <div class="inventory-card django-card" id="card-{{ produit.reference }}" data-status="{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum }}')">
             <div class="card-details">
                 <span class="product-ref">{{ produit.reference }}</span>
                 <span class="product-name" id="name-{{ produit.reference }}">{{ produit.objet }}</span>
@@ -229,9 +230,9 @@
             <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" id="dot-{{ produit.reference }}"></div>
         </div>
         {% empty %}
-        <p style="text-align: center; color: #777777; font-style: italic; padding: 20px; width: 100%;">Aucun produit trouvé dans l'inventaire.</p>
+        <p id="emptyDjangoMsg" style="text-align: center; color: #777777; font-style: italic; padding: 20px; width: 100%;">Aucun produit trouvé dans l'inventaire.</p>
         {% endfor %}
-        <p id="noLocalResult" style="text-align: center; color: #777777; font-style: italic; padding: 20px; width: 100%; display: none;">Aucun produit ne correspond à votre recherche locale.</p>
+        <p id="noLocalResult" style="text-align: center; color: #777777; font-style: italic; padding: 20px; width: 100%; display: none;">Aucun produit ne correspond à votre recherche globale.</p>
     </div>
 
     <div class="pagination" id="inventoryPagination" style="display: flex; justify-content: center; gap: 10px; margin-top: 40px; width: 100%;">
@@ -252,9 +253,9 @@
         <button class="modal-close" onclick="closeProductDetails()">✕</button>
         
         <div class="modal-header-nav">
-            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(-1)">→</button>
+            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(-1)">←</button>
             <h3 class="modal-title" style="margin-bottom: 0;">Détail produit</h3>
-            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(1)">←</button>
+            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(1)">→</button>
         </div>
                 
         <form id="editForm" method="POST" action="">
@@ -351,34 +352,100 @@
         }
     }
 
-    function filtrerInventaireLocalement() {
-        const terme = document.getElementById('searchInput').value.toLowerCase().trim();
-        const cards = document.querySelectorAll('.inventory-card');
+    // Algorithme de recherche floue (Distance de Levenshtein simplifiée + Inclusion)
+    function verifierMatchFlou(texteBase, recherche) {
+        texteBase = texteBase.toLowerCase();
+        recherche = recherche.toLowerCase();
+        
+        if (texteBase.includes(recherche)) return true;
+        
+        // Si le mot recherché fait plus de 3 lettres, on tolère de légères erreurs de frappe (Sheba)
+        if (recherche.length > 3) {
+            let fautesTolerees = recherche.length > 6 ? 2 : 1;
+            let distance = 0;
+            let i = 0, j = 0;
+            
+            // Vérification basique par similarité de sous-chaîne proche
+            for (let k = 0; k <= texteBase.length - recherche.length; k++) {
+                let sousTexte = texteBase.substr(k, recherche.length);
+                let differences = 0;
+                for (let m = 0; m < recherche.length; m++) {
+                    if (sousTexte[m] !== recherche[m]) differences++;
+                }
+                if (differences <= fautesTolerees) return true;
+            }
+        }
+        return false;
+    }
+
+    function filtrerToutInventaireFlou() {
+        const terme = document.getElementById('searchInput').value.trim();
+        const container = document.getElementById('inventoryList');
         const pagination = document.getElementById('inventoryPagination');
         const noResultMsg = document.getElementById('noLocalResult');
+        
+        // 1. Si la barre de recherche est vide, on réaffiche les éléments de la page Django courante
+        if (terme === '') {
+            const djangoCards = document.querySelectorAll('.django-card');
+            djangoCards.forEach(card => card.style.display = 'flex');
+            
+            // Supprimer les cartes temporaires globales
+            const tempCards = document.querySelectorAll('.temp-global-card');
+            tempCards.forEach(card => card.remove());
+            
+            if (pagination) pagination.style.display = 'flex';
+            noResultMsg.style.display = 'none';
+            return;
+        }
+
+        // 2. Si on tape une recherche, on cache les cartes Django et on cherche dans le tableau global
+        const djangoCards = document.querySelectorAll('.django-card');
+        djangoCards.forEach(card => card.style.display = 'none');
+        
+        // Nettoyer les anciennes cartes temporaires de la recherche précédente
+        const oldTempCards = document.querySelectorAll('.temp-global-card');
+        oldTempCards.forEach(card => card.remove());
+        
+        if (pagination) pagination.style.display = 'none';
+        
         let trouve = 0;
 
-        cards.forEach(card => {
-            const refText = card.querySelector('.product-ref').textContent.toLowerCase();
-            const nameText = card.querySelector('.product-name').textContent.toLowerCase();
-
-            if (refText.includes(terme) || nameText.includes(terme)) {
-                card.style.display = 'flex';
+        fullInventory.forEach(produit => {
+            if (verifierMatchFlou(produit.nom, terme) || verifierMatchFlou(produit.reference, terme) || verifierMatchFlou(produit.categorie, terme)) {
                 trouve++;
-            } else {
-                card.style.display = 'none';
+                
+                // Calcul du statut de couleur pour la pastille
+                let stockInt = parseInt(produit.stock) || 0;
+                let quotaInt = parseInt(produit.quota) || 0;
+                let colorClass = 'green';
+                if (produit.quota !== '') {
+                    if (stockInt <= quotaInt) colorClass = 'red';
+                    else if (stockInt <= quotaInt + 10) colorClass = 'yellow';
+                }
+
+                // Création dynamique de la carte de l'article
+                const newCard = document.createElement('div');
+                newCard.className = 'inventory-card temp-global-card';
+                newCard.id = `card-${produit.reference}`;
+                newCard.innerHTML = `
+                    <div class="card-details">
+                        <span class="product-ref">${produit.reference}</span>
+                        <span class="product-name">${produit.nom}</span>
+                    </div>
+                    <div class="status-dot status-${colorClass}"></div>
+                `;
+                
+                // Lier l'événement click pour ouvrir la modale comme le fait Django
+                .onclick = () => openProductDetails(produit.id, produit.reference, produit.nom, produit.categorie, produit.stock, produit.emplacement, produit.quota);
+                
+                container.appendChild(newCard);
             }
         });
 
-        if (terme !== '') {
-            if (pagination) pagination.style.display = 'none';
-            if (trouve === 0) {
-                noResultMsg.style.display = 'block';
-            } else {
-                noResultMsg.style.display = 'none';
-            }
+        // Gestion du message "Aucun produit trouvé"
+        if (trouve === 0) {
+            noResultMsg.style.display = 'block';
         } else {
-            if (pagination) pagination.style.display = 'flex';
             noResultMsg.style.display = 'none';
         }
     }
