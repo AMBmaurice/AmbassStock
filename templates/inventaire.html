@@ -52,6 +52,7 @@
         .modal-close { position: absolute; top: 30px; right: 30px; background: none; border: none; font-size: 1.3rem; cursor: pointer; }
         .modal-title { font-size: 2.2rem; font-weight: 600; color: #2c351c; margin-bottom: 35px; }  
         .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); row-gap: 28px; column-gap: 40px; background-color: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 16px; padding: 35px 40px; margin-bottom: 30px; }
+        .details-item { display: flex; flex-direction: column; gap: 8px; }
         .detail-item { display: flex; flex-direction: column; gap: 8px; }
         .detail-label { font-size: 0.88rem; color: #7A8278; font-weight: 500; text-transform: uppercase; }
             
@@ -181,21 +182,17 @@
     </div>
     
     <div class="search-filter-bar" style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 35px; width: 100%;">
-        <form method="GET" action="/inventaire/" id="searchForm" style="flex-grow: 1; max-width: 500px; margin: 0; padding: 0;">
-            {% if statut_filtre and statut_filtre != 'all' %}<input type="hidden" name="statut" value="{{ statut_filtre }}">{% endif %}
-            {% if tri_filtre %}<input type="hidden" name="tri" value="{{ tri_filtre }}">{% endif %}
+        <div style="flex-grow: 1; max-width: 500px; margin: 0; padding: 0;">
             <div class="search-wrapper" style="width: 100%;">
                 <input 
                     type="text" 
                     id="searchInput" 
-                    name="q"
                     class="search-input" 
                     placeholder="Rechercher un produit (Ex: trombone)..." 
-                    value="{{ recherche_term }}"
-                    style="width: 100%; height: 42px; padding: 0 15px; border-radius: 12px; border: 1px solid rgba(73, 84, 48, 0.2); background: #FAFBF9;"
-                    oninput="soumettreRechercheAutomatique()">
+                    style="width: 100%; height: 46px; padding: 0 18px; border-radius: 12px; border: 1px solid rgba(73, 84, 48, 0.3); background: #FAFBF9; font-size: 1.05rem; font-weight: 500; color: #2c351c;"
+                    oninput="filtrerInventaireLocalement()">
             </div>
-        </form>
+        </div>
             
         <div class="filter-buttons-group" style="display: flex; gap: 8px; flex-shrink: 0; align-items: center;">
             <a href="?{% if recherche_term %}q={{ recherche_term }}&{% endif %}{% if tri_filtre %}tri={{ tri_filtre }}&{% endif %}statut=all" class="sidebar-link-btn">
@@ -234,9 +231,10 @@
         {% empty %}
         <p style="text-align: center; color: #777777; font-style: italic; padding: 20px; width: 100%;">Aucun produit trouvé dans l'inventaire.</p>
         {% endfor %}
+        <p id="noLocalResult" style="text-align: center; color: #777777; font-style: italic; padding: 20px; width: 100%; display: none;">Aucun produit ne correspond à votre recherche locale.</p>
     </div>
 
-    <div class="pagination" style="display: flex; justify-content: center; gap: 10px; margin-top: 40px; width: 100%;">
+    <div class="pagination" id="inventoryPagination" style="display: flex; justify-content: center; gap: 10px; margin-top: 40px; width: 100%;">
         {% if page_obj.has_previous %}
             <a href="?page=1{% if recherche_term %}&q={{ recherche_term }}{% endif %}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}{% if tri_filtre %}&tri={{ tri_filtre }}{% endif %}">&laquo; Début</a>
             <a href="?page={{ page_obj.previous_page_number }}{% if recherche_term %}&q={{ recherche_term }}{% endif %}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}{% if tri_filtre %}&tri={{ tri_filtre }}{% endif %}">Précédent</a>
@@ -254,9 +252,9 @@
         <button class="modal-close" onclick="closeProductDetails()">✕</button>
         
         <div class="modal-header-nav">
-            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(-1)">◀</button>
+            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(-1)">→</button>
             <h3 class="modal-title" style="margin-bottom: 0;">Détail produit</h3>
-            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(1)">▶</button>
+            <button type="button" class="btn-nav-arrow" onclick="navigateToProduct(1)">←</button>
         </div>
                 
         <form id="editForm" method="POST" action="">
@@ -353,21 +351,42 @@
         }
     }
 
-    let searchTimeout;
-    function soumettreRechercheAutomatique() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            document.getElementById('searchForm').submit();
-        }, 400);
+    function filtrerInventaireLocalement() {
+        const terme = document.getElementById('searchInput').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.inventory-card');
+        const pagination = document.getElementById('inventoryPagination');
+        const noResultMsg = document.getElementById('noLocalResult');
+        let trouve = 0;
+
+        cards.forEach(card => {
+            const refText = card.querySelector('.product-ref').textContent.toLowerCase();
+            const nameText = card.querySelector('.product-name').textContent.toLowerCase();
+
+            if (refText.includes(terme) || nameText.includes(terme)) {
+                card.style.display = 'flex';
+                trouve++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (terme !== '') {
+            if (pagination) pagination.style.display = 'none';
+            if (trouve === 0) {
+                noResultMsg.style.display = 'block';
+            } else {
+                noResultMsg.style.display = 'none';
+            }
+        } else {
+            if (pagination) pagination.style.display = 'flex';
+            noResultMsg.style.display = 'none';
+        }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
         const input = document.getElementById('searchInput');
-        if (input && input.value !== '') {
+        if (input) {
             input.focus();
-            const val = input.value;
-            input.value = '';
-            input.value = val;
         }
     });
 
