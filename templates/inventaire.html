@@ -23,10 +23,8 @@
         .btn-filter { padding: 8px 16px; border: 1px solid #D0D6CE; background: #ffffff; border-radius: 20px; font-size: 0.85rem; cursor: pointer; color: #333333; transition: all 0.2s; }
         .btn-filter.active { background-color: #495430; color: #ffffff; border-color: #495430; }
         
-        /* Zone d'action au-dessus des filtres */
         .action-header-bar { display: flex; justify-content: flex-end; margin-bottom: 15px; width: 100%; }
         
-        /* Style personnalisé du bouton de téléchargement du PDF inventaire en harmonie avec le style global */
         .btn-pdf-export { height: 42px; padding: 0 18px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, transform 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; box-shadow: 0 4px 10px rgba(94, 109, 98, 0.15); }
         .btn-pdf-export:hover { background-color: #495430; transform: translateY(-1px); }
 
@@ -46,13 +44,11 @@
         .pagination a, .pagination span { padding: 10px 16px; border: 1px solid #E0E4DE; border-radius: 8px; text-decoration: none; color: #495430; background: white; }
         .pagination .current { background: #495430; color: white; }
             
-        /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(12px); z-index: 1000; justify-content: center; align-items: center; }
         .modal-box { background: #ffffff; border: 1px solid #E2E6E1; width: 100%; max-width: 780px; border-radius: 24px; padding: 50px; position: relative; }
         .modal-close { position: absolute; top: 30px; right: 30px; background: none; border: none; font-size: 1.3rem; cursor: pointer; }
         .modal-title { font-size: 2.2rem; font-weight: 600; color: #2c351c; margin-bottom: 35px; }  
         .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); row-gap: 28px; column-gap: 40px; background-color: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 16px; padding: 35px 40px; margin-bottom: 30px; }
-        .details-item { display: flex; flex-direction: column; gap: 8px; }
         .detail-item { display: flex; flex-direction: column; gap: 8px; }
         .detail-label { font-size: 0.88rem; color: #7A8278; font-weight: 500; text-transform: uppercase; }
             
@@ -67,7 +63,6 @@
         .btn-delete:hover { background-color: #FDF8F6; border-color: #8C4A32; }
         .hint-warning { background-color: #FFF8E7; border: 1px solid #FFE7B3; border-radius: 12px; padding: 18px 24px; display: flex; gap: 14px; color: #B37400; font-size: 0.92rem; }
 
-        /* Style spécifique pour la zone des flèches */
         .modal-header-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 35px; }
         .btn-nav-arrow { background: #FAFBF9; border: 1px solid #E2E6E1; color: #495430; width: 44px; height: 44px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; user-select: none; }
         .btn-nav-arrow:hover { background: #5E6D3E; color: white; border-color: #5E6D3E; }
@@ -220,7 +215,6 @@
     </div>
             
     <div class="inventory-list" id="inventoryList" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-        <!-- Conserver les éléments initiaux de la page Django pour le premier chargement -->
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}" data-status="{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum }}')">
             <div class="card-details">
@@ -352,20 +346,14 @@
         }
     }
 
-    // Algorithme de recherche floue (Distance de Levenshtein simplifiée + Inclusion)
     function verifierMatchFlou(texteBase, recherche) {
         texteBase = texteBase.toLowerCase();
         recherche = recherche.toLowerCase();
         
         if (texteBase.includes(recherche)) return true;
         
-        // Si le mot recherché fait plus de 3 lettres, on tolère de légères erreurs de frappe (Sheba)
         if (recherche.length > 3) {
             let fautesTolerees = recherche.length > 6 ? 2 : 1;
-            let distance = 0;
-            let i = 0, j = 0;
-            
-            // Vérification basique par similarité de sous-chaîne proche
             for (let k = 0; k <= texteBase.length - recherche.length; k++) {
                 let sousTexte = texteBase.substr(k, recherche.length);
                 let differences = 0;
@@ -384,12 +372,10 @@
         const pagination = document.getElementById('inventoryPagination');
         const noResultMsg = document.getElementById('noLocalResult');
         
-        // 1. Si la barre de recherche est vide, on réaffiche les éléments de la page Django courante
         if (terme === '') {
             const djangoCards = document.querySelectorAll('.django-card');
             djangoCards.forEach(card => card.style.display = 'flex');
             
-            // Supprimer les cartes temporaires globales
             const tempCards = document.querySelectorAll('.temp-global-card');
             tempCards.forEach(card => card.remove());
             
@@ -398,11 +384,9 @@
             return;
         }
 
-        // 2. Si on tape une recherche, on cache les cartes Django et on cherche dans le tableau global
         const djangoCards = document.querySelectorAll('.django-card');
         djangoCards.forEach(card => card.style.display = 'none');
         
-        // Nettoyer les anciennes cartes temporaires de la recherche précédente
         const oldTempCards = document.querySelectorAll('.temp-global-card');
         oldTempCards.forEach(card => card.remove());
         
@@ -414,7 +398,6 @@
             if (verifierMatchFlou(produit.nom, terme) || verifierMatchFlou(produit.reference, terme) || verifierMatchFlou(produit.categorie, terme)) {
                 trouve++;
                 
-                // Calcul du statut de couleur pour la pastille
                 let stockInt = parseInt(produit.stock) || 0;
                 let quotaInt = parseInt(produit.quota) || 0;
                 let colorClass = 'green';
@@ -423,7 +406,6 @@
                     else if (stockInt <= quotaInt + 10) colorClass = 'yellow';
                 }
 
-                // Création dynamique de la carte de l'article
                 const newCard = document.createElement('div');
                 newCard.className = 'inventory-card temp-global-card';
                 newCard.id = `card-${produit.reference}`;
@@ -435,14 +417,15 @@
                     <div class="status-dot status-${colorClass}"></div>
                 `;
                 
-                // Lier l'événement click pour ouvrir la modale comme le fait Django
-                .onclick = () => openProductDetails(produit.id, produit.reference, produit.nom, produit.categorie, produit.stock, produit.emplacement, produit.quota);
+                // Correction critique pour l'ouverture propre de la modale
+                newCard.addEventListener('click', function() {
+                    openProductDetails(produit.id, produit.reference, produit.nom, produit.categorie, produit.stock, produit.emplacement, produit.quota);
+                });
                 
                 container.appendChild(newCard);
             }
         });
 
-        // Gestion du message "Aucun produit trouvé"
         if (trouve === 0) {
             noResultMsg.style.display = 'block';
         } else {
