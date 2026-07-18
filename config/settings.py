@@ -60,7 +60,6 @@ DATABASES = {
         'HOST': 'aws-0-eu-central-1.pooler.supabase.com',
         'PORT': '6543',
     }
-    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [
