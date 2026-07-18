@@ -65,6 +65,10 @@
         
         /* Message d'absence de données noir grisé homogène pour les deux sections */
         .empty-state { text-align: center; padding: 40px; color: #9A9F98; font-style: italic; font-size: 0.95rem; }
+
+        .pagination-box { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .pagination-box a, .pagination-box span { padding: 8px 14px; border: 1px solid #E0E4DE; border-radius: 8px; text-decoration: none; color: #495430; background: white; font-size: 0.9rem; }
+        .pagination-box .current { background: #495430; color: white; }
     </style>
 </head>
 <body>
@@ -251,6 +255,21 @@ function toggleSidebar() {
                     {% endfor %}
                 </tbody>
             </table>  
+
+            <!-- Bloc de navigation pour la pagination des entrées -->
+            {% if page_obj_entrees.paginator.num_pages > 1 %}
+            <div class="pagination-box">
+                {% if page_obj_entrees.has_previous %}
+                    <a href="?page_entrees=1{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">&laquo; Début</a>
+                    <a href="?page_entrees={{ page_obj_entrees.previous_page_number }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">Précédent</a>
+                {% endif %}
+                <span class="current">Page {{ page_obj_entrees.number }} sur {{ page_obj_entrees.paginator.num_pages }}</span>
+                {% if page_obj_entrees.has_next %}
+                    <a href="?page_entrees={{ page_obj_entrees.next_page_number }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">Suivant</a>
+                    <a href="?page_entrees={{ page_obj_entrees.paginator.num_pages }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">Fin &raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
             
         <div class="form-container-box">
@@ -353,6 +372,21 @@ function toggleSidebar() {
                 <div class="empty-state">Aucune sortie enregistrée.</div>
                 {% endfor %}
             </div>
+
+            <!-- Bloc de navigation pour la pagination des sorties -->
+            {% if page_obj_sorties.paginator.num_pages > 1 %}
+            <div class="pagination-box">
+                {% if page_obj_sorties.has_previous %}
+                    <a href="?page_sorties=1{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">&laquo; Début</a>
+                    <a href="?page_sorties={{ page_obj_sorties.previous_page_number }}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">Précédent</a>
+                {% endif %}
+                <span class="current">Page {{ page_obj_sorties.number }} sur {{ page_obj_sorties.paginator.num_pages }}</span>
+                {% if page_obj_sorties.has_next %}
+                    <a href="?page_sorties={{ page_obj_sorties.next_page_number }}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">Suivant</a>
+                    <a href="?page_sorties={{ page_obj_sorties.paginator.num_pages }}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">Fin &raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </div>
                         
