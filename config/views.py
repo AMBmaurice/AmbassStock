@@ -9,6 +9,7 @@ from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.db import transaction
 from django.db.models import F, Sum, Count, Q
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -442,9 +443,11 @@ def page_gestion_stocks(request):
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             
             try:
-                produit = Produit.objects.get(reference=ref_produit)
-                produit.quantite += quantite_ajoutee 
-                produit.save()
+                with transaction.atomic():
+                    produit = Produit.objects.select_for_update().get(reference=ref_produit)
+                    produit.quantite = F("quantite") + quantite_ajoutee
+                    produit.save(update_fields=["quantite"])
+                    produit.refresh_from_db()
                 
                 MouvementStock.objects.create(
                     type_mouvement='ENTREE',
@@ -465,20 +468,26 @@ def page_gestion_stocks(request):
             service_demandeur = request.POST.get('service') or "Administration"
         
             try:
-                produit = Produit.objects.get(reference=ref_produit)
-                if produit.quantite >= quantite_retiree:
-                    produit.quantite -= quantite_retiree
-                    produit.save()
+                with transaction.atomic():
+                    produit = Produit.objects.select_for_update().get(reference=ref_produit)
+
+                    if produit.quantite < quantite_retiree:
+                        messages.error(request, "Stock insuffisant.")
+                        return redirect('/gestion-stocks/')
+
+                    produit.quantite = F("quantite") - quantite_retiree
+                    produit.save(update_fields=["quantite"])
+                    produit.refresh_from_db()
                 
-                    MouvementStock.objects.create(   
-                        type_mouvement='SORTIE',
-                        objet=produit.objet,
-                        produit=produit,
-                        quantite=quantite_retiree,
-                        service=service_demandeur,
-                        date_mouvement=request.POST.get('date_sortie') or date.today()
-                    )
-                    messages.success(request, "Quantité retirée")
+                MouvementStock.objects.create(   
+                    type_mouvement='SORTIE',
+                    objet=produit.objet,
+                    produit=produit,
+                    quantite=quantite_retiree,
+                    service=service_demandeur,
+                    date_mouvement=request.POST.get('date_sortie') or date.today()
+                )
+                messages.success(request, "Quantité retirée")
             except Produit.DoesNotExist:
                 pass
             return redirect('/gestion-stocks/')
