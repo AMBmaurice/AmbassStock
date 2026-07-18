@@ -553,12 +553,23 @@ def page_historique(request):
             movimiento.objet = movimiento.produit.objet
             movimiento.reference = movimiento.produit.reference
             
+    # Application de la pagination par blocs de 20 lignes
+    paginator_entrees = Paginator(liste_entrees, 20)
+    page_entrees = request.GET.get('page_entrees', 1)
+    page_obj_entrees = paginator_entrees.get_page(page_entrees)
+
+    paginator_sorties = Paginator(liste_sorties, 20)
+    page_sorties = request.GET.get('page_sorties', 1)
+    page_obj_sorties = paginator_sorties.get_page(page_sorties)
+
     return render(request, 'historique.html', {   
         'profil_actif': profil_actif,
-        'entrees': liste_entrees,
-        'sorties': liste_sorties
+        'page_obj_entrees': page_obj_entrees,
+        'page_obj_sorties': page_obj_sorties,
+        'entrees': page_obj_entrees.object_list,
+        'sorties': page_obj_sorties.object_list
     })
-
+    
 @require_POST
 def supprimer_mouvement(request, mouvement_id):
     if not request.user.is_authenticated:
