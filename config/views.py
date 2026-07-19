@@ -718,7 +718,7 @@ def page_factures(request):
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
         
-        # Le fichier physique envoyé par le formulaire
+        # Étape 1 & 2 : Extraction du flux binaire du PDF depuis request.FILES (mémoire tampon)
         fichier_facture = request.FILES.get('fichier_facture')
         
         if not date_commande:
@@ -727,13 +727,20 @@ def page_factures(request):
         
         if montant_total and fichier_facture:
             try:
-                # On utilise uniquement les champs validés et existants de ton modèle
-                # pour garantir le fonctionnement immédiat du cloud Supabase
-                Facture.objects.create(
+                # Étape 3 : Création de l'instance en mémoire vive
+                nouvelle_facture = Facture(
                     date_commande=date_commande,
-                    montant_total=float(montant_total),
-                    fichier_facture=fichier_facture
+                    montant_total=float(montant_total)
                 )
+                
+                # Attribuer explicitement le fichier au champ pour forcer DEFAULT_FILE_STORAGE 
+                # à intercepter le fichier, ouvrir la connexion TLS/HTTPS et pousser le stream vers le Bucket
+                nouvelle_facture.fichier_facture = fichier_facture
+                
+                # Étape 4 & 5 : L'appel à .save() déclenche la passerelle S3 compatible de Supabase.
+                # Une fois le transfert physique réussi, Django valide et indexe la ligne dans PostgreSQL.
+                nouvelle_facture.save()
+                
             except Exception:
                 pass
             return redirect('/factures/')
