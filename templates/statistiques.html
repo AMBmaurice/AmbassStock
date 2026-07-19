@@ -158,11 +158,10 @@
             <h3>Statistiques</h3>
         </div>
 
-        <!-- BLOC 1 : FORMULAIRE EXCLUSIF POUR LA GÉNÉRATION DE RAPPORT PDF CORRIGÉ -->
+        <!-- BLOC 1 : CONFIGURATEUR INTELLIGENT DE RAPPORT PDF SANS CASES À COCHER ET ROUTE EN METHOD GET CORRIGEE -->
         <div class="stat-container-box">
             <h4 class="card-title">Configuration et Génération du Rapport (PDF)</h4>
-            <form method="POST" action="/generer-pdf-statistiques/" style="display: flex; flex-direction: column; gap: 25px;">
-                {% csrf_token %}
+            <form method="GET" action="/generer-pdf-statistiques/" style="display: flex; flex-direction: column; gap: 25px;">
                 <div class="report-generation-bar">
                     <div class="report-group">
                         <label class="report-label">Type de Rapport</label>
@@ -178,12 +177,12 @@
                     <div id="periodA" class="report-group">
                         <label class="report-label" id="labelA">Période cible du PDF</label>
                         <div style="display: flex; gap: 10px;">
-                            <select name="periode_annee" class="select-custom" style="min-width: 110px;">
+                            <select name="target_year" class="select-custom" style="min-width: 110px;">
                                 {% for annee in liste_annees %}
                                     <option value="{{ annee }}" {% if annee == annee_selectionnee %}selected{% endif %}>{{ annee }}</option>
                                 {% endfor %}
                             </select>
-                            <select name="periode_mois" id="pdfMonthA" class="select-custom" style="min-width: 140px;">
+                            <select name="target_month" id="pdfMonthA" class="select-custom" style="min-width: 140px;">
                                 {% for m in liste_mois %}
                                     {% if m.valeur != 'all' %}
                                         <option value="{{ m.valeur }}" {% if m.valeur == mois_selectionne %}selected{% endif %}>{{ m.nom }}</option>
@@ -212,31 +211,16 @@
                         </div>
                     </div>
 
-                    <!-- ZONE DYNAMIQUE POUR LES ANNÉES SUPPLÉMENTAIRES -->
-                    <div id="extraYearsContainer" style="display: none; gap: 10px; align-items: flex-end;"></div>
+                    <!-- ZONE DYNAMIQUE POUR LES PÉRIODES SUPPLÉMENTAIRES C ET D -->
+                    <div id="extraYearsContainer" style="display: none; gap: 10px; align-items: flex-end; flex-wrap: wrap;"></div>
 
-                    <!-- BOUTON PLUS POUR AJOUTER DES ANNÉES -->
+                    <!-- BOUTON PLUS DE COMPARAISON SÉQUENTIELLE -->
                     <div id="containerBtnPlus" class="report-group" style="display: none;">
-                        <button type="button" onclick="ajouterAnneeComparaison()" class="btn-generate" style="background-color: #ECEFEA; color: #5E6D3E; font-size: 1.2rem; height: 44px; width: 44px; padding: 0; justify-content: center; border-radius: 10px;">+</button>
+                        <button type="button" onclick="ajouterPeriodeComparaison()" class="btn-generate" style="background-color: #ECEFEA; color: #5E6D3E; font-size: 1.2rem; height: 44px; width: 44px; padding: 0; justify-content: center; border-radius: 10px;">+</button>
                     </div>
                 </div>
 
-                <div style="display: flex; flex-wrap: wrap; gap: 30px; padding-top: 15px; border-top: 1px solid rgba(230, 234, 228, 0.7);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" name="inclure_graphiques" id="incGraph" value="true" checked style="width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer;">
-                        <label for="incGraph" style="font-size: 0.95rem; color: #333333; cursor: pointer;">Intégrer les graphiques de répartition</label>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" name="inclure_dormants" id="incDorm" value="true" checked style="width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer;">
-                        <label for="incDorm" style="font-size: 0.95rem; color: #333333; cursor: pointer;">Inclure la liste des produits dormants</label>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" name="inclure_remarques" id="incRem" value="true" checked style="width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer;">
-                        <label for="incRem" style="font-size: 0.95rem; color: #333333; cursor: pointer;">Générer les conclusions et recommandations</label>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
+                <div style="display: flex; justify-content: flex-end; margin-top: 5px; padding-top: 15px; border-top: 1px solid rgba(230, 234, 228, 0.7)">
                     <button type="submit" class="btn-generate">Générer le document PDF</button>
                 </div>
             </form>
@@ -435,7 +419,7 @@
             }
         }
 
-        let compteurAnneesExtras = 0;
+        let compteurPériodesExtras = 0;
 
         function adjustReportFields() {
             const typeAnalyse = document.getElementById('reportScope').value;
@@ -449,7 +433,7 @@
             
             extraContainer.innerHTML = "";
             extraContainer.style.display = "none";
-            compteurAnneesExtras = 0;
+            compteurPériodesExtras = 0;
 
             if (typeAnalyse === 'mensuel') {
                 periodA.style.display = 'flex'; 
@@ -466,7 +450,7 @@
             } else if (typeAnalyse === 'comparaison_mois') {
                 periodA.style.display = 'flex'; 
                 periodB.style.display = 'flex';
-                btnPlus.style.display = 'none';
+                btnPlus.style.display = 'flex';
                 pdfMonthA.style.display = 'block';
                 pdfMonthB.style.display = 'block';
                 labelA.innerText = "Mois de référence (A)";
@@ -482,29 +466,52 @@
             }
         }
 
-        function ajouterAnneeComparaison() {
-            if (compteurAnneesExtras >= 2) {
-                alert("Vous pouvez ajouter jusqu'à 4 années de comparaison maximum.");
+        function ajouterPeriodeComparaison() {
+            if (compteurPériodesExtras >= 2) {
+                alert("Vous pouvez ajouter jusqu'à 4 périodes de comparaison au total.");
                 return;
             }
             
-            compteurAnneesExtras++;
+            compteurPériodesExtras++;
+            const typeAnalyse = document.getElementById('reportScope').value;
             const extraContainer = document.getElementById('extraYearsContainer');
             extraContainer.style.display = 'flex';
             
-            const lettreAnnee = compteurAnneesExtras === 1 ? 'C' : 'D';
-            const nameChamp = compteurAnneesExtras === 1 ? 'periode_annee_c' : 'periode_annee_d';
+            const lettrePeriode = compteurPériodesExtras === 1 ? 'C' : 'D';
+            const nameChampAnnee = compteurPériodesExtras === 1 ? 'periode_annee_c' : 'periode_annee_d';
+            const nameChampMois = compteurPériodesExtras === 1 ? 'periode_mois_c' : 'periode_mois_d';
             
             const nouveauBloc = document.createElement('div');
             nouveauBloc.className = 'report-group';
-            nouveauBloc.innerHTML = `
-                <label class="report-label">Année de comparaison (${lettreAnnee})</label>
-                <select name="${nameChamp}" class="select-custom" style="min-width: 110px;">
-                    {% for annee in liste_annees %}
-                        <option value="${annee}">${annee}</option>
-                    {% endfor %}
-                </select>
-            `;
+            
+            if (typeAnalyse === 'comparaison_ans') {
+                nouveauBloc.innerHTML = `
+                    <label class="report-label">Année de comparaison (${lettrePeriode})</label>
+                    <select name="${nameChampAnnee}" class="select-custom" style="min-width: 110px;">
+                        {% for annee in liste_annees %}
+                            <option value="${annee}">${annee}</option>
+                        {% endfor %}
+                    </select>
+                `;
+            } else if (typeAnalyse === 'comparaison_mois') {
+                nouveauBloc.innerHTML = `
+                    <label class="report-label">Mois de comparaison (${lettrePeriode})</label>
+                    <div style="display: flex; gap: 10px;">
+                        <select name="${nameChampAnnee}" class="select-custom" style="min-width: 110px;">
+                            {% for annee in liste_annees %}
+                                <option value="${annee}">${annee}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="${nameChampMois}" class="select-custom" style="min-width: 140px;">
+                            {% for m in liste_mois %}
+                                {% if m.valeur != 'all' %}
+                                    <option value="${m.valeur}">${m.nom}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                `;
+            }
             
             extraContainer.appendChild(nouveauBloc);
         }
