@@ -587,7 +587,7 @@ def page_statistiques(request):
     # Période temporelle de base
     maintenant = timezone.now()
     
-    # **CORRECTION : Paramètres dédiés uniquement à la consultation en direct à l'écran**
+    # Paramètres dédiés uniquement à la consultation en direct à l'écran
     filter_year = int(request.GET.get('filter_year', maintenant.year))
     filter_month_raw = request.GET.get('filter_month', str(maintenant.month))
 
@@ -607,7 +607,7 @@ def page_statistiques(request):
         {'valeur': '11', 'nom': 'Novembre'}, {'valeur': '12', 'nom': 'Décembre'}
     ]
 
-    # CORRECTION : Les statistiques de l'écran se basent sur filter_year et filter_month
+    # Les statistiques de l'écran se basent sur filter_year et filter_month
     mouvements = MouvementStock.objects.filter(date_mouvement__year=filter_year)
     if filter_month_raw != 'all':
         filter_month = int(filter_month_raw)
@@ -619,12 +619,15 @@ def page_statistiques(request):
     total_operations = mouvements.count()
     total_entrees = mouvements.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
     total_sorties = mouvements.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
-    taux_rotation = round((total_sorties / total_entrees * 100), 1) if total_entrees > 0 else 0.0
+    
+    # Correction de la rotation : calcul basé sur le stock global disponible pour éviter le zéro constant
+    stock_total_disponible = Produit.objects.aggregate(total=Sum('quantite'))['total'] or 1
+    taux_rotation = round((total_sorties / stock_total_disponible * 100), 1)
 
     # 2. Filtrage et génération du graphique principal (Bar Chart)
     view_mode = request.GET.get('view_mode', 'hebdomadaire')
     
-    # CORRECTION : Rendu dynamique basé sur les filtres de consultation de l'écran
+    # Rendu dynamique basé sur les filtres de consultation de l'écran
     if view_mode == 'mensuel' and filter_month != 'all':
         import calendar
         nb_jours = calendar.monthrange(filter_year, filter_month)[1]
@@ -705,6 +708,7 @@ def page_statistiques(request):
         'flop_produits': flop_produits,
         'produits_dormants': produits_dormants
     })
+    
 def page_factures(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
