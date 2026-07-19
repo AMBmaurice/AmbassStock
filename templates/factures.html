@@ -41,7 +41,6 @@
         
         .btn-download { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; background-color: #FAFBF9; color: #495430; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
         .btn-download:hover { background-color: #F1F3F0; border-color: #A3AFA0; }
-        .ref-tag { font-family: monospace; font-weight: 600; color: #5E6D3E; background: #EBF2E9; padding: 4px 8px; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -163,17 +162,12 @@ function toggleSidebar() {
         <div class="card-box">
             <h4 class="card-title">Ajouter une facture</h4>
             
-            <form method="POST" action="">
+            <form method="POST" action="" enctype="multipart/form-data">
                 {% csrf_token %}
                 
                 <div class="form-group">
-                    <label class="form-label">Numéro de Facture</label>
-                    <input type="text" name="numero_facture" class="input-custom" placeholder="Ex: FAC-2026-001" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Fournisseur / Prestataire</label>
-                    <input type="text" name="nom_fournisseur" class="input-custom" placeholder="Ex: Lyreco" required>
+                    <label class="form-label">Date d'émission</label>
+                    <input type="date" name="date_facture" class="input-custom" required>
                 </div>
 
                 <div class="form-group">
@@ -185,18 +179,25 @@ function toggleSidebar() {
                     <label class="form-label">Devise</label>
                     <select name="devise" class="select-custom">
                         <option value="EUR" selected>Euro (€)</option>
-                        <option value="USD">Dollar ($)</option>
                         <option value="MUR">Roupie Mauricienne (₨)</option>
+                        <option value="USD">Dollar ($)</option>
                         <option value="GBP">Livre Sterling (£)</option>
+                        <option value="CHF">Franc Suisse (CHF)</option>
+                        <option value="CAD">Dollar Canadien ($)</option>
+                        <option value="AUD">Dollar Australien ($)</option>
+                        <option value="JPY">Yen Japonais (¥)</option>
+                        <option value="CNY">Yuan Chinois (¥)</option>
+                        <option value="INR">Roupie Indienne (₹)</option>
+                        <option value="ZAR">Rand Sud-Africain (R)</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Date d'émission</label>
-                    <input type="date" name="date_facture" class="input-custom">
+                    <label class="form-label">Téléverser la facture numérisée</label>
+                    <input type="file" name="fichier_facture" class="input-custom input-file-custom" required>
                 </div>
 
-                <button type="submit" class="btn-submit">Soumettre au Cloud</button>
+                <button type="submit" class="btn-submit">Ajouter la facture</button>
             </form>
         </div>
 
@@ -209,30 +210,41 @@ function toggleSidebar() {
                     <thead>
                         <tr>
                             <th>Date d'émission</th>
-                            <th>Numéro de Facture</th>
-                            <th>Fournisseur</th>
                             <th>Montant total de la commande</th>
+                            <th>Facture format digitalisé</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for f in factures %}
                         <tr>
-                            <td style="color: #7A8278;">{{ f.date_facture|date:"d/m/Y" }}</td>
-                            <td><span class="ref-tag">{{ f.numero_facture }}</span></td>
-                            <td><strong>{{ f.nom_fournisseur }}</strong></td>
+                            <td style="color: #7A8278;">{{ f.date_commande|date:"d/m/Y" }}</td>
                             <td style="font-weight: 700; color: #2c351c;">
-                                {{ f.montant }} 
+                                {{ f.montant_total }} 
                                 {% if f.devise == 'EUR' %}€
-                                {% elif f.devise == 'USD' %}$
                                 {% elif f.devise == 'MUR' %}₨
+                                {% elif f.devise == 'USD' %}$
                                 {% elif f.devise == 'GBP' %}£
-                                {% else %}{{ f.devise }}
+                                {% elif f.devise == 'CHF' %}CHF
+                                {% elif f.devise == 'CAD' %}$
+                                {% elif f.devise == 'AUD' %}$
+                                {% elif f.devise == 'JPY' %}¥
+                                {% elif f.devise == 'CNY' %}¥
+                                {% elif f.devise == 'INR' %}₹
+                                {% elif f.devise == 'ZAR' %}R
+                                {% else %}€
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if f.fichier_facture %}
+                                    <a href="{{ f.fichier_facture.url }}" class="btn-download" target="_blank">Voir le document</a>
+                                {% else %}
+                                    <span style="color: #7A8278; font-style: italic;">Aucun fichier</span>
                                 {% endif %}
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" style="color: #7A8278; font-style: italic; text-align: center; padding: 30px;">Aucune facture enregistrée dans la base cloud pour le moment.</td>
+                            <td colspan="3" style="color: #7A8278; font-style: italic; text-align: center; padding: 30px;">Aucune facture enregistrée dans la base cloud pour le moment.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
