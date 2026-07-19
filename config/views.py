@@ -713,7 +713,40 @@ def page_factures(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
-    return render(request, 'factures.html', {'profil_actif': profil_actif})
+    
+    if request.method == "POST":
+        numero_facture = request.POST.get('numero_facture')
+        nom_fournisseur = request.POST.get('nom_fournisseur')
+        montant_brut = request.POST.get('montant')
+        devise = request.POST.get('devise', 'EUR')
+        date_facture = request.POST.get('date_facture')
+        
+        # Si aucune date n'est saisie, on utilise la date du jour par défaut
+        if not date_facture:
+            from datetime import date
+            date_facture = date.today()
+        
+        if numero_facture and nom_fournisseur and montant_brut:
+            try:
+                # Enregistrement immédiat dans la base PostgreSQL cloud (Supabase)
+                Facture.objects.create(
+                    numero_facture=numero_facture,
+                    nom_fournisseur=nom_fournisseur,
+                    montant=float(montant_brut),
+                    devise=devise,
+                    date_facture=date_facture
+                )
+            except Exception:
+                pass
+            return redirect('/factures/')
+
+    # Récupération de l'historique global depuis le cloud
+    toutes_les_factures = Facture.objects.all().order_by('-date_facture', '-id')
+    
+    return render(request, 'factures.html', {
+        'profil_actif': profil_actif,
+        'factures': toutes_les_factures
+    })
 
 def page_gestion_demandes(request):
     if not request.user.is_authenticated:
