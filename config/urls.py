@@ -28,4 +28,5 @@ urlpatterns = [
     path('modifier-mouvement/<int:mouvement_id>/', views.page_historique, name='modifier_mouvement'),
     path('supprimer-mouvement/<int:mouvement_id>/', views.supprimer_mouvement, name='supprimer_mouvement'),
     path("test-db/", views.test_database),
+    path('generer-pdf-statistiques/', views.generer_pdf_statistiques, name='generer_pdf_statistiques'),
 ]
