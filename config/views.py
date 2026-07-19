@@ -586,67 +586,88 @@ def page_statistiques(request):
     
     # Période temporelle de base
     maintenant = timezone.now()
+    
+    # CORRECTION : Unification des filtres pour toute la page
     annee_selectionnee = int(request.GET.get('target_year', maintenant.year))
-    mois_selectionne = int(request.GET.get('target_month', maintenant.month))
-
-    # Filtre spécifique pour le bloc des Indicateurs d'activité globaux
-    stats_year = int(request.GET.get('stats_year', maintenant.year))
-    stats_month_raw = request.GET.get('stats_month', str(maintenant.month))
+    mois_selectionne_raw = request.GET.get('target_month', str(maintenant.month))
 
     # Listes pour alimenter les menus déroulants
     liste_annees = [maintenant.year, maintenant.year - 1, maintenant.year - 2]
     liste_mois = [
         {'valeur': 'all', 'nom': 'Total Annuel'},
-        {'valeur': 1, 'nom': 'Janvier'}, {'valeur': 2, 'nom': 'Février'},
-        {'valeur': 3, 'nom': 'Mars'}, {'valeur': 4, 'nom': 'Avril'},
-        {'valeur': 5, 'nom': 'Mai'}, {'valeur': 6, 'nom': 'Juin'},
-        {'valeur': 7, 'nom': 'Juillet'}, {'valeur': 8, 'nom': 'Août'},
-        {'valeur': 9, 'nom': 'Septembre'}, {'valeur': 10, 'nom': 'Octobre'},
-        {'valeur': 11, 'nom': 'Novembre'}, {'valeur': 12, 'nom': 'Décembre'}
+        {'valeur': '1', 'nom': 'Janvier'}, {'valeur': '2', 'nom': 'Février'},
+        {'valeur': '3', 'nom': 'Mars'}, {'valeur': '4', 'nom': 'Avril'},
+        {'valeur': '5', 'nom': 'Mai'}, {'valeur': '6', 'nom': 'Juin'},
+        {'valeur': '7', 'nom': 'Juillet'}, {'valeur': '8', 'nom': 'Août'},
+        {'valeur': '9', 'nom': 'Septembre'}, {'valeur': '10', 'nom': 'Octobre'},
+        {'valeur': '11', 'nom': 'Novembre'}, {'valeur': '12', 'nom': 'Décembre'}
     ]
 
-    # Base des mouvements pour les compteurs globaux filtrés
-    mouvements_globaux = MouvementStock.objects.filter(date_mouvement__year=stats_year)
-    if stats_month_raw != 'all':
-        stats_month = int(stats_month_raw)
-        mouvements_globaux = mouvements_globaux.filter(date_mouvement__month=stats_month)
+    # CORRECTION : Filtrage unifié de l'historique des mouvements pour toute la page
+    mouvements = MouvementStock.objects.filter(date_mouvement__year=annee_selectionnee)
+    if mois_selectionne_raw != 'all':
+        mois_selectionne = int(mois_selectionne_raw)
+        mouvements = mouvements.filter(date_mouvement__month=mois_selectionne)
     else:
-        stats_month = 'all'
+        mois_selectionne = 'all'
 
-    total_operations = mouvements_globaux.count()
-    total_entrees = mouvements_globaux.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
-    total_sorties = mouvements_globaux.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
+    # 1. Indicateurs d'activité globaux basés sur le filtre unifié
+    total_operations = mouvements.count()
+    total_entrees = mouvements.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
+    total_sorties = mouvements.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
     taux_rotation = round((total_sorties / total_entrees * 100), 1) if total_entrees > 0 else 0.0
 
-    # 2. Filtrage pour le graphique principal (Bar Chart)
+    # 2. Filtrage et génération du graphique principal (Bar Chart)
     view_mode = request.GET.get('view_mode', 'hebdomadaire')
-    mouvements = MouvementStock.objects.all()
     
-    if view_mode == 'mensuel':
-        mouvements_graph = mouvements.filter(date_mouvement__year=annee_selectionnee, date_mouvement__month=mois_selectionne)
-        jours = sorted(list(set(mouvements_graph.values_list('date_mouvement__day', flat=True))))
-        chart_labels = [f"Jour {j}" for j in jours]
-        chart_sorties = [mouvements_graph.filter(type_mouvement='SORTIE', date_mouvement__day=j).aggregate(s=Sum('quantite'))['s'] or 0 for j in jours]
-        chart_operations = [mouvements_graph.filter(date_mouvement__day=j).count() for j in jours]
+    # CORRECTION : Construction dynamique du calendrier mensuel ou hebdomadaire complet
+    if view_mode == 'mensuel' and mois_selectionne != 'all':
+        # Calcul du nombre exact de jours dans le mois sélectionné pour l'année choisie
+        import calendar
+        nb_jours = calendar.monthrange(annee_selectionnee, mois_selectionne)[1]
+        jours = list(range(1, nb_jours + 1))
+        chart_labels = [f"{j}" for j in jours]
+        
+        # Regroupement et calcul exact de TOUTES les quantités pour chaque jour du mois
+        chart_sorties = []
+        chart_operations = []
+        for j in jours:
+            mouvements_jour = mouvements.filter(date_mouvement__day=j)
+            quantite_sortie = mouvements_jour.filter(type_mouvement='SORTIE').aggregate(s=Sum('quantite'))['s'] or 0
+            chart_sorties.append(quantite_sortie)
+            chart_operations.append(mouvements_jour.count())
+            
+    elif view_mode == 'mensuel' and mois_selectionne == 'all':
+        # Si vision mensuelle mais sélection "Total Annuel", on affiche les 12 mois de l'année
+        chart_labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+        chart_sorties = []
+        chart_operations = []
+        for m in range(1, 13):
+            mouvements_mois = MouvementStock.objects.filter(date_mouvement__year=annee_selectionnee, date_mouvement__month=m)
+            chart_sorties.append(mouvements_mois.filter(type_mouvement='SORTIE').aggregate(s=Sum('quantite'))['s'] or 0)
+            chart_operations.append(mouvements_mois.count())
+            
     else:
+        # **Vue hebdomadaire par défaut (7 derniers jours glissants)**
         debut_semaine = maintenant.date() - timedelta(days=6)
-        mouvements_graph = mouvements.filter(date_mouvement__gte=debut_semaine)
         jours = [debut_semaine + timedelta(days=i) for i in range(7)]
         chart_labels = [j.strftime('%d %b') for j in jours]
-        chart_sorties = [mouvements_graph.filter(type_mouvement='SORTIE', date_mouvement=j).aggregate(s=Sum('quantite'))['s'] or 0 for j in jours]
-        chart_operations = [mouvements_graph.filter(date_mouvement=j).count() for j in jours]
+        
+        # Correction : On interroge l'historique complet pour ces jours spécifiques
+        chart_sorties = [MouvementStock.objects.filter(type_mouvement='SORTIE', date_mouvement=j).aggregate(s=Sum('quantite'))['s'] or 0 for j in jours]
+        chart_operations = [MouvementStock.objects.filter(date_mouvement=j).count() for j in jours]
 
-    # 3. Consommation par service (Donut 1)
+    # 3. Consommation par service (Donut 1) - filtrée dynamiquement
     sorties_par_service = mouvements.filter(type_mouvement='SORTIE').values('service').annotate(total=Sum('quantite')).order_by('-total')
     service_labels = [s['service'] for s in sorties_par_service]
     service_data = [s['total'] for s in sorties_par_service]
 
-    # 4. Répartition par catégorie (Donut 2)
+    # 4. Répartition par catégorie (Donut 2) - filtrée dynamiquement
     sorties_par_cat = mouvements.filter(type_mouvement='SORTIE', produit__isnull=False).values('produit__categorie').annotate(total=Sum('quantite')).order_by('-total')
     category_labels = [c['produit__categorie'] for c in sorties_par_cat]
     category_data = [c['total'] for c in sorties_par_cat]
 
-    # 5. Top 3 & Flop 3 des ventes
+    # 5. Top 3 & Flop 3 des ventes - filtrés dynamiquement
     produits_analytics = mouvements.filter(type_mouvement='SORTIE').values('objet').annotate(total_sorti=Sum('quantite'))
     pas_de_donnees_mouvement = not produits_analytics.exists()
 
@@ -666,8 +687,6 @@ def page_statistiques(request):
         'view_mode': view_mode,
         'annee_selectionnee': annee_selectionnee,
         'mois_selectionne': mois_selectionne,
-        'stats_year': stats_year,
-        'stats_month': stats_month,
         'liste_annees': liste_annees,
         'liste_mois': liste_mois,
         'chart_labels': chart_labels,
