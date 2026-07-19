@@ -218,7 +218,28 @@
         </div>
 
         <div class="stat-container-box">
-            <h4 class="card-title">Indicateurs d'activité globaux</h4>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+                <h4 class="card-title" style="margin-bottom: 0;">Indicateurs d'activité globaux</h4>
+                
+                <form method="GET" action="" id="globalIndicatorsForm" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="hidden" name="view_mode" value="{{ view_mode }}">
+                    <input type="hidden" name="target_year" value="{{ annee_selectionnee }}">
+                    <input type="hidden" name="target_month" value="{{ mois_selectionne }}">
+
+                    <select name="stats_year" class="select-custom" style="min-width: 100px; height: 38px;" onchange="document.getElementById('globalIndicatorsForm').submit()">
+                        {% for annee in liste_annees %}
+                            <option value="{{ annee }}" {% if annee == stats_year %}selected{% endif %}>{{ annee }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <select name="stats_month" class="select-custom" style="min-width: 140px; height: 38px;" onchange="document.getElementById('globalIndicatorsForm').submit()">
+                        {% for m in liste_mois %}**
+                            <option value="{{ m.valeur }}" {% if m.valeur|stringformat:"s" == stats_month|stringformat:"s" %}selected{% endif %}>{{ m.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+
             <div class="big-numbers-grid">
                 <div class="number-card">
                     <div class="number-label">Opérations réalisées</div>
