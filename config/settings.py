@@ -7,7 +7,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-_9r&5hdo!!k(*@-*0#nrg
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['ambassstock.up.railway.app', '*']
+# MODIFICATION : Intégration de l'adresse Railway et sécurité universelle
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'ambassstock.up.railway.app', '*']
 
 INSTALLED_APPS = [
     'config',
@@ -91,3 +92,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'noreply@ambassstock.local'
+
+# AJOUT : Origine de confiance pour valider les formulaires et la connexion sans erreur 403
+CSRF_TRUSTED_ORIGINS = ['https://ambassstock.up.railway.app']
