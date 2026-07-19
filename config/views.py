@@ -584,15 +584,19 @@ def page_statistiques(request):
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
     
-    # 1. Période temporelle et filtres d'affichage
-    view_mode = request.GET.get('view_mode', 'hebdomadaire')
+    # Période temporelle de base
     maintenant = timezone.now()
     annee_selectionnee = int(request.GET.get('target_year', maintenant.year))
     mois_selectionne = int(request.GET.get('target_month', maintenant.month))
 
+    # Filtre spécifique pour le bloc des Indicateurs d'activité globaux
+    stats_year = int(request.GET.get('stats_year', maintenant.year))
+    stats_month_raw = request.GET.get('stats_month', str(maintenant.month))
+
     # Listes pour alimenter les menus déroulants
     liste_annees = [maintenant.year, maintenant.year - 1, maintenant.year - 2]
     liste_mois = [
+        {'valeur': 'all', 'nom': 'Total Annuel'},
         {'valeur': 1, 'nom': 'Janvier'}, {'valeur': 2, 'nom': 'Février'},
         {'valeur': 3, 'nom': 'Mars'}, {'valeur': 4, 'nom': 'Avril'},
         {'valeur': 5, 'nom': 'Mai'}, {'valeur': 6, 'nom': 'Juin'},
@@ -601,26 +605,30 @@ def page_statistiques(request):
         {'valeur': 11, 'nom': 'Novembre'}, {'valeur': 12, 'nom': 'Décembre'}
     ]
 
-    # Base des mouvements réels
-    mouvements = MouvementStock.objects.all()
-    total_operations = mouvements.count()
-    
-    total_entrees = mouvements.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
-    total_sorties = mouvements.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
+    # Base des mouvements pour les compteurs globaux filtrés
+    mouvements_globaux = MouvementStock.objects.filter(date_mouvement__year=stats_year)
+    if stats_month_raw != 'all':
+        stats_month = int(stats_month_raw)
+        mouvements_globaux = mouvements_globaux.filter(date_mouvement__month=stats_month)
+    else:
+        stats_month = 'all'
 
-    # Taux de rotation : (Total Sorties / (Total Entrées ou 1 si 0)) * 100
+    total_operations = mouvements_globaux.count()
+    total_entrees = mouvements_globaux.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
+    total_sorties = mouvements_globaux.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
     taux_rotation = round((total_sorties / total_entrees * 100), 1) if total_entrees > 0 else 0.0
 
     # 2. Filtrage pour le graphique principal (Bar Chart)
+    view_mode = request.GET.get('view_mode', 'hebdomadaire')
+    mouvements = MouvementStock.objects.all()
+    
     if view_mode == 'mensuel':
         mouvements_graph = mouvements.filter(date_mouvement__year=annee_selectionnee, date_mouvement__month=mois_selectionne)
-        # Axe X : Répartition par jours du mois
         jours = sorted(list(set(mouvements_graph.values_list('date_mouvement__day', flat=True))))
         chart_labels = [f"Jour {j}" for j in jours]
         chart_sorties = [mouvements_graph.filter(type_mouvement='SORTIE', date_mouvement__day=j).aggregate(s=Sum('quantite'))['s'] or 0 for j in jours]
         chart_operations = [mouvements_graph.filter(date_mouvement__day=j).count() for j in jours]
     else:
-        # Par défaut : Vue Semaine (les 7 derniers jours)
         debut_semaine = maintenant.date() - timedelta(days=6)
         mouvements_graph = mouvements.filter(date_mouvement__gte=debut_semaine)
         jours = [debut_semaine + timedelta(days=i) for i in range(7)]
@@ -634,7 +642,6 @@ def page_statistiques(request):
     service_data = [s['total'] for s in sorties_par_service]
 
     # 4. Répartition par catégorie (Donut 2)
-    # Note : Comme la catégorie est portée par le produit lié, on passe par la relation
     sorties_par_cat = mouvements.filter(type_mouvement='SORTIE', produit__isnull=False).values('produit__categorie').annotate(total=Sum('quantite')).order_by('-total')
     category_labels = [c['produit__categorie'] for c in sorties_par_cat]
     category_data = [c['total'] for c in sorties_par_cat]
@@ -659,6 +666,8 @@ def page_statistiques(request):
         'view_mode': view_mode,
         'annee_selectionnee': annee_selectionnee,
         'mois_selectionne': mois_selectionne,
+        'stats_year': stats_year,
+        'stats_month': stats_month,
         'liste_annees': liste_annees,
         'liste_mois': liste_mois,
         'chart_labels': chart_labels,
