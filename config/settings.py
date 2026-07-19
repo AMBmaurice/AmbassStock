@@ -7,7 +7,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-_9r&5hdo!!k(*@-*0#nrg
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'ambassstock.onrender.com', '.onrender.com']
+ALLOWED_HOSTS = ['ambassstock.up.railway.app', '*']
 
 INSTALLED_APPS = [
     'config',
