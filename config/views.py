@@ -587,7 +587,11 @@ def page_statistiques(request):
     # Période temporelle de base
     maintenant = timezone.now()
     
-    # CORRECTION : Unification des filtres pour toute la page
+    # **CORRECTION : Paramètres dédiés uniquement à la consultation en direct à l'écran**
+    filter_year = int(request.GET.get('filter_year', maintenant.year))
+    filter_month_raw = request.GET.get('filter_month', str(maintenant.month))
+
+    # Paramètres pour le formulaire de génération de PDF (indépendants)
     annee_selectionnee = int(request.GET.get('target_year', maintenant.year))
     mois_selectionne_raw = request.GET.get('target_month', str(maintenant.month))
 
@@ -603,15 +607,15 @@ def page_statistiques(request):
         {'valeur': '11', 'nom': 'Novembre'}, {'valeur': '12', 'nom': 'Décembre'}
     ]
 
-    # CORRECTION : Filtrage unifié de l'historique des mouvements pour toute la page
-    mouvements = MouvementStock.objects.filter(date_mouvement__year=annee_selectionnee)
-    if mois_selectionne_raw != 'all':
-        mois_selectionne = int(mois_selectionne_raw)
-        mouvements = mouvements.filter(date_mouvement__month=mois_selectionne)
+    # CORRECTION : Les statistiques de l'écran se basent sur filter_year et filter_month
+    mouvements = MouvementStock.objects.filter(date_mouvement__year=filter_year)
+    if filter_month_raw != 'all':
+        filter_month = int(filter_month_raw)
+        mouvements = mouvements.filter(date_mouvement__month=filter_month)
     else:
-        mois_selectionne = 'all'
+        filter_month = 'all'
 
-    # 1. Indicateurs d'activité globaux basés sur le filtre unifié
+    # 1. Indicateurs d'activité globaux
     total_operations = mouvements.count()
     total_entrees = mouvements.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
     total_sorties = mouvements.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
@@ -620,15 +624,13 @@ def page_statistiques(request):
     # 2. Filtrage et génération du graphique principal (Bar Chart)
     view_mode = request.GET.get('view_mode', 'hebdomadaire')
     
-    # CORRECTION : Construction dynamique du calendrier mensuel ou hebdomadaire complet
-    if view_mode == 'mensuel' and mois_selectionne != 'all':
-        # Calcul du nombre exact de jours dans le mois sélectionné pour l'année choisie
+    # CORRECTION : Rendu dynamique basé sur les filtres de consultation de l'écran
+    if view_mode == 'mensuel' and filter_month != 'all':
         import calendar
-        nb_jours = calendar.monthrange(annee_selectionnee, mois_selectionne)[1]
+        nb_jours = calendar.monthrange(filter_year, filter_month)[1]
         jours = list(range(1, nb_jours + 1))
         chart_labels = [f"{j}" for j in jours]
         
-        # Regroupement et calcul exact de TOUTES les quantités pour chaque jour du mois
         chart_sorties = []
         chart_operations = []
         for j in jours:
@@ -637,46 +639,46 @@ def page_statistiques(request):
             chart_sorties.append(quantite_sortie)
             chart_operations.append(mouvements_jour.count())
             
-    elif view_mode == 'mensuel' and mois_selectionne == 'all':
-        # Si vision mensuelle mais sélection "Total Annuel", on affiche les 12 mois de l'année
+    elif view_mode == 'mensuel' and filter_month == 'all':
         chart_labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
         chart_sorties = []
         chart_operations = []
         for m in range(1, 13):
-            mouvements_mois = MouvementStock.objects.filter(date_mouvement__year=annee_selectionnee, date_mouvement__month=m)
+            mouvements_mois = MouvementStock.objects.filter(date_mouvement__year=filter_year, date_mouvement__month=m)
             chart_sorties.append(mouvements_mois.filter(type_mouvement='SORTIE').aggregate(s=Sum('quantite'))['s'] or 0)
             chart_operations.append(mouvements_mois.count())
             
     else:
-        # **Vue hebdomadaire par défaut (7 derniers jours glissants)**
         debut_semaine = maintenant.date() - timedelta(days=6)
         jours = [debut_semaine + timedelta(days=i) for i in range(7)]
         chart_labels = [j.strftime('%d %b') for j in jours]
         
-        # Correction : On interroge l'historique complet pour ces jours spécifiques
         chart_sorties = [MouvementStock.objects.filter(type_mouvement='SORTIE', date_mouvement=j).aggregate(s=Sum('quantite'))['s'] or 0 for j in jours]
         chart_operations = [MouvementStock.objects.filter(date_mouvement=j).count() for j in jours]
 
-    # 3. Consommation par service (Donut 1) - filtrée dynamiquement
+    # 3. Consommation par service
     sorties_par_service = mouvements.filter(type_mouvement='SORTIE').values('service').annotate(total=Sum('quantite')).order_by('-total')
     service_labels = [s['service'] for s in sorties_par_service]
     service_data = [s['total'] for s in sorties_par_service]
 
-    # 4. Répartition par catégorie (Donut 2) - filtrée dynamiquement
+    # 4. Répartition par catégorie
     sorties_par_cat = mouvements.filter(type_mouvement='SORTIE', produit__isnull=False).values('produit__categorie').annotate(total=Sum('quantite')).order_by('-total')
     category_labels = [c['produit__categorie'] for c in sorties_par_cat]
     category_data = [c['total'] for c in sorties_par_cat]
 
-    # 5. Top 3 & Flop 3 des ventes - filtrés dynamiquement
+    # 5. Top 3 & Flop 3 des ventes
     produits_analytics = mouvements.filter(type_mouvement='SORTIE').values('objet').annotate(total_sorti=Sum('quantite'))
     pas_de_donnees_mouvement = not produits_analytics.exists()
 
     top_produits = produits_analytics.order_by('-total_sorti')[:3]
     flop_produits = produits_analytics.order_by('total_sorti')[:3]
 
-    # 6. Produits dormants (Aucune activité physique depuis 6 mois)
+    # 6. Produits dormants (Aucune activité depuis 6 mois)
     seuil_dormant = maintenant - timedelta(days=180)
     produits_dormants = Produit.objects.filter(derniere_activite__lte=seuil_dormant).order_by('objet')
+
+    # Ajustement pour la comparaison de chaînes au format brut
+    mois_selectionne = mois_selectionne_raw
 
     return render(request, 'statistiques.html', {
         'profil_actif': profil_actif,
@@ -685,6 +687,8 @@ def page_statistiques(request):
         'total_sorties': total_sorties,
         'taux_rotation': taux_rotation,
         'view_mode': view_mode,
+        'filter_year': filter_year,
+        'filter_month': filter_month,
         'annee_selectionnee': annee_selectionnee,
         'mois_selectionne': mois_selectionne,
         'liste_annees': liste_annees,
@@ -701,7 +705,6 @@ def page_statistiques(request):
         'flop_produits': flop_produits,
         'produits_dormants': produits_dormants
     })
-    
 def page_factures(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
