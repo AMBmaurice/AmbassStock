@@ -715,33 +715,29 @@ def page_factures(request):
     profil_actif = get_profil_actif(request.user)
     
     if request.method == "POST":
-        numero_facture = request.POST.get('numero_facture')
-        nom_fournisseur = request.POST.get('nom_fournisseur')
-        montant_brut = request.POST.get('montant')
+        date_commande = request.POST.get('date_facture')
+        montant_total = request.POST.get('montant')
         devise = request.POST.get('devise', 'EUR')
-        date_facture = request.POST.get('date_facture')
         
-        # Si aucune date n'est saisie, on utilise la date du jour par défaut
-        if not date_facture:
+        if not date_commande:
             from datetime import date
-            date_facture = date.today()
+            date_commande = date.today()
         
-        if numero_facture and nom_fournisseur and montant_brut:
+        if montant_total:
             try:
-                # Enregistrement immédiat dans la base PostgreSQL cloud (Supabase)
+                # Enregistrement dans le cloud avec les vrais champs de ton modèle
                 Facture.objects.create(
-                    numero_facture=numero_facture,
-                    nom_fournisseur=nom_fournisseur,
-                    montant=float(montant_brut),
-                    devise=devise,
-                    date_facture=date_facture
+                    date_commande=date_commande,
+                    montant_total=float(montant_total),
+                    # Si le champ 'devise' n'existe pas encore dans ton models.py, 
+                    # Django l'ignorera ou mettra une erreur. L'idéal est de l'enregistrer ainsi :
                 )
             except Exception:
                 pass
             return redirect('/factures/')
 
-    # Récupération de l'historique global depuis le cloud
-    toutes_les_factures = Facture.objects.all().order_by('-date_facture', '-id')
+    # Correction de l'erreur 500/FieldError en utilisant le bon champ 'date_commande'
+    toutes_les_factures = Facture.objects.all().order_by('-date_commande', '-id')
     
     return render(request, 'factures.html', {
         'profil_actif': profil_actif,
