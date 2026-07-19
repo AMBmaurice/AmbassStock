@@ -158,10 +158,12 @@
             <h3>Statistiques</h3>
         </div>
 
+        <!-- **MODIFICATION : Le formulaire passe en méthode GET pour servir de filtre global unifié** -->
         <div class="stat-container-box">
             <h4 class="card-title">Configuration et Périmètre du Rapport Stratégique</h4>
-            <form method="POST" action="" style="display: flex; flex-direction: column; gap: 25px;">
-                {% csrf_token %}
+            <form method="GET" action="" style="display: flex; flex-direction: column; gap: 25px;">
+                <!-- **Conservation du mode d'affichage graphique lors du rechargement** -->
+                **<input type="hidden" name="view_mode" value="{{ view_mode }}">**
                 
                 <div class="report-generation-bar">
                     <div class="report-group">
@@ -174,17 +176,18 @@
                         </select>
                     </div>
 
+                    <!-- **CORRECTION : Remplacement des clés de formulaires par target_year et target_month (soumission sur changement)** -->
                     <div id="periodA" class="report-group">
                         <label class="report-label" id="labelA">Période cible</label>
                         <div style="display: flex; gap: 10px;">
-                            <select name="periode_annee" class="select-custom" style="min-width: 110px;">
+                            <select name="target_year" class="select-custom" style="min-width: 110px;" onchange="this.form.submit()">
                                 {% for annee in liste_annees %}
                                     <option value="{{ annee }}" {% if annee == annee_selectionnee %}selected{% endif %}>{{ annee }}</option>
                                 {% endfor %}
                             </select>
-                            <select name="periode_mois" class="select-custom" style="min-width: 140px;">
+                            <select name="target_month" class="select-custom" style="min-width: 140px;" onchange="this.form.submit()">
                                 {% for m in liste_mois %}
-                                    <option value="{{ m.valeur }}" {% if m.valeur == mois_selectionne %}selected{% endif %}>{{ m.nom }}</option>
+                                    <option value="{{ m.valeur }}" {% if m.valeur == mois_selectionne|stringformat:"s" %}selected{% endif %}>{{ m.nom }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -212,32 +215,18 @@
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
-                    <button type="submit" class="btn-generate">Générer le rapport personnalisé</button>
+                    <button type="submit" formaction="/generer-pdf-statistiques/" class="btn-generate">Générer le rapport personnalisé (PDF)</button>
                 </div>
             </form>
         </div>
 
+        <!-- **CORRECTION : Le formulaire de filtre doublon a été épuré pour éviter les désynchronisations** -->
         <div class="stat-container-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
                 <h4 class="card-title" style="margin-bottom: 0;">Indicateurs d'activité globaux</h4>
-                
-                <form method="GET" action="" id="globalIndicatorsForm" style="display: flex; align-items: center; gap: 10px;">
-                    <input type="hidden" name="view_mode" value="{{ view_mode }}">
-                    <input type="hidden" name="target_year" value="{{ annee_selectionnee }}">
-                    <input type="hidden" name="target_month" value="{{ mois_selectionne }}">
-
-                    <select name="stats_year" class="select-custom" style="min-width: 100px; height: 38px;" onchange="document.getElementById('globalIndicatorsForm').submit()">
-                        {% for annee in liste_annees %}
-                            <option value="{{ annee }}" {% if annee == stats_year %}selected{% endif %}>{{ annee }}</option>
-                        {% endfor %}
-                    </select>
-                    
-                    <select name="stats_month" class="select-custom" style="min-width: 140px; height: 38px;" onchange="document.getElementById('globalIndicatorsForm').submit()">
-                        {% for m in liste_mois %}**
-                            <option value="{{ m.valeur }}" {% if m.valeur|stringformat:"s" == stats_month|stringformat:"s" %}selected{% endif %}>{{ m.nom }}</option>
-                        {% endfor %}
-                    </select>
-                </form>
+                <div style="color: #5E6D3E; font-weight: 600; font-size: 0.95rem;">
+                    Période : {{ annee_selectionnee }} {% if mois_selectionne != 'all' %}- Mois ({{ mois_selectionne }}){% else %}- Année complète{% endif %}
+                </div>
             </div>
 
             <div class="big-numbers-grid">
@@ -264,27 +253,15 @@
             <div class="card-header-flex" style="margin-bottom: 25px;">
                 <h4 class="section-title" id="chartMainTitle">Flux analytique des mouvements physiques</h4>
                 
+                <!-- **AJOUT : Sélecteur rapide de Mode de Vue synchronisé avec les filtres globaux** -->
                 <form method="GET" action="" id="chartFilterForm" style="display: flex; align-items: center; gap: 15px;">
-                    <div style="display: flex; flex-direction: column; gap: 4px;">
-                        <select name="view_mode" id="viewModeSelect" class="select-custom" style="min-width: 160px; height: 38px;" onchange="toggleMonthInput()">
-                            <option value="hebdomadaire" {% if view_mode == 'hebdomadaire' %}selected{% endif %}>Vue Semaine</option>
-                            <option value="mensuel" {% if view_mode == 'mensuel' %}selected{% endif %}>Vue Mois</option>
-                        </select>
-                    </div>
+                    <input type="hidden" name="target_year" value="{{ annee_selectionnee }}">
+                    <input type="hidden" name="target_month" value="{{ mois_selectionne }}">
                     
-                    <div id="chartMonthGroup" style="display: {% if view_mode == 'mensuel' %}flex{% else %}none{% endif %}; align-items: center; gap: 10px;">
-                        <select name="target_year" id="chartYearInput" class="select-custom" style="min-width: 110px; height: 38px;" onchange="document.getElementById('chartFilterForm').submit()">
-                            {% for annee in liste_annees %}
-                                <option value="{{ annee }}" {% if annee == annee_selectionnee %}selected{% endif %}>{{ annee }}</option>
-                            {% endfor %}
-                        </select>
-
-                        <select name="target_month" id="chartMonthInput" class="select-custom" style="min-width: 140px; height: 38px;" onchange="document.getElementById('chartFilterForm').submit()">
-                            {% for m in liste_mois %}
-                                <option value="{{ m.valeur }}" {% if m.valeur == mois_selectionne %}selected{% endif %}>{{ m.nom }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    <select name="view_mode" id="viewModeSelect" class="select-custom" style="min-width: 160px; height: 38px;" onchange="document.getElementById('chartFilterForm').submit()">
+                        <option value="hebdomadaire" {% if view_mode == 'hebdomadaire' %}selected{% endif %}>Vue Semaine Glissante</option>
+                        <option value="mensuel" {% if view_mode == 'mensuel' %}selected{% endif %}>Vue Calendrier</option>
+                    </select>
                 </form>
             </div>
             
@@ -331,7 +308,7 @@
                         </ul>
                     </div>
                     
-                    <div style="border-left: 1px solid rgba(230, 234, 228, 0.7);"></div>
+                    <div style="border-left: 1px solid rgba(230, 234, 228, 0.7)"></div>
                     
                     <div class="top-flop-column">
                         <div class="column-title">Flop 3 des produits les moins demandés</div>
@@ -409,18 +386,6 @@
             }
         }
 
-        function toggleMonthInput() {
-            const selectMode = document.getElementById('viewModeSelect').value;
-            const monthGroup = document.getElementById('chartMonthGroup');
-            
-            if (selectMode === 'mensuel') {
-                monthGroup.style.display = 'flex';
-            } else {
-                monthGroup.style.display = 'none';
-                document.getElementById('chartFilterForm').submit();
-            }
-        }
-
         function adjustReportFields() {
             const selectElement = document.getElementById('reportScope');
             const categorieSelectionnee = selectElement.value;
@@ -443,6 +408,7 @@
             }
         }
 
+        // **LIAISON GRAPHISME : Rendu dynamique et précis de l'historique de la base de données**
         const ctxBar = document.getElementById('metricsBarChart').getContext('2d');
         const metricsBarChart = new Chart(ctxBar, {
             type: 'bar',
