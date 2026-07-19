@@ -14,7 +14,6 @@
         .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
         .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
 
-        /* Bandeau Info Style Vert Premium */
         .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.15); color: #495430; padding: 18px 24px; border-radius: 16px; font-weight: 600; margin-bottom: 30px; font-size: 0.98rem; line-height: 1.5; }
         
         .card-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); margin-bottom: 30px; }
@@ -23,8 +22,8 @@
         .form-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; width: 100%; max-width: 650px; }
         .form-label { font-size: 0.82rem; color: #495430; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        .input-custom { height: 50px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 1rem; background-color: #FAFBF9; outline: none; width: 100%; color: #2c351c; font-weight: 500; transition: border-color 0.2s, background-color 0.2s; }
-        .input-custom:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.06); }
+        .input-custom, .select-custom { height: 50px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 1rem; background-color: #FAFBF9; outline: none; width: 100%; color: #2c351c; font-weight: 500; transition: border-color 0.2s, background-color 0.2s; }
+        .input-custom:focus, .select-custom:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.06); }
         
         .input-file-custom { padding-top: 12px; cursor: pointer; }
 
@@ -32,10 +31,8 @@
         .btn-submit:hover { background-color: #495430; }
         .btn-submit:active { transform: scale(0.98); }
 
-        /* Ligne séparatrice fine et transparente */
         .fine-divider { border: 0; height: 1px; background: rgba(73, 84, 48, 0.08); margin: 10px 0 40px 0; }
 
-        /* Structure du Tableau de Factures */
         .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
         .factures-table { width: 100%; border-collapse: collapse; text-align: left; }
         .factures-table th { font-size: 0.82rem; color: #495430; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 20px; border-bottom: 2px solid #E2E6E1; background-color: #FAFBF9; }
@@ -44,6 +41,7 @@
         
         .btn-download { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; background-color: #FAFBF9; color: #495430; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
         .btn-download:hover { background-color: #F1F3F0; border-color: #A3AFA0; }
+        .ref-tag { font-family: monospace; font-weight: 600; color: #5E6D3E; background: #EBF2E9; padding: 4px 8px; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -130,14 +128,12 @@
 </div>
 
 <script>
-
 function toggleSidebar() {
     const sidebar = document.getElementById('appSidebar');
     const openBtn = document.getElementById('sidebarToggleOpen');
     const mainContent = document.querySelector('.main-content');
         
     if (sidebar.style.transform === 'translateX(-290px)') {
-        // Mode Normal (Sidebar Ouverte)
         sidebar.style.transform = 'translateX(0px)';
         sidebar.style.opacity = '1';
         openBtn.style.display = 'none';
@@ -147,7 +143,6 @@ function toggleSidebar() {
             mainContent.style.paddingTop = '0px';
         }
     } else {
-        // Mode Plein Écran (Sidebar Fermée)
         sidebar.style.transform = 'translateX(-290px)';
         sidebar.style.opacity = '0';
         openBtn.style.display = 'flex';
@@ -158,68 +153,86 @@ function toggleSidebar() {
         }
     }
 }
-
 </script>
 
     <div class="main-content">
-        <!-- Bandeau d'information vert -->
         <div class="info-green-banner">
             Dans cet espace, vous pouvez ajouter les factures issues de vos commandes. Vous pouvez retrouver ces factures dans l'historique qui l'accompagne.
         </div>
 
-        <!-- PREMIÈRE CARD : AJOUTER UNE FACTURE -->
         <div class="card-box">
             <h4 class="card-title">Ajouter une facture</h4>
             
-            <form method="POST" action="" enctype="multipart/form-data">
+            <form method="POST" action="">
                 {% csrf_token %}
                 
                 <div class="form-group">
-                    <label class="form-label">Date de la commande</label>
-                    <input type="date" name="date_commande" class="input-custom" required>
+                    <label class="form-label">Numéro de Facture</label>
+                    <input type="text" name="numero_facture" class="input-custom" placeholder="Ex: FAC-2026-001" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Montant total de la commande</label>
-                    <input type="number" step="0.01" name="montant_total" class="input-custom" placeholder="0.00" required>
+                    <label class="form-label">Fournisseur / Prestataire</label>
+                    <input type="text" name="nom_fournisseur" class="input-custom" placeholder="Ex: Lyreco" required>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Téléverser la facture</label>
-                    <input type="file" name="fichier_facture" class="input-custom input-file-custom" required>
+                    <label class="form-label">Montant de la facture</label>
+                    <input type="number" step="0.01" name="montant" class="input-custom" placeholder="0.00" required>
                 </div>
 
-                <button type="submit" class="btn-submit">Soumettre</button>
+                <div class="form-group">
+                    <label class="form-label">Devise</label>
+                    <select name="devise" class="select-custom">
+                        <option value="EUR" selected>Euro (€)</option>
+                        <option value="USD">Dollar ($)</option>
+                        <option value="MUR">Roupie Mauricienne (₨)</option>
+                        <option value="GBP">Livre Sterling (£)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Date d'émission</label>
+                    <input type="date" name="date_facture" class="input-custom">
+                </div>
+
+                <button type="submit" class="btn-submit">Soumettre au Cloud</button>
             </form>
         </div>
 
-        <!-- LIGNE FINE TRANSLUCIDE SÉPARATRICE -->
         <hr class="fine-divider">
 
-        <!-- DEUXIÈME CARD DISTINCTE : HISTORIQUE DES FACTURES -->
         <div class="card-box">
             <h4 class="card-title">Historique des factures</h4>
             <div class="table-container">
                 <table class="factures-table">
                     <thead>
                         <tr>
-                            <th>Date de la commande</th>
+                            <th>Date d'émission</th>
+                            <th>Numéro de Facture</th>
+                            <th>Fournisseur</th>
                             <th>Montant total de la commande</th>
-                            <th>Facture format digitalisé</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for f in factures %}
                         <tr>
-                            <td>{{ f.date_commande|date:"d/m/Y" }}</td>
-                            <td>{{ f.montant_total }} €</td>
-                            <td>
-                                <a href="{{ f.fichier_facture.url }}" class="btn-download" target="_blank">Voir le document</a>
+                            <td style="color: #7A8278;">{{ f.date_facture|date:"d/m/Y" }}</td>
+                            <td><span class="ref-tag">{{ f.numero_facture }}</span></td>
+                            <td><strong>{{ f.nom_fournisseur }}</strong></td>
+                            <td style="font-weight: 700; color: #2c351c;">
+                                {{ f.montant }} 
+                                {% if f.devise == 'EUR' %}€
+                                {% elif f.devise == 'USD' %}$
+                                {% elif f.devise == 'MUR' %}₨
+                                {% elif f.devise == 'GBP' %}£
+                                {% else %}{{ f.devise }}
+                                {% endif %}
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="3" style="color: #7A8278; font-style: italic; text-align: center; padding: 30px;">Aucune facture enregistrée pour le moment.</td>
+                            <td colspan="4" style="color: #7A8278; font-style: italic; text-align: center; padding: 30px;">Aucune facture enregistrée dans la base cloud pour le moment.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
