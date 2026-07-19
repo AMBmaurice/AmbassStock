@@ -717,9 +717,8 @@ def page_factures(request):
     if request.method == "POST":
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
-        devise = request.POST.get('devise', 'EUR')
         
-        # Interception obligatoire du fichier PDF physique transmis par le formulaire
+        # Le fichier physique envoyé par le formulaire
         fichier_facture = request.FILES.get('fichier_facture')
         
         if not date_commande:
@@ -728,12 +727,11 @@ def page_factures(request):
         
         if montant_total and fichier_facture:
             try:
-                # La méthode create prend en charge le téléversement du fichier physique 
-                # et l'écriture de son lien dans PostgreSQL simultanément
+                # On utilise uniquement les champs validés et existants de ton modèle
+                # pour garantir le fonctionnement immédiat du cloud Supabase
                 Facture.objects.create(
                     date_commande=date_commande,
                     montant_total=float(montant_total),
-                    devise=devise,
                     fichier_facture=fichier_facture
                 )
             except Exception:
