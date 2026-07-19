@@ -717,6 +717,9 @@ def page_factures(request):
     if request.method == "POST":
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
+        devise = request.POST.get('devise', 'EUR')
+        
+        # Interception obligatoire du fichier PDF physique transmis par le formulaire
         fichier_facture = request.FILES.get('fichier_facture')
         
         if not date_commande:
@@ -725,10 +728,12 @@ def page_factures(request):
         
         if montant_total and fichier_facture:
             try:
-                # Enregistrement complet avec le fichier numérisé vers ton stockage cloud
+                # La méthode create prend en charge le téléversement du fichier physique 
+                # et l'écriture de son lien dans PostgreSQL simultanément
                 Facture.objects.create(
                     date_commande=date_commande,
                     montant_total=float(montant_total),
+                    devise=devise,
                     fichier_facture=fichier_facture
                 )
             except Exception:
