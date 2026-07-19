@@ -717,33 +717,31 @@ def page_factures(request):
     if request.method == "POST":
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
-        devise = request.POST.get('devise', 'EUR')
+        fichier_facture = request.FILES.get('fichier_facture')
         
         if not date_commande:
             from datetime import date
             date_commande = date.today()
         
-        if montant_total:
+        if montant_total and fichier_facture:
             try:
-                # Enregistrement dans le cloud avec les vrais champs de ton modèle
+                # Enregistrement complet avec le fichier numérisé vers ton stockage cloud
                 Facture.objects.create(
                     date_commande=date_commande,
                     montant_total=float(montant_total),
-                    # Si le champ 'devise' n'existe pas encore dans ton models.py, 
-                    # Django l'ignorera ou mettra une erreur. L'idéal est de l'enregistrer ainsi :
+                    fichier_facture=fichier_facture
                 )
             except Exception:
                 pass
             return redirect('/factures/')
 
-    # Correction de l'erreur 500/FieldError en utilisant le bon champ 'date_commande'
     toutes_les_factures = Facture.objects.all().order_by('-date_commande', '-id')
     
     return render(request, 'factures.html', {
         'profil_actif': profil_actif,
         'factures': toutes_les_factures
     })
-
+    
 def page_gestion_demandes(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
