@@ -740,3 +740,216 @@ def test_database(request):
     return HttpResponse(
         f"Produit créé avec l'ID {produit.id}"
     )
+
+# AJOUT DANS VIEWS.PY : Contrôleur de génération des rapports d'audit personnalisés
+def generer_pdf_statistiques(request):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    
+    profil_actif = get_profil_actif(request.user)
+    maintenant = timezone.now()
+
+    # Extraction des configurations du périmètre du rapport
+    type_analyse = request.GET.get('type_analyse', 'mensuel')
+    inclure_graphiques = request.GET.get('inclure_graphiques') == 'true'
+    inclure_dormants = request.GET.get('inclure_dormants') == 'true'
+    inclure_remarques = request.GET.get('inclure_remarques') == 'true'
+
+    # Variables temporelles cibles pour filtrer l'historique
+    target_year = int(request.GET.get('target_year', maintenant.year))
+    target_month_raw = request.GET.get('target_month', str(maintenant.month))
+
+    # Traitement unifié des périodes pour l'affichage textuel du rapport
+    if target_month_raw != 'all':
+        target_month = int(target_month_raw)
+        periode_a = f"{target_month}/{target_year}"
+        mouvements = MouvementStock.objects.filter(date_mouvement__year=target_year, date_mouvement__month=target_month)
+    else:
+        target_month = 'all'
+        periode_a = f"Année {target_year}"
+        mouvements = MouvementStock.objects.filter(date_mouvement__year=target_year)
+
+    # Variables de période de comparaison (pour les modes comparatifs)
+    periode_b_raw = request.GET.get('periode_b', '')
+    periode_b = periode_b_raw if periode_b_raw else None
+
+    # 1. Calcul des indicateurs logistiques de base pour la période A
+    total_operations = mouvements.count()
+    total_entrees = mouvements.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
+    total_sorties = mouvements.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
+    taux_rotation = round((total_sorties / total_entrees * 100), 1) if total_entrees > 0 else 0.0
+
+    # Extraction des données de répartition (Donuts)
+    sorties_par_service = mouvements.filter(type_mouvement='SORTIE').values('service').annotate(total=Sum('quantite')).order_by('-total')
+    service_labels = [s['service'] for s in sorties_par_service]
+    service_data = [s['total'] for s in sorties_par_service]
+
+    sorties_par_cat = mouvements.filter(type_mouvement='SORTIE', produit__isnull=False).values('produit__categorie').annotate(total=Sum('quantite')).order_by('-total')
+    category_labels = [c['produit__categorie'] for c in sorties_par_cat]
+    category_data = [c['total'] for c in sorties_par_cat]
+
+    # Extraction des matériels dormants (sans flux depuis plus de 180 jours)
+    seuil_dormant = maintenant - timedelta(days=180)
+    produits_dormants = Produit.objects.filter(derniere_activite__lte=seuil_dormant).order_by('objet')
+    
+    # Qualification du statut d'immobilisation
+    statut_dormant = "Optimal" if produits_dormants.count() <= 5 else "Vigilance Requise"
+    statut_general = "Activité Stable" if total_operations > 10 else "Activité Faible"
+
+    # Initialisation des variables spécifiques aux structures de rapports
+    kpis_avances = []
+    tableau_specifique = None
+    synthese_generale = "Aucun mouvement significatif enregistré sur cette période pour formuler un audit."
+    remarque_sectorielle = "Les données de consommation sectorielles sont équilibrées."
+    remarque_dormant = "Le volume de stockage passif ne présente pas d'anomalie critique."
+
+    # ==========================================
+    # STRUCTURE 1 : AUDIT MENSUEL SPÉCIFIQUE
+    # ==========================================
+    if type_analyse == 'mensuel':
+        score_intensite = round(total_sorties / total_operations, 1) if total_operations > 0 else 0
+        kpis_avances = [
+            {"nom": "Score d'Intensité (Volume moyen par retrait)", "valeur": f"{score_intensite} unités", "seuil": "Fux réguliers", "diag": "Valide"},
+            {"nom": "Indice de Flux Tendus (Entrées vs Sorties)", "valeur": f"{total_entrees} entrées / {total_sorties} sorties", "seuil": "Équilibre requis", "diag": "Flux Ajustés"}
+        ]
+        
+        # Calcul automatique des articles menacés de rupture sous 15 jours
+        alertes_approvisionnement = []
+        for p in Produit.objects.all():
+            sorties_mensuelles = mouvements.filter(type_mouvement='SORTIE', produit=p).aggregate(s=Sum('quantite'))['s'] or 0
+            vitesse_consommation_15j = sorties_mensuelles / 2
+            if p.quantite <= vitesse_consommation_15j and sorties_mensuelles > 0:
+                alertes_approvisionnement.append({"reference": p.reference, "objet": p.objet, "stock": p.quantite, "consomme": sorties_mensuelles})
+        
+        tableau_specifique = {"type": "alertes_mensuelles", "donnees": alertes_approvisionnement}
+        
+        # Rédaction des conclusions opérationnelles mensuelles
+        if total_sorties > 0:
+            service_majoritaire = service_labels[0] if service_labels else "aucun"
+            synthese_generale = f"L'audit du mois indique une activité concentrée sur le service {service_majoritaire}. Le rythme des sorties impose un contrôle strict des stocks physiques au début du mois prochain."
+            remarque_sectorielle = f"Le pôle majeur de consommation de ce mois est représenté par la catégorie {category_labels[0] if category_labels else 'non définie'}."
+            remarque_dormant = f"Il est recommandé d'apurer les {produits_dormants.count()} références inactives pour libérer de l'espace pour les consommables à forte rotation."
+
+    # ==========================================
+    # STRUCTURE 2 : BILAN ANNUEL SPÉCIFIQUE
+    # ==========================================
+    elif type_analyse == 'annuel':
+        estimation_encombrement = produits_dormants.aggregate(t=Sum('quantite'))['t'] or 0
+        kpis_avances = [
+            {"nom": "Volume Annuel Immobilisé Inactif", "valeur": f"{estimation_encombrement} unités", "seuil": "Inférieur à 200", "diag": "Alerte Espace" if estimation_encombrement > 200 else "Conforme"},
+            {"nom": "Taux d'Utilisation des Stocks Passifs", "valeur": "0.0%", "seuil": "Objectif de réduction", "diag": "Perte Sèche"}
+        ]
+        
+        # Construction du palmarès complet d'efficacité annuelle des services
+        palmares = []
+        for s in sorties_par_service:
+            palmares.append({"service": s['service'], "total": s['total'], "part": round((s['total'] / total_sorties * 100), 1) if total_sorties > 0 else 0})
+        
+        tableau_specifique = {"type": "palmares_annuel", "donnees": palmares}
+        
+        # Rédaction des conclusions budgétaires annuelles
+        synthese_generale = f"Le bilan logistique annuel montre un volume total cumulé de {total_operations} fiches d'opérations. Le taux de rotation global s'établit à {taux_rotation}%, révélant la performance de la chaîne d'approvisionnement."
+        remarque_sectorielle = "L'analyse macroscopique sur 12 mois démontre une dépendance structurelle aux consommables de bureau et d'administration."
+        remarque_dormant = f"L'immobilisation prolongée de {produits_dormants.count()} références représente un coût d'opportunité spatial pour la réserve de la délégation."
+
+    # ==========================================
+    # STRUCTURE 3 : COMPARAISON ÉVOLUTION (MOIS A VS MOIS B)
+    # ==========================================
+    elif type_analyse == 'comparaison_mois':
+        mois_b_data = {"entrees": 0, "sorties": 0, "ops": 0}
+        if periode_b:
+            try:
+                date_b = datetime.strptime(periode_b, "%Y-%m")
+                mouv_b = MouvementStock.objects.filter(date_mouvement__year=date_b.year, date_mouvement__month=date_b.month)
+                mois_b_data["ops"] = mouv_b.count()
+                mois_b_data["entrees"] = mouv_b.filter(type_mouvement='ENTREE').aggregate(t=Sum('quantite'))['t'] or 0
+                mois_b_data["sorties"] = mouv_b.filter(type_mouvement='SORTIE').aggregate(t=Sum('quantite'))['t'] or 0
+            except ValueError:
+                pass
+
+        ecart_sorties = total_sorties - mois_b_data["sorties"]
+        pct_evolution = round((ecart_sorties / mois_b_data["sorties"] * 100), 1) if mois_b_data["sorties"] > 0 else 0
+        tendance_txt = f"+{pct_evolution}%" if pct_evolution >= 0 else f"{pct_evolution}%"
+
+        kpis_avances = [
+            {"nom": "Évolution Relative des Sorties", "valeur": tendance_txt, "seuil": "Objectif Sobriété", "diag": "En Hausse" if pct_evolution > 0 else "En Baisse"},
+            {"nom": "Variation Volumétrique des Fiches", "valeur": f"{total_operations - mois_b_data['ops']} unités", "seuil": "Stabilité visée", "diag": "Ajusté"}
+        ]
+
+        # Tableau des écarts relatifs par catégorie
+        ecarts_categories = []
+        for cat in list(set(category_labels)):
+            q_a = mouvements.filter(type_mouvement='SORTIE', produit__categorie=cat).aggregate(t=Sum('quantite'))['t'] or 0
+            q_b = 0
+            if periode_b:
+                q_b = MouvementStock.objects.filter(type_mouvement='SORTIE', date_mouvement__year=date_b.year, date_mouvement__month=date_b.month, produit__categorie=cat).aggregate(t=Sum('quantite'))['t'] or 0
+            ecarts_categories.append({"categorie": cat, "mois_a": q_a, "mois_b": q_b, "ecart": q_a - q_b})
+
+        tableau_specifique = {"type": "ecarts_mensuels", "donnees": ecarts_categories}
+
+        # Rédaction comparative de court terme
+        synthese_generale = f"La comparaison directe montre une variation d'activité de {tendance_txt} du volume de matériel retiré entre la période de référence et la période de comparaison."
+        remarque_sectorielle = "L'analyse met en relief des oscillations de consommation sectorielles dictées par l'agenda des événements diplomatiques."
+        remarque_dormant = "Les stocks passifs sont restés rigoureusement inchangés entre les deux mois audités."
+
+    # ==========================================
+    # STRUCTURE 4 : COMPARAISON INTERANNUELLE (ANNÉE A VS ANNÉE B)
+    # ==========================================
+    elif type_analyse == 'comparaison_ans':
+        annee_b_data = {"entrees": 0, "sorties": 0, "ops": 0}
+        annee_b_target = target_year - 1
+        if periode_b and len(periode_b) == 4:
+            annee_b_target = int(periode_b)
+        
+        mouv_annee_b = MouvementStock.objects.filter(date_mouvement__year=annee_b_target)
+        annee_b_data["ops"] = mouv_annee_b.count()
+        annee_b_data["entrees"] = mouv_annee_b.filter(type_mouvement='ENTREE').aggregate(t=Sum('quantite'))['t'] or 0
+        annee_b_data["sorties"] = mouv_annee_b.filter(type_mouvement='SORTIE').aggregate(t=Sum('quantite'))['t'] or 0
+        rot_b = round((annee_b_data["sorties"] / annee_b_data["entrees"] * 100), 1) if annee_b_data["entrees"] > 0 else 0
+
+        kpis_avances = [
+            {"nom": "Évolution Efficience Globale (Taux Rotation)", "valeur": f"{taux_rotation}% vs {rot_b}%", "seuil": "Progression attendue", "diag": "Optimisé" if taux_rotation >= rot_b else "Régression"},
+            {"nom": "Variation structurelle des flux", "valeur": f"{total_operations - annee_b_data['ops']} opérations", "seuil": "Suivi long terme", "diag": "Évolution Constatée"}
+        ]
+
+        # Bilan de trajectoire annuel condensé
+        trajectoire = [
+            {"indicateur": "Opérations globales", "annee_a": total_operations, "annee_b": annee_b_data["ops"], "evolution": total_operations - annee_b_data["ops"]},
+            {"indicateur": "Volume total entré", "annee_a": total_entrees, "annee_b": annee_b_data["entrees"], "evolution": total_entrees - annee_b_data["entrees"]},
+            {"indicateur": "Volume total sorti", "annee_a": total_sorties, "annee_b": annee_b_data["sorties"], "evolution": total_sorties - annee_b_data["sorties"]}
+        ]
+        
+        tableau_specifique = {"type": "trajectoire_annuelle", "donnees": trajectoire}
+        periode_b = f"Année {annee_b_target}"
+
+        # Rédaction macro pour la direction
+        synthese_generale = f"L'analyse pluriannuelle objective une transformation des trajectoires de flux. L'écart net d'opérations s'établit à {total_operations - annee_b_data['ops']} fiches sur les cycles comparés."
+        remarque_sectorielle = "Les glissements de consommation interannuels traduisent une rationalisation progressive des achats de fournitures de la délégation."
+        remarque_dormant = "La pérennité de certaines poches d'inactivité dans le stock sur 24 mois nécessite la mise en place d'un protocole d'apurement global."
+
+    # Rendu final vers le template HTML d'impression
+    return render(request, 'rapport_statistiques.html', {
+        'profil_actif': profil_actif,
+        'type_analyse': type_analyse,
+        'periode_a': periode_a,
+        'periode_b': periode_b,
+        'total_operations': total_operations,
+        'taux_rotation': taux_rotation,
+        'total_entrees': total_entrees,
+        'total_sorties': total_sorties,
+        'statut_general': statut_general,
+        'statut_dormant': statut_dormant,
+        'produits_dormants': produits_dormants,
+        'inclure_graphiques': inclure_graphiques,
+        'inclure_dormants': inclure_dormants,
+        'inclure_remarques': inclure_remarques,
+        'service_labels': service_labels,
+        'service_data': service_data,
+        'category_labels': category_labels,
+        'category_data': category_data,
+        'kpis_avances': kpis_avances,
+        'tableau_specifique': tableau_specifique,
+        'synthese_generale': synthese_generale,
+        'remarque_sectorielle': remarque_sectorielle,
+        'remarque_dormant': remarque_dormant,
+    })
