@@ -236,7 +236,7 @@ function toggleSidebar() {
                             </td>
                             <td>
                                 {% if f.fichier_facture %}
-                                    <a href="https://thdejgdwiatuhlrzlhxh.storage.supabase.co/storage/v1/object/public/{{ f.fichier_facture.name }}" class="btn-download" target="_blank">Voir le document</a>
+                                    <a href="{{ f.fichier_facture.url }}" class="btn-download" target="_blank">Voir le document</a>
                                 {% else %}
                                     <span style="color: #7A8278; font-style: italic;">Aucun fichier</span>
                                 {% endif %}
