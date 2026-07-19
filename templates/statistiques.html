@@ -218,36 +218,41 @@
         </div>
 
         <!-- MODIFICATION : BLOC TOTALEMENT INDÉPENDANT DE FILTRAGE TEMPPOREL POUR L'ÉCRAN -->
-        **<div class="stat-container-box" style="padding: 20px 30px; margin-bottom: 25px;">**
-            **<form method="GET" action="" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">**
-                **<input type="hidden" name="view_mode" value="{{ view_mode }}">**
+        <div class="stat-container-box" style="padding: 30px; margin-bottom: 25px;">
+            <h4 class="card-title" style="margin-bottom: 5px;">Filtrage des données en direct</h4>
+            <p style="font-size: 0.9rem; color: #7A8278; margin-bottom: 20px; text-align: left;">
+                Choisissez ici la période et l'échelle de la vue pour adapter instantanément les indicateurs, les graphiques analytiques ainsi que les palmarès de performance de l'écran.
+            </p>
+
+            <form method="GET" action="" style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <input type="hidden" name="view_mode" value="{{ view_mode }}">
                 
-                **<div style="display: flex; flex-direction: column; gap: 6px;">**
-                    **<span style="font-size: 0.78rem; color: #7A8278; font-weight: 700; text-transform: uppercase;">Filtrer les données de l'écran</span>**
-                    **<div style="display: flex; gap: 10px;">**
-                        **<select name="filter_year" class="select-custom" style="min-width: 120px; height: 40px;" onchange="this.form.submit()">**
-                            **{% for annee in liste_annees %}**
-                                **<option value="{{ annee }}" {% if annee == filter_year %}selected{% endif %}>{{ annee }}</option>**
-                            **{% endfor %}**
-                        **</select>**
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <span style="font-size: 0.78rem; color: #7A8278; font-weight: 700; text-transform: uppercase;">Période de consultation</span>
+                    <div style="display: flex; gap: 10px;">
+                        <select name="filter_year" class="select-custom" style="min-width: 120px; height: 40px;" onchange="this.form.submit()">
+                            {% for annee in liste_annees %}
+                                <option value="{{ annee }}" {% if annee == filter_year %}selected{% endif %}>{{ annee }}</option>
+                            {% endfor %}
+                        </select>
                         
-                        **<select name="filter_month" class="select-custom" style="min-width: 160px; height: 40px;" onchange="this.form.submit()">**
-                            **{% for m in liste_mois %}**
-                                **<option value="{{ m.valeur }}" {% if m.valeur == filter_month|stringformat:"s" %}selected{% endif %}>{{ m.nom }}</option>**
-                            **{% endfor %}**
-                        **</select>**
-                    **</div>**
-                **</div>**
+                        <select name="filter_month" class="select-custom" style="min-width: 160px; height: 40px;" onchange="this.form.submit()">
+                            {% for m in liste_mois %}
+                                <option value="{{ m.valeur }}" {% if m.valeur == filter_month|stringformat:"s" %}selected{% endif %}>{{ m.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
                 
-                **<div style="margin-left: auto; display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">**
-                    **<span style="font-size: 0.78rem; color: #7A8278; font-weight: 700; text-transform: uppercase;">Échelle du graphique</span>**
-                    **<div style="display: flex; gap: 8px;">**
-                        **<a href="?filter_year={{ filter_year }}&filter_month={{ filter_month }}&view_mode=hebdomadaire" class="btn-generate" style="height: 40px; background-color: {% if view_mode == 'hebdomadaire' %}#5E6D3E{% else %}#D0D6CE{% endif %}; color: {% if view_mode == 'hebdomadaire' %}#ffffff{% else %}#2c351c{% endif %}; font-size: 0.88rem; text-decoration: none; padding: 0 15px; border-radius: 8px;">Semaine Glissante</a>**
-                        **<a href="?filter_year={{ filter_year }}&filter_month={{ filter_month }}&view_mode=mensuel" class="btn-generate" style="height: 40px; background-color: {% if view_mode == 'mensuel' %}#5E6D3E{% else %}#D0D6CE{% endif %}; color: {% if view_mode == 'mensuel' %}#ffffff{% else %}#2c351c{% endif %}; font-size: 0.88rem; text-decoration: none; padding: 0 15px; border-radius: 8px;">Vue Calendrier</a>**
-                    **</div>**
-                **</div>**
-            **</form>**
-        **</div>**
+                <div style="margin-left: auto; display: flex; flex-direction: column; gap: 6px; align-items: flex-end;">
+                    <span style="font-size: 0.78rem; color: #7A8278; font-weight: 700; text-transform: uppercase;">Échelle du graphique</span>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="?filter_year={{ filter_year }}&filter_month={{ filter_month }}&view_mode=hebdomadaire" class="btn-generate" style="height: 40px; background-color: {% if view_mode == 'hebdomadaire' %}#5E6D3E{% else %}#D0D6CE{% endif %}; color: {% if view_mode == 'hebdomadaire' %}#ffffff{% else %}#2c351c{% endif %}; font-size: 0.88rem; text-decoration: none; padding: 0 15px; border-radius: 8px;">Semaine Glissante</a>
+                        <a href="?filter_year={{ filter_year }}&filter_month={{ filter_month }}&view_mode=mensuel" class="btn-generate" style="height: 40px; background-color: {% if view_mode == 'mensuel' %}#5E6D3E{% else %}#D0D6CE{% endif %}; color: {% if view_mode == 'mensuel' %}#ffffff{% else %}#2c351c{% endif %}; font-size: 0.88rem; text-decoration: none; padding: 0 15px; border-radius: 8px;">Vue Calendrier</a>
+                    </div>
+                </div>
+            </form>
+        </div>
 
         <!-- BLOC INDICATEURS GLOBAUX -->
         <div class="stat-container-box">
@@ -427,7 +432,6 @@
             }
         }
 
-        // **LIAISON GRAPHISME : Rendu dynamique et précis de l'historique de la base de données**
         const ctxBar = document.getElementById('metricsBarChart').getContext('2d');
         const metricsBarChart = new Chart(ctxBar, {
             type: 'bar',
