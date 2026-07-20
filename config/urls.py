@@ -9,13 +9,14 @@ urlpatterns = [
     path('deconnexion/', views.page_deconnexion, name='deconnexion'),
     path('accueil/', views.page_accueil, name='accueil'),
     
-    # Liens connectés aux vraies fonctions dédiées
+    # Liens connectés aux vues de l'application
     path('statistiques/', views.page_statistiques, name='statistiques'),
     path('factures/', views.page_factures, name='factures'),
+    path('factures/voir/<int:facture_id>/', views.afficher_facture, name='voir_facture'),
     path('gestion-demandes/', views.page_gestion_demandes, name='gestion_demandes'),
     path('gestion-utilisateurs/', views.page_gestion_utilisateurs, name='gestion_utilisateurs'),
     
-    # Routes actives de l'application
+    # Routes principales d'inventaire et stocks
     path('inventaire/', views.page_inventaire, name='inventaire'),
     path('inventaire', views.page_inventaire),
     
