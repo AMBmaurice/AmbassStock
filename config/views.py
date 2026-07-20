@@ -82,32 +82,63 @@ def page_accueil(request):
     )
     
     maintenant = timezone.now()
-    jour_semaine = maintenant.weekday()
-    heure_actuelle = maintenant.hour
-            
+    jour = maintenant.weekday() # 0 = Lundi, 1 = Mardi, 2 = Mercredi, 3 = Jeudi, 4 = Vendredi, ...
+    heure = maintenant.hour
+    
     liste_des_services = [
-        "Consulaire",
-        "Secrétaire",
-        "Secrétaire AMB",
-        "1ère Secrétaire",
-        "2ème Secrétaire",
-        "Diplomate",
-        "Administration"
+        "Consulaire", "Secrétaire", "Secrétaire AMB",
+        "1ère Secrétaire", "2ème Secrétaire", "Diplomate", "Administration"
     ]
     for nom_service in liste_des_services:
         DeclarationHebdomadaire.objects.get_or_create(service=nom_service)
-            
-    if jour_semaine == 2 and heure_actuelle == 0:
-        DeclarationHebdomadaire.objects.all().update(
+
+    # -------------------------------------------------------------
+    # GESTION DES CYCLES TEMPORELS ET DÉCALAGES
+    # -------------------------------------------------------------
+    
+    # 1. Jeudi à partir de 18h (Jeudi soir) : Réinitialisation automatique pour ceux qui ont répondu
+    if jour == 3 and heure >= 18:
+        declarations_validees = DeclarationHebdomadaire.objects.filter(statut='valide', reinitialise_cette_semaine=False)
+        for dec in declarations_validees:
+            dec.statut = 'en_attente'
+            dec.reponse = None
+            dec.date_validation = None
+            dec.force_valide_par_admin = False
+            dec.non_reponses_consecutives = 0 # Remise à zéro des infractions
+            dec.reinitialise_cette_semaine = True
+            dec.save()
+
+    # 2. Jeudi 18h : Clôture de la période pour les retardataires qui n'ont pas répondu
+    if jour == 3 and heure >= 18:
+        declarations_retard = DeclarationHebdomadaire.objects.exclude(statut__in=['valide', 'en_attente'])
+        for dec in declarations_retard:
+            if dec.statut != 'non_repondu':
+                dec.statut = 'non_repondu'
+                dec.non_reponses_consecutives += 1
+                dec.save()
+
+    # 3. Vendredi à partir de 12h00 : Remise à zéro ultime pour les retardataires ("n'a pas répondu")
+    if jour == 4 and heure >= 12:
+        DeclarationHebdomadaire.objects.filter(statut='non_repondu').update(
             statut='en_attente',
             reponse=None,
             date_validation=None,
-            force_valide_par_admin=False
+            force_valide_par_admin=False,
+            reinitialise_cette_semaine=True
         )
-    
-    if (jour_semaine == 1 and heure_actuelle >= 10) or (jour_semaine == 2 and heure_actuelle < 0):
-        DeclarationHebdomadaire.objects.filter(statut='en_attente').update(statut='en_retard')
-    
+
+    # 4. Remise à zéro du flag de réinitialisation le Vendredi soir à 23h
+    if jour == 4 and heure >= 23:
+        DeclarationHebdomadaire.objects.all().update(reinitialise_cette_semaine=False)
+
+    # 5. Évolution automatique du statut "en_attente" vers "a_relancer" du Lundi 12h au Jeudi 18h
+    est_periode_relance = (jour == 0 and heure >= 12) or (jour in [1, 2]) or (jour == 3 and heure < 18)
+    if est_periode_relance:
+        DeclarationHebdomadaire.objects.filter(statut='en_attente').update(statut='a_relancer')
+
+    # -------------------------------------------------------------
+    # GESTION DES SOUMISSIONS POST
+    # -------------------------------------------------------------
     if request.method == "POST":
         if "soumettre_declaration" in request.POST:
             service_choisi = request.POST.get('service')
@@ -150,14 +181,20 @@ def page_accueil(request):
             return redirect('/accueil/')
             
     declarations_reelles = DeclarationHebdomadaire.objects.all()
-        
-    notification_alerte = None
-    if not est_role_admin:
-        for d in declarations_reelles:
-            if d.statut == "en_retard":
-                notification_alerte = f"Attention, il est temps de se régulariser pour le service {d.service} !"
-                break
-                
+    
+    # Extraction des services retardataires (statut 'a_relancer' ou 'non_repondu')
+    services_retardataires = [d.service for d in declarations_reelles if d.statut in ['a_relancer', 'non_repondu']]
+
+    # Activation des notifications selon les créneaux exacts
+    # Phase 1 : Barre transparente du Lundi 12h au Mercredi 12h
+    afficher_barre_relance = ((jour == 0 and heure >= 12) or jour == 1 or (jour == 2 and heure < 12)) and len(services_retardataires) > 0
+    
+    # Phase 2 : Pop-up répétitive du Mercredi 12h au Vendredi 12h
+    afficher_popup_relance = ((jour == 2 and heure >= 12) or jour == 3 or (jour == 4 and heure < 12)) and len(services_retardataires) > 0
+
+    # Détection des récidivistes (3 absences consécutives) pour l'administrateur
+    alertes_admin_recidive = DeclarationHebdomadaire.objects.filter(non_reponses_consecutives__gte=3) if est_role_admin else []
+
     page_obj_alerte = None
     if est_role_admin:
         liste_alerte = Produit.objects.filter(quantite__lte=F('quota_minimum')).order_by('objet')
@@ -168,10 +205,13 @@ def page_accueil(request):
     return render(request, 'accueil.html', {
         'profil_actif': profil_actif,
         'declarations': declarations_reelles,
-        'notification_alerte': notification_alerte,
         'is_admin': est_role_admin,
         'demandes': DemandeService.objects.all().order_by('-id'),
-        'produits_alerte': page_obj_alerte
+        'produits_alerte': page_obj_alerte,
+        'services_retardataires': services_retardataires,
+        'afficher_barre_relance': afficher_barre_relance,
+        'afficher_popup_relance': afficher_popup_relance,
+        'alertes_admin_recidive': alertes_admin_recidive
     })
 
 def page_inventaire(request):
