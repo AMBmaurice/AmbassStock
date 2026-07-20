@@ -84,13 +84,14 @@ class DeclarationHebdomadaire(models.Model):
     date_validation = models.DateTimeField(blank=True, null=True)
     force_valide_par_admin = models.BooleanField(default=False)
     
-    # AJOUTS : Pour la règle des 3 retards consécutifs et le suivi de semaine
+    # Suivi des retards consécutifs, du cycle et des alertes
     non_reponses_consecutives = models.IntegerField(default=0)
+    reinitialise_cette_semaine = models.BooleanField(default=False)
     semaine_actuelle = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.service} - {self.statut}"
-        
+
 class DemandeService(models.Model):
     CHOIX_TYPES = [
         ('suggestion', 'Une suggestion'),
@@ -128,6 +129,13 @@ class Facture(models.Model):
     date_commande = models.DateField()
     montant_total = models.DecimalField(max_digits=10, decimal_places=2)
     fichier_facture = models.FileField(upload_to='factures/')
+
+    @property
+    def url_corrigee(self):
+        if self.fichier_facture:
+            # Nettoie les éventuels doublons de sous-dossiers dans l'URL Supabase/Django
+            return self.fichier_facture.url.replace('Factures/factures/', 'factures/')
+        return ""
 
     def __str__(self):
         return f"Facture du {self.date_commande} - {self.montant_total}€"
