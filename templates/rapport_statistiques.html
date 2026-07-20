@@ -109,20 +109,22 @@
                     <th>Référence</th>
                     <th>Désignation</th>
                     <th>Stock actuel</th>
+                    <th>Quota min.</th>
                     <th>Volume consommé (mois)</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in tableau_specifique.donnees %}
-                <tr>
+                <tr style="background-color: #FCEAE8;">
                     <td>{{ item.reference }}</td>
-                    <td><strong>{{ item.objet }}</strong></td>
-                    <td>{{ item.stock }}</td>
+                    <td><strong style="color: #BA3C2A;">{{ item.objet }}</strong></td>
+                    <td><strong style="color: #BA3C2A;">{{ item.stock }}</strong></td>
+                    <td>{{ item.quota }}</td>
                     <td>{{ item.consomme }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="text-align: center; color: #7A8278; font-style: italic;">Aucun article menacé de rupture sur cette période.</td>
+                    <td colspan="5" style="text-align: center; color: #7A8278; font-style: italic; padding: 15px;">Parfait ! Aucun produit n'est actuellement sous son quota minimum (statut rouge).</td>
                 </tr>
                 {% endfor %}
             </tbody>
