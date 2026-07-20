@@ -406,6 +406,41 @@ function toggleSidebar() {
         {% endif %}
                         
         {% if is_admin %}
+        <!-- DÉCLARATION HEBDOMADAIRE ADMIN -->
+        <div class="card-box">
+            <h4 class="card-title">Déclaration hebdomadaire de l'Administration</h4>
+            <p class="card-subtitle">Validation des mouvements logistiques pour le service Administration.</p>
+                
+            <form method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="soumettre_declaration" value="true">
+        
+                <div class="form-group">
+                    <label class="form-label">Section / Service</label>
+                    <select name="service" class="select-custom" required>
+                        <option value="Administration" selected>Administration</option>
+                        <option value="Consulaire">Consulaire</option>
+                        <option value="Secrétaire">Secrétaire</option>
+                        <option value="Secrétaire AMB">Secrétaire AMB</option>
+                        <option value="1ère Secrétaire">1ère Secrétaire</option>
+                        <option value="2ème Secrétaire">2ème Secrétaire</option>
+                        <option value="Diplomate">Diplomate</option>
+                    </select>
+                </div>
+    
+                <div class="form-group">
+                    <label class="form-label">Attestation sur l'honneur pour la semaine en cours</label>
+                    <select name="reponse" class="select-custom" required>
+                        <option value="" disabled selected>Sélectionner votre déclaration officielle...</option>
+                        <option value="pris">Je certifie avoir prélevé des articles dans la réserve et les avoir enregistrés sur la plateforme.</option>
+                        <option value="rien">Je certifie n'avoir effectué aucun prélèvement au cours de cette semaine.</option>
+                    </select> 
+                </div>
+            
+                <button type="submit" class="btn-submit">Soumettre l'émargement</button>
+            </form>
+        </div>
+
         <div class="card-box">
             <h4 class="card-title" style="margin-bottom: 15px;">Centre de réception des émargements</h4>
             <div class="admin-services-grid">
@@ -505,7 +540,6 @@ function fermerPopupTemporairement() {
     document.getElementById('popupRelanceOBLIGATOIRE').style.display = 'none';
 }
 
-// Réaffichage systématique dès que l'utilisateur change d'onglet et revient sur la page
 document.addEventListener("visibilitychange", function() {
     if (!document.hidden) {
         document.getElementById('popupRelanceOBLIGATOIRE').style.display = 'flex';
