@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport Statistiques Logistiques - AmbassStock</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #ffffff; color: #333333; padding: 40px; font-size: 14px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #5E6D3E; padding-bottom: 20px; margin-bottom: 30px; }
+        .title { font-size: 1.8rem; font-weight: 800; color: #2C351C; text-transform: uppercase; letter-spacing: -0.5px; }
+        .subtitle { font-size: 0.95rem; color: #7A8278; margin-top: 5px; }
+        
+        .badge-status { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; background-color: #EBF2E9; color: #5E6D3E; border: 1px solid #5E6D3E; }
+        
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+        .kpi-card { background-color: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 12px; padding: 15px; text-align: center; }
+        .kpi-valeur { font-size: 1.5rem; font-weight: 800; color: #2C351C; margin-bottom: 4px; }
+        .kpi-label { font-size: 0.8rem; color: #7A8278; font-weight: 600; text-transform: uppercase; }
+        
+        .section-title { font-size: 1.2rem; font-weight: 700; color: #2C351C; border-left: 4px solid #5E6D3E; padding-left: 10px; margin: 30px 0 15px 0; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        th { background-color: #5E6D3E; color: #ffffff; text-align: left; padding: 10px 12px; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; }
+        td { padding: 10px 12px; border-bottom: 1px solid #E2E6E1; font-size: 0.9rem; }
+        tr:nth-child(even) { background-color: #FAFBF9; }
+        
+        .box-remarque { background-color: #FAFBF9; border: 1px solid #D0D6CE; border-left: 4px solid #5E6D3E; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-style: italic; color: #495430; line-height: 1.5; }
+        
+        @media print {
+            body { padding: 0; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+        <button onclick="window.print()" style="background-color: #5E6D3E; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Imprimer / Enregistrer en PDF</button>
+    </div>
+
+    <div class="header">
+        <div>
+            <h1 class="title">Rapport d'Audit Logistique</h1>
+            <div class="subtitle">Période audité : <strong>{{ periode_a }}</strong> {% if periode_b %}vs <strong>{{ periode_b }}</strong>{% endif %}</div>
+        </div>
+        <div>
+            <span class="badge-status">{{ statut_general }}</span>
+        </div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-valeur">{{ total_operations }}</div>
+            <div class="kpi-label">Opérations globales</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-valeur">{{ total_entrees }}</div>
+            <div class="kpi-label">Articles entrés</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-valeur">{{ total_sorties }}</div>
+            <div class="kpi-label">Articles sortis</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-valeur">{{ taux_rotation }}%</div>
+            <div class="kpi-label">Taux de rotation</div>
+        </div>
+    </div>
+
+    {% if inclure_remarques %}
+    <h2 class="section-title">Synthèse Opérationnelle</h2>
+    <div class="box-remarque">
+        {{ synthese_generale }}
+    </div>
+    {% endif %}
+
+    {% if kpis_avances %}
+    <h2 class="section-title">Indicateurs d'Efficience</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Indicateur</th>
+                <th>Valeur observée</th>
+                <th>Seuil de référence</th>
+                <th>Diagnostic</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for kpi in kpis_avances %}
+            <tr>
+                <td><strong>{{ kpi.nom }}</strong></td>
+                <td>{{ kpi.valeur }}</td>
+                <td>{{ kpi.seuil }}</td>
+                <td><strong>{{ kpi.diag }}</strong></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    {% if tableau_specifique %}
+        <h2 class="section-title">Analyse Détaillée des Mouvements</h2>
+        {% if tableau_specifique.type == 'alertes_mensuelles' %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Désignation</th>
+                    <th>Stock actuel</th>
+                    <th>Volume consommé (mois)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tableau_specifique.donnees %}
+                <tr>
+                    <td>{{ item.reference }}</td>
+                    <td><strong>{{ item.objet }}</strong></td>
+                    <td>{{ item.stock }}</td>
+                    <td>{{ item.consomme }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #7A8278; font-style: italic;">Aucun article menacé de rupture sur cette période.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% elif tableau_specifique.type == 'palmares_annuel' %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Total des sorties</th>
+                    <th>Part relative</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tableau_specifique.donnees %}
+                <tr>
+                    <td><strong>{{ item.service }}</strong></td>
+                    <td>{{ item.total }}</td>
+                    <td>{{ item.part }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    {% endif %}
+
+    {% if inclure_dormants %}
+    <h2 class="section-title">Matériels en Inactivité Prolongée (> 180 jours)</h2>
+    {% if inclure_remarques %}<p class="box-remarque">{{ remarque_dormant }}</p>{% endif %}
+    <table>
+        <thead>
+            <tr>
+                <th>Référence</th>
+                <th>Désignation</th>
+                <th>Emplacement</th>
+                <th>Quantité stockée</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in produits_dormants %}
+            <tr>
+                <td>{{ p.reference }}</td>
+                <td><strong>{{ p.objet }}</strong></td>
+                <td>{{ p.emplacement|default:"Réserve" }}</td>
+                <td>{{ p.quantite }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #7A8278; font-style: italic;">Aucun matériel dormant identifié.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+</body>
+</html>
