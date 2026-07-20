@@ -14,15 +14,13 @@ from django.db.models import F, Sum, Count, Q
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
-from django.http import HttpResponse
-from .models import Produit
-
 
 from .models import Produit, ProfilUtilisateur, DeclarationHebdomadaire, DemandeService, Facture, MouvementStock
+
 
 def get_profil_actif(user):
     if not user.is_authenticated:
@@ -43,6 +41,7 @@ def get_profil_actif(user):
         return ProfilUtilisateur.objects.get(user=user)
     except ProfilUtilisateur.DoesNotExist:
         return None
+
 
 def page_connexion(request):
     if request.user.is_authenticated: 
@@ -65,6 +64,7 @@ def page_connexion(request):
             
     return render(request, 'connexion.html')
 
+
 def page_accueil(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -82,7 +82,7 @@ def page_accueil(request):
     )
     
     maintenant = timezone.now()
-    jour = maintenant.weekday() # 0 = Lundi, 1 = Mardi, 2 = Mercredi, 3 = Jeudi, 4 = Vendredi, ...
+    jour = maintenant.weekday()  # 0 = Lundi, 1 = Mardi, 2 = Mercredi, 3 = Jeudi, 4 = Vendredi, ...
     heure = maintenant.hour
     
     liste_des_services = [
@@ -104,7 +104,7 @@ def page_accueil(request):
             dec.reponse = None
             dec.date_validation = None
             dec.force_valide_par_admin = False
-            dec.non_reponses_consecutives = 0 # Remise à zéro des infractions
+            dec.non_reponses_consecutives = 0
             dec.reinitialise_cette_semaine = True
             dec.save()
 
@@ -186,10 +186,7 @@ def page_accueil(request):
     services_retardataires = [d.service for d in declarations_reelles if d.statut in ['a_relancer', 'non_repondu']]
 
     # Activation des notifications selon les créneaux exacts
-    # Phase 1 : Barre transparente du Lundi 12h au Mercredi 12h
     afficher_barre_relance = ((jour == 0 and heure >= 12) or jour == 1 or (jour == 2 and heure < 12)) and len(services_retardataires) > 0
-    
-    # Phase 2 : Pop-up répétitive du Mercredi 12h au Vendredi 12h
     afficher_popup_relance = ((jour == 2 and heure >= 12) or jour == 3 or (jour == 4 and heure < 12)) and len(services_retardataires) > 0
 
     # Détection des récidivistes (3 absences consécutives) pour l'administrateur
@@ -213,6 +210,7 @@ def page_accueil(request):
         'afficher_popup_relance': afficher_popup_relance,
         'alertes_admin_recidive': alertes_admin_recidive
     })
+
 
 def page_inventaire(request):
     profil_actif = get_profil_actif(request.user)
@@ -259,7 +257,7 @@ def page_inventaire(request):
             current_page = request.POST.get('page', '1') 
             recherche_term = request.POST.get('q', '')
             statut_filtre = request.POST.get('statut', 'all')
-            tri_filtre = request.POST.get('tri', 'alpha')   
+            tri_filtre = request.POST.get('tri', 'alpha')    
                     
             try:
                 produit = Produit.objects.get(id=produit_id)
@@ -281,14 +279,6 @@ def page_inventaire(request):
             return redirect(redirect_url)
 
         elif action_type == "generer_recapitulatif_pdf":
-            import io
-            from django.http import HttpResponse
-            from django.utils import timezone
-            from reportlab.lib import colors
-            from reportlab.lib.pagesizes import letter
-            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-            
             produits_actifs = Produit.objects.exclude(emplacement="Archivé").filter(quantite__gt=0).order_by('emplacement', 'objet')
             
             buffer = io.BytesIO()
@@ -419,6 +409,7 @@ def page_inventaire(request):
         'tri_filtre': tri_filtre   
     })
 
+
 def page_gestion_stocks(request): 
     profil_actif = get_profil_actif(request.user)
     if not request.user.is_authenticated:
@@ -432,7 +423,7 @@ def page_gestion_stocks(request):
     if request.method == "POST":
         action_type = request.POST.get('action_type')
                     
-        if action_type == "creation" or action_type == "creation_produit":
+        if action_type in ["creation", "creation_produit"]:
             categorie_nom = request.POST.get('categorie')
             objet_nom = request.POST.get('objet') or request.POST.get('nom')
     
@@ -554,6 +545,7 @@ def page_gestion_stocks(request):
         'date_du_jour': aujourd_hui
     })
 
+
 def page_historique(request):
     profil_actif = get_profil_actif(request.user) 
     if not request.user.is_authenticated:
@@ -593,7 +585,6 @@ def page_historique(request):
             movimiento.objet = movimiento.produit.objet
             movimiento.reference = movimiento.produit.reference
             
-    # Application de la pagination par blocs de 20 lignes
     paginator_entrees = Paginator(liste_entrees, 20)
     page_entrees = request.GET.get('page_entrees', 1)
     page_obj_entrees = paginator_entrees.get_page(page_entrees)
@@ -609,6 +600,7 @@ def page_historique(request):
         'entrees': page_obj_entrees.object_list,
         'sorties': page_obj_sorties.object_list
     })
+
     
 @require_POST
 def supprimer_mouvement(request, mouvement_id):
@@ -619,23 +611,20 @@ def supprimer_mouvement(request, mouvement_id):
     messages.success(request, "Mouvement de test supprimé de l'historique.")
     return redirect('/historique/')
 
+
 def page_statistiques(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
     
-    # Période temporelle de base
     maintenant = timezone.now()
     
-    # Paramètres dédiés uniquement à la consultation en direct à l'écran
     filter_year = int(request.GET.get('filter_year', maintenant.year))
     filter_month_raw = request.GET.get('filter_month', str(maintenant.month))
 
-    # Paramètres pour le formulaire de génération de PDF (indépendants)
     annee_selectionnee = int(request.GET.get('target_year', maintenant.year))
     mois_selectionne_raw = request.GET.get('target_month', str(maintenant.month))
 
-    # Listes pour alimenter les menus déroulants
     liste_annees = [maintenant.year, maintenant.year - 1, maintenant.year - 2]
     liste_mois = [
         {'valeur': 'all', 'nom': 'Total Annuel'},
@@ -647,7 +636,6 @@ def page_statistiques(request):
         {'valeur': '11', 'nom': 'Novembre'}, {'valeur': '12', 'nom': 'Décembre'}
     ]
 
-    # Les statistiques de l'écran se basent sur filter_year et filter_month
     mouvements = MouvementStock.objects.filter(date_mouvement__year=filter_year)
     if filter_month_raw != 'all':
         filter_month = int(filter_month_raw)
@@ -655,19 +643,15 @@ def page_statistiques(request):
     else:
         filter_month = 'all'
 
-    # 1. Indicateurs d'activité globaux
     total_operations = mouvements.count()
     total_entrees = mouvements.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
     total_sorties = mouvements.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
     
-    # Correction de la rotation : calcul basé sur le stock global disponible pour éviter le zéro constant
     stock_total_disponible = Produit.objects.aggregate(total=Sum('quantite'))['total'] or 1
     taux_rotation = round((total_sorties / stock_total_disponible * 100), 1)
 
-    # 2. Filtrage et génération du graphique principal (Bar Chart)
     view_mode = request.GET.get('view_mode', 'hebdomadaire')
     
-    # Rendu dynamique basé sur les filtres de consultation de l'écran
     if view_mode == 'mensuel' and filter_month != 'all':
         import calendar
         nb_jours = calendar.monthrange(filter_year, filter_month)[1]
@@ -699,28 +683,23 @@ def page_statistiques(request):
         chart_sorties = [MouvementStock.objects.filter(type_mouvement='SORTIE', date_mouvement=j).aggregate(s=Sum('quantite'))['s'] or 0 for j in jours]
         chart_operations = [MouvementStock.objects.filter(date_mouvement=j).count() for j in jours]
 
-    # 3. Consommation par service
     sorties_par_service = mouvements.filter(type_mouvement='SORTIE').values('service').annotate(total=Sum('quantite')).order_by('-total')
     service_labels = [s['service'] for s in sorties_par_service]
     service_data = [s['total'] for s in sorties_par_service]
 
-    # 4. Répartition par catégorie
     sorties_par_cat = mouvements.filter(type_mouvement='SORTIE', produit__isnull=False).values('produit__categorie').annotate(total=Sum('quantite')).order_by('-total')
     category_labels = [c['produit__categorie'] for c in sorties_par_cat]
     category_data = [c['total'] for c in sorties_par_cat]
 
-    # 5. Top 3 & Flop 3 des ventes
     produits_analytics = mouvements.filter(type_mouvement='SORTIE').values('objet').annotate(total_sorti=Sum('quantite'))
     pas_de_donnees_mouvement = not produits_analytics.exists()
 
     top_produits = produits_analytics.order_by('-total_sorti')[:3]
     flop_produits = produits_analytics.order_by('total_sorti')[:3]
 
-    # 6. Produits dormants (Aucune activité depuis 6 mois)
     seuil_dormant = maintenant - timedelta(days=180)
     produits_dormants = Produit.objects.filter(derniere_activite__lte=seuil_dormant).order_by('objet')
 
-    # Ajustement pour la comparaison de chaînes au format brut
     mois_selectionne = mois_selectionne_raw
 
     return render(request, 'statistiques.html', {
@@ -748,6 +727,7 @@ def page_statistiques(request):
         'flop_produits': flop_produits,
         'produits_dormants': produits_dormants
     })
+
     
 def page_factures(request):
     if not request.user.is_authenticated:
@@ -757,40 +737,41 @@ def page_factures(request):
     if request.method == "POST":
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
-        
-        # Étape 1 & 2 : Extraction du flux binaire du PDF depuis request.FILES (mémoire tampon)
         fichier_facture = request.FILES.get('fichier_facture')
         
         if not date_commande:
-            from datetime import date
             date_commande = date.today()
         
         if montant_total and fichier_facture:
             try:
-                # Étape 3 : Création de l'instance en mémoire vive
                 nouvelle_facture = Facture(
                     date_commande=date_commande,
                     montant_total=float(montant_total)
                 )
-                
-                # Attribuer explicitement le fichier au champ pour forcer DEFAULT_FILE_STORAGE 
-                # à intercepter le fichier, ouvrir la connexion TLS/HTTPS et pousser le stream vers le Bucket
                 nouvelle_facture.fichier_facture = fichier_facture
-                
-                # Étape 4 & 5 : L'appel à .save() déclenche la passerelle S3 compatible de Supabase.
-                # Une fois le transfert physique réussi, Django valide et indexe la ligne dans PostgreSQL.
                 nouvelle_facture.save()
-                
             except Exception:
                 pass
             return redirect('/factures/')
 
-    toutes_les_factures = Facture.objects.all().order_by('-date_commande', '-id')
+    tous_les_factures = Facture.objects.all().order_by('-date_commande', '-id')
     
     return render(request, 'factures.html', {
         'profil_actif': profil_actif,
-        'factures': toutes_les_factures
+        'factures': tous_les_factures
     })
+
+
+def afficher_facture(request, facture_id):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    facture = get_object_or_404(Facture, pk=facture_id)
+    if facture.fichier_facture:
+        url = facture.fichier_facture.url
+        url_propre = url.replace('Factures/factures/', 'factures/')
+        return redirect(url_propre)
+    return redirect('/factures/')
+
     
 def page_gestion_demandes(request):
     if not request.user.is_authenticated:
@@ -798,23 +779,25 @@ def page_gestion_demandes(request):
     profil_actif = get_profil_actif(request.user)
     return render(request, 'gestion_demandes.html', {'profil_actif': profil_actif})
 
+
 def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
     
-    # Récupération de tous les profils utilisateurs
     tous_les_utilisateurs = ProfilUtilisateur.objects.all().order_by('nom_complet')
     
     return render(request, 'gestion_utilisateurs.html', {
         'profil_actif': profil_actif,
-        'utilisateurs': tous_les_utilisateurs # On passe cette liste au template
+        'utilisateurs': tous_les_utilisateurs
     })
+
 
 def page_deconnexion(request):
     logout(request)
     messages.success(request, "Vous avez été déconnecté avec succès.")
     return redirect('/connexion/')
+
 
 def test_database(request):
     produit = Produit.objects.create(
@@ -825,11 +808,9 @@ def test_database(request):
         emplacement="Test"
     )
 
-    return HttpResponse(
-        f"Produit créé avec l'ID {produit.id}"
-    )
+    return HttpResponse(f"Produit créé avec l'ID {produit.id}")
 
-# AJOUT DANS VIEWS.PY : Contrôleur de génération des rapports d'audit personnalisés
+
 def generer_pdf_statistiques(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -837,17 +818,14 @@ def generer_pdf_statistiques(request):
     profil_actif = get_profil_actif(request.user)
     maintenant = timezone.now()
 
-    # Extraction des configurations du périmètre du rapport
     type_analyse = request.GET.get('type_analyse', 'mensuel')
     inclure_graphiques = request.GET.get('inclure_graphiques') == 'true'
     inclure_dormants = request.GET.get('inclure_dormants') == 'true'
     inclure_remarques = request.GET.get('inclure_remarques') == 'true'
 
-    # Variables temporelles cibles pour filtrer l'historique
     target_year = int(request.GET.get('target_year', maintenant.year))
     target_month_raw = request.GET.get('target_month', str(maintenant.month))
 
-    # Traitement unifié des périodes pour l'affichage textuel du rapport
     if target_month_raw != 'all':
         target_month = int(target_month_raw)
         periode_a = f"{target_month}/{target_year}"
@@ -857,17 +835,14 @@ def generer_pdf_statistiques(request):
         periode_a = f"Année {target_year}"
         mouvements = MouvementStock.objects.filter(date_mouvement__year=target_year)
 
-    # Variables de période de comparaison (pour les modes comparatifs)
     periode_b_raw = request.GET.get('periode_b', '')
     periode_b = periode_b_raw if periode_b_raw else None
 
-    # 1. Calcul des indicateurs logistiques de base pour la période A
     total_operations = mouvements.count()
     total_entrees = mouvements.filter(type_mouvement='ENTREE').aggregate(total=Sum('quantite'))['total'] or 0
     total_sorties = mouvements.filter(type_mouvement='SORTIE').aggregate(total=Sum('quantite'))['total'] or 0
     taux_rotation = round((total_sorties / total_entrees * 100), 1) if total_entrees > 0 else 0.0
 
-    # Extraction des données de répartition (Donuts)
     sorties_par_service = mouvements.filter(type_mouvement='SORTIE').values('service').annotate(total=Sum('quantite')).order_by('-total')
     service_labels = [s['service'] for s in sorties_par_service]
     service_data = [s['total'] for s in sorties_par_service]
@@ -876,15 +851,12 @@ def generer_pdf_statistiques(request):
     category_labels = [c['produit__categorie'] for c in sorties_par_cat]
     category_data = [c['total'] for c in sorties_par_cat]
 
-    # Extraction des matériels dormants (sans flux depuis plus de 180 jours)
     seuil_dormant = maintenant - timedelta(days=180)
     produits_dormants = Produit.objects.filter(derniere_activite__lte=seuil_dormant).order_by('objet')
     
-    # Qualification du statut d'immobilisation
     statut_dormant = "Optimal" if produits_dormants.count() <= 5 else "Vigilance Requise"
     statut_general = "Activité Stable" if total_operations > 10 else "Activité Faible"
 
-    # Initialisation des variables spécifiques aux structures de rapports
     kpis_avances = []
     tableau_specifique = None
     synthese_generale = "Aucun mouvement significatif enregistré sur cette période pour formuler un audit."
@@ -897,21 +869,26 @@ def generer_pdf_statistiques(request):
     if type_analyse == 'mensuel':
         score_intensite = round(total_sorties / total_operations, 1) if total_operations > 0 else 0
         kpis_avances = [
-            {"nom": "Score d'Intensité (Volume moyen par retrait)", "valeur": f"{score_intensite} unités", "seuil": "Fux réguliers", "diag": "Valide"},
+            {"nom": "Score d'Intensité (Volume moyen par retrait)", "valeur": f"{score_intensite} unités", "seuil": "Flux réguliers", "diag": "Valide"},
             {"nom": "Indice de Flux Tendus (Entrées vs Sorties)", "valeur": f"{total_entrees} entrées / {total_sorties} sorties", "seuil": "Équilibre requis", "diag": "Flux Ajustés"}
         ]
         
-        # Calcul automatique des articles menacés de rupture sous 15 jours
+        # Sélection de TOUS les produits dont le stock est <= quota minimum (statut rouge)
+        produits_en_rupture = Produit.objects.filter(quantite__lte=F('quota_minimum')).order_by('objet')
+        
         alertes_approvisionnement = []
-        for p in Produit.objects.all():
+        for p in produits_en_rupture:
             sorties_mensuelles = mouvements.filter(type_mouvement='SORTIE', produit=p).aggregate(s=Sum('quantite'))['s'] or 0
-            vitesse_consommation_15j = sorties_mensuelles / 2
-            if p.quantite <= vitesse_consommation_15j and sorties_mensuelles > 0:
-                alertes_approvisionnement.append({"reference": p.reference, "objet": p.objet, "stock": p.quantite, "consomme": sorties_mensuelles})
+            alertes_approvisionnement.append({
+                "reference": p.reference, 
+                "objet": p.objet, 
+                "stock": p.quantite, 
+                "quota": p.quota_minimum,
+                "consomme": sorties_mensuelles
+            })
         
         tableau_specifique = {"type": "alertes_mensuelles", "donnees": alertes_approvisionnement}
         
-        # Rédaction des conclusions opérationnelles mensuelles
         if total_sorties > 0:
             service_majoritaire = service_labels[0] if service_labels else "aucun"
             synthese_generale = f"L'audit du mois indique une activité concentrée sur le service {service_majoritaire}. Le rythme des sorties impose un contrôle strict des stocks physiques au début du mois prochain."
@@ -928,14 +905,12 @@ def generer_pdf_statistiques(request):
             {"nom": "Taux d'Utilisation des Stocks Passifs", "valeur": "0.0%", "seuil": "Objectif de réduction", "diag": "Perte Sèche"}
         ]
         
-        # Construction du palmarès complet d'efficacité annuelle des services
         palmares = []
         for s in sorties_par_service:
             palmares.append({"service": s['service'], "total": s['total'], "part": round((s['total'] / total_sorties * 100), 1) if total_sorties > 0 else 0})
         
         tableau_specifique = {"type": "palmares_annuel", "donnees": palmares}
         
-        # Rédaction des conclusions budgétaires annuelles
         synthese_generale = f"Le bilan logistique annuel montre un volume total cumulé de {total_operations} fiches d'opérations. Le taux de rotation global s'établit à {taux_rotation}%, révélant la performance de la chaîne d'approvisionnement."
         remarque_sectorielle = "L'analyse macroscopique sur 12 mois démontre une dépendance structurelle aux consommables de bureau et d'administration."
         remarque_dormant = f"L'immobilisation prolongée de {produits_dormants.count()} références représente un coût d'opportunité spatial pour la réserve de la délégation."
@@ -964,7 +939,6 @@ def generer_pdf_statistiques(request):
             {"nom": "Variation Volumétrique des Fiches", "valeur": f"{total_operations - mois_b_data['ops']} unités", "seuil": "Stabilité visée", "diag": "Ajusté"}
         ]
 
-        # Tableau des écarts relatifs par catégorie
         ecarts_categories = []
         for cat in list(set(category_labels)):
             q_a = mouvements.filter(type_mouvement='SORTIE', produit__categorie=cat).aggregate(t=Sum('quantite'))['t'] or 0
@@ -975,7 +949,6 @@ def generer_pdf_statistiques(request):
 
         tableau_specifique = {"type": "ecarts_mensuels", "donnees": ecarts_categories}
 
-        # Rédaction comparative de court terme
         synthese_generale = f"La comparaison directe montre une variation d'activité de {tendance_txt} du volume de matériel retiré entre la période de référence et la période de comparaison."
         remarque_sectorielle = "L'analyse met en relief des oscillations de consommation sectorielles dictées par l'agenda des événements diplomatiques."
         remarque_dormant = "Les stocks passifs sont restés rigoureusement inchangés entre les deux mois audités."
@@ -1000,7 +973,6 @@ def generer_pdf_statistiques(request):
             {"nom": "Variation structurelle des flux", "valeur": f"{total_operations - annee_b_data['ops']} opérations", "seuil": "Suivi long terme", "diag": "Évolution Constatée"}
         ]
 
-        # Bilan de trajectoire annuel condensé
         trajectoire = [
             {"indicateur": "Opérations globales", "annee_a": total_operations, "annee_b": annee_b_data["ops"], "evolution": total_operations - annee_b_data["ops"]},
             {"indicateur": "Volume total entré", "annee_a": total_entrees, "annee_b": annee_b_data["entrees"], "evolution": total_entrees - annee_b_data["entrees"]},
@@ -1010,12 +982,10 @@ def generer_pdf_statistiques(request):
         tableau_specifique = {"type": "trajectoire_annuelle", "donnees": trajectoire}
         periode_b = f"Année {annee_b_target}"
 
-        # Rédaction macro pour la direction
         synthese_generale = f"L'analyse pluriannuelle objective une transformation des trajectoires de flux. L'écart net d'opérations s'établit à {total_operations - annee_b_data['ops']} fiches sur les cycles comparés."
         remarque_sectorielle = "Les glissements de consommation interannuels traduisent une rationalisation progressive des achats de fournitures de la délégation."
         remarque_dormant = "La pérennité de certaines poches d'inactivité dans le stock sur 24 mois nécessite la mise en place d'un protocole d'apurement global."
 
-    # Rendu final vers le template HTML d'impression
     return render(request, 'rapport_statistiques.html', {
         'profil_actif': profil_actif,
         'type_analyse': type_analyse,
