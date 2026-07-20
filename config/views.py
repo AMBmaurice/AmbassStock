@@ -802,7 +802,14 @@ def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
-    return render(request, 'gestion_utilisateurs.html', {'profil_actif': profil_actif})
+    
+    # Récupération de tous les profils utilisateurs
+    tous_les_utilisateurs = ProfilUtilisateur.objects.all().order_by('nom_complet')
+    
+    return render(request, 'gestion_utilisateurs.html', {
+        'profil_actif': profil_actif,
+        'utilisateurs': tous_les_utilisateurs # On passe cette liste au template
+    })
 
 def page_deconnexion(request):
     logout(request)
