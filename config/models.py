@@ -79,14 +79,18 @@ class DeclarationHebdomadaire(models.Model):
     ]
 
     service = models.CharField(max_length=50, choices=CHOIX_SERVICES, unique=True)
-    statut = models.CharField(max_length=20, default='en_attente')  
+    statut = models.CharField(max_length=20, default='en_attente')  # 'en_attente', 'a_relancer', 'non_repondu', 'valide'
     reponse = models.CharField(max_length=10, choices=CHOIX_REPONSES, blank=True, null=True)
     date_validation = models.DateTimeField(blank=True, null=True)
     force_valide_par_admin = models.BooleanField(default=False)
+    
+    # AJOUTS : Pour la règle des 3 retards consécutifs et le suivi de semaine
+    non_reponses_consecutives = models.IntegerField(default=0)
+    semaine_actuelle = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.service} - {self.statut}"
-
+        
 class DemandeService(models.Model):
     CHOIX_TYPES = [
         ('suggestion', 'Une suggestion'),
