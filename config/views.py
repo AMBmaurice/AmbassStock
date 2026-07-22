@@ -218,11 +218,11 @@ def page_inventaire(request):
 
     profil_actif = get_profil_actif(request.user)
     
-    # Dans views.py
-# Vérification du rôle Administrateur
-is_admin = request.user.is_superuser or (
-    profil_actif and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
-)
+    # Vérification du rôle Administrateur
+    is_admin = request.user.is_superuser or (
+        profil_actif and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
+    )
+
     if request.method == "POST":
         action_type = request.POST.get('action_type')
 
