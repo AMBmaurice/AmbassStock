@@ -118,7 +118,7 @@
             width: 100%; 
             max-width: 650px;
             color: #2c351c;
-            font-weight: 500;    
+            font-weight: 500;     
             min-height: 120px;
             resize: vertical;
             transition: border-color 0.2s, background-color 0.2s;
@@ -312,14 +312,29 @@ function toggleSidebar() {
         <h1>AmbassStock</h1>
         <div class="tagline">organiser • suivre • optimiser</div>
     </div>
-                                    
+                                        
     <h2 class="page-title">Accueil</h2>
     <p class="welcome-text">Bienvenue dans le système de gestion des stocks. Cette application a été conçue pour rationaliser le suivi des stocks et la logistique dans tous les services.</p>
                 
     <hr class="section-divider">
                 
     <h3>Tableau de bord</h3>
-                    
+
+    <!-- BLOC D'INFORMATION DES RETRAITS ET ÉMARGEMENTS -->
+    <div style="background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; padding: 20px 24px; border-radius: 16px; font-weight: 500; margin-bottom: 30px; font-size: 0.95rem; line-height: 1.6; display: flex; align-items: flex-start; gap: 14px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-weight: 700; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; color: #2c351c;">Information</span>
+            <span>Les retraits s'effectuent tous les jeudis à partir de 15h50, merci d'être consciencieux et de veiller à venir aux bons horaires.</span>
+            <span>Vous êtes priés de bien vouloir valider votre liste de courses avant le mercredi matin de chaque semaine, le cas échéant vous devrez attendre la semaine suivante pour pouvoir retirer, aucune exception ne sera faite !</span>
+            <span>Merci de bien vouloir renseigner dans la section dédiée si vous avez retiré ou non la semaine précédente, tout abus dans les retards ou oublis pourra être sanctionné.</span>
+        </div>
+    </div>
+
     <div class="dashboard-grid">
                         
         {% if not is_admin %}
