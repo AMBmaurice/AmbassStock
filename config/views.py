@@ -322,6 +322,12 @@ def page_inventaire(request):
                 produit.emplacement = request.POST.get('emplacement')
                 produit.quantite = int(request.POST.get('quantite', 0))
                 produit.quota_minimum = int(request.POST.get('quota_minimum', 0))
+                
+                # **ENREGISTREMENT DU FOURNISSEUR**
+                fournisseur_recu = request.POST.get('fournisseur')
+                if fournisseur_recu:
+                    produit.fournisseur = fournisseur_recu
+
                 produit.save()
 
                 messages.success(request, f'Modification du produit "{produit.objet}" enregistrée avec succès !')
@@ -497,7 +503,7 @@ def page_inventaire(request):
     return render(request, 'inventaire.html', {
         'profil_actif': profil_actif,
         'is_admin': is_admin,
-        'panier_bloque': panier_bloque,  # Variable essentielle transmise au template
+        'panier_bloque': panier_bloque,
         'page_obj': page_obj,
         'tous_les_produits_complets': tous_les_produits_complets,
         'produits_dans_panier': produits_dans_panier,
