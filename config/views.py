@@ -1,4 +1,5 @@
 import io
+import json
 import re
 import unicodedata
 from datetime import date, datetime, timedelta
@@ -226,15 +227,43 @@ def page_inventaire(request):
     if request.method == "POST":
         action_type = request.POST.get('action_type')
 
-        # 1. AJOUT D'UN PRODUIT AU PANIER PAR UN SERVICE
-        if action_type == "ajouter_panier":
+        # 1. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT)
+        if action_type == "ajouter_panier_groupe":
+            service = request.POST.get('service')
+            panier_raw = request.POST.get('panier_json')
+
+            if service and panier_raw:
+                try:
+                    panier_dict = json.loads(panier_raw)
+                    for prod_id, item_data in panier_dict.items():
+                        produit = Produit.objects.get(id=prod_id)
+                        # Récupère la quantité sous 'qty' ou 'quantite'
+                        quantite = int(item_data.get('qty', item_data.get('quantite', 1)))
+
+                        # Ajout ou cumul de la quantité pour ce service
+                        article_panier, created = ArticlePanier.objects.get_or_create(
+                            produit=produit,
+                            service=service,
+                            defaults={'quantite_demandee': quantite}
+                        )
+                        if not created:
+                            article_panier.quantite_demandee += quantite
+                            article_panier.save()
+
+                    messages.success(request, f"La demande de fournitures pour le service {service} a été enregistrée avec succès !")
+                except Exception:
+                    messages.error(request, "Une erreur est survenue lors de l'enregistrement de votre panier.")
+
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # 2. AJOUT D'UN PRODUIT UNIQUE AU PANIER
+        elif action_type == "ajouter_panier":
             produit_id = request.POST.get('produit_id')
             service = request.POST.get('service')
             quantite = int(request.POST.get('quantite', 1))
 
             try:
                 produit = Produit.objects.get(id=produit_id)
-                # Créer ou mettre à jour la quantité pour le service concerné
                 item, created = ArticlePanier.objects.get_or_create(
                     produit=produit,
                     service=service,
@@ -248,7 +277,7 @@ def page_inventaire(request):
                 pass
             return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-        # 2. RETRAIT D'UN PRODUIT DU PANIER
+        # 3. RETRAIT D'UN PRODUIT DU PANIER
         elif action_type == "retirer_panier":
             panier_id = request.POST.get('panier_id')
             try:
@@ -258,7 +287,7 @@ def page_inventaire(request):
                 pass
             return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-        # 3. MODIFICATION PRODUIT (ADMIN)
+        # 4. MODIFICATION PRODUIT (ADMIN)
         elif action_type == "modification" and is_admin:
             produit_id = request.POST.get('produit_id')
             current_page = request.POST.get('page', '1')
@@ -290,7 +319,7 @@ def page_inventaire(request):
 
             return redirect(redirect_url)
 
-        # 4. SUPPRESSION DÉFINITIVE (SUPERUSER / ADMIN)
+        # 5. SUPPRESSION DÉFINITIVE (SUPERUSER)
         elif action_type == "suppression_definitive" and request.user.is_superuser:
             produit_id = request.POST.get('produit_id')
             current_page = request.POST.get('page', '1')
@@ -317,7 +346,7 @@ def page_inventaire(request):
 
             return redirect(redirect_url)
 
-        # 5. GÉNÉRATION DU PDF D'INVENTAIRE
+        # 6. GÉNÉRATION DU PDF D'INVENTAIRE
         elif action_type == "generer_recapitulatif_pdf":
             produits_actifs = Produit.objects.exclude(emplacement="Archivé").filter(quantite__gt=0).order_by('emplacement', 'objet')
 
@@ -435,9 +464,10 @@ def page_inventaire(request):
 
         tous_les_produits = tous_les_produits.filter(id__in=produits_filtres_ids)
 
+    # Récupération complète de tous les produits (pour la recherche JS globale)
     tous_les_produits_complets = list(tous_les_produits)
 
-    # Récupération des articles actuellement au panier sous forme de dictionnaire {produit_id: article_panier}
+    # Récupération des articles actuellement en panier
     paniers_actifs = ArticlePanier.objects.all()
     produits_dans_panier = {p.produit_id: p for p in paniers_actifs}
 
