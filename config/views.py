@@ -943,35 +943,24 @@ def page_inventaire(request):
 def page_panier(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
+        
     profil_actif = get_profil_actif(request.user)
 
     if request.method == "POST":
         action_type = request.POST.get('action_type')
 
-        # Action d'administration : Valider la livraison d'un service complet
+        # Valider la livraison d'un service complet (Déduction du stock)
         if action_type == "valider_livraison_service":
             service_nom = request.POST.get('service')
             articles_service = ArticlePanier.objects.filter(service=service_nom)
 
-            with transaction.atomic():
-                for item in articles_service:
-                    # Déduction automatique du stock
-                    prod = item.produit
-                    if prod.quantite >= item.quantite_demandee:
-                        prod.quantite -= item.quantite_demandee
-                        prod.save()
-                        # Enregistrement du mouvement de sortie dans l'historique
-                        MouvementStock.objects.create(
-                            type_mouvement='SORTIE',
-                            objet=prod.objet,
-                            produit=prod,
-                            quantite=item.quantite_demandee,
-                            service=service_nom,
-                            date_mouvement=date.today()
-                        )
-                # Vider les articles du panier pour ce service
-                articles_service.delete()
-
+            for item in articles_service:
+                prod = item.produit
+                if prod.quantite >= item.quantite_demandee:
+                    prod.quantite -= item.quantite_demandee
+                    prod.save()
+            
+            articles_service.delete()
             messages.success(request, f"La commande du service {service_nom} a été livrée et déduite du stock !")
             return redirect('/panier/')
 
@@ -980,7 +969,7 @@ def page_panier(request):
             ArticlePanier.objects.filter(id=item_id).delete()
             return redirect('/panier/')
 
-    # Regroupement des articles du panier par service
+    # Récupérer et grouper les articles par service
     articles = ArticlePanier.objects.select_related('produit').order_by('service', 'produit__objet')
     
     panier_par_service = {}
@@ -992,7 +981,6 @@ def page_panier(request):
     return render(request, 'panier.html', {
         'profil_actif': profil_actif,
         'panier_par_service': panier_par_service,
-        'nb_total_articles': articles.count()
     })
 
 def page_deconnexion(request):
