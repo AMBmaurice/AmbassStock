@@ -19,8 +19,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
-from .models import Produit, ProfilUtilisateur, DeclarationHebdomadaire, DemandeService, Facture, MouvementStock
-
+from .models import Produit, ProfilUtilisateur, DeclarationHebdomadaire, DemandeService, Facture, MouvementStock, ArticlePanier
 
 def get_profil_actif(user):
     if not user.is_authenticated:
@@ -792,6 +791,131 @@ def page_gestion_utilisateurs(request):
         'utilisateurs': tous_les_utilisateurs
     })
 
+def page_inventaire(request):
+    profil_actif = get_profil_actif(request.user)
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+                
+    if request.method == "POST":
+        action_type = request.POST.get('action_type')
+
+        # GESTION AJOUT AU PANIER
+        if action_type == "ajouter_panier":
+            produit_id = request.POST.get('produit_id')
+            service = request.POST.get('service')
+            quantite = int(request.POST.get('quantite', 1))
+
+            try:
+                produit = Produit.objects.get(id=produit_id)
+                # Créer ou mettre à jour la quantité demandée
+                item, created = ArticlePanier.objects.get_or_create(
+                    produit=produit,
+                    service=service,
+                    defaults={'quantite_demandee': quantite}
+                )
+                if not created:
+                    item.quantite_demandee = quantite
+                    item.save()
+                messages.success(request, f'"{produit.objet}" ajouté au panier du service {service}.')
+            except Produit.DoesNotExist:
+                pass
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # GESTION RETRAIT DU PANIER
+        elif action_type == "retirer_panier":
+            panier_id = request.POST.get('panier_id')
+            try:
+                ArticlePanier.objects.filter(id=panier_id).delete()
+                messages.success(request, "Article retiré de la liste de courses.")
+            except Exception:
+                pass
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # ... (conserver tes autres blocs action_type : modification, suppression_definitive, etc.) ...
+
+    # Récupérer les ID des produits déjà présents dans le panier
+    paniers_actifs = ArticlePanier.objects.all()
+    produits_dans_panier = {p.produit_id: p for p in paniers_actifs}
+
+    recherche_term = request.GET.get('q', '').strip()
+    statut_filtre = request.GET.get('statut', 'all')
+    tri_filtre = request.GET.get('tri', 'alpha')
+
+    tous_les_produits = Produit.objects.all().order_by('objet')
+    if recherche_term:
+        tous_les_produits = tous_les_produits.filter(
+            Q(objet__icontains=recherche_term) | Q(reference__icontains=recherche_term)
+        )
+
+    paginator = Paginator(tous_les_produits, 15)
+    page_number = request.GET.get('page', '1')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventaire.html', {
+        'profil_actif': profil_actif,
+        'page_obj': page_obj,
+        'produits_dans_panier': produits_dans_panier,
+        'recherche_term': recherche_term,
+        'statut_filtre': statut_filtre,
+        'tri_filtre': tri_filtre
+    })
+
+
+# 2. Nouvelle vue pour l'onglet Panier
+def page_panier(request):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+
+    if request.method == "POST":
+        action_type = request.POST.get('action_type')
+
+        # Action d'administration : Valider la livraison d'un service complet
+        if action_type == "valider_livraison_service":
+            service_nom = request.POST.get('service')
+            articles_service = ArticlePanier.objects.filter(service=service_nom)
+
+            with transaction.atomic():
+                for item in articles_service:
+                    # Déduction automatique du stock
+                    prod = item.produit
+                    if prod.quantite >= item.quantite_demandee:
+                        prod.quantite -= item.quantite_demandee
+                        prod.save()
+                        # Enregistrement du mouvement de sortie dans l'historique
+                        MouvementStock.objects.create(
+                            type_mouvement='SORTIE',
+                            objet=prod.objet,
+                            produit=prod,
+                            quantite=item.quantite_demandee,
+                            service=service_nom,
+                            date_mouvement=date.today()
+                        )
+                # Vider les articles du panier pour ce service
+                articles_service.delete()
+
+            messages.success(request, f"La commande du service {service_nom} a été livrée et déduite du stock !")
+            return redirect('/panier/')
+
+        elif action_type == "retirer_item":
+            item_id = request.POST.get('item_id')
+            ArticlePanier.objects.filter(id=item_id).delete()
+            return redirect('/panier/')
+
+    # Regroupement des articles du panier par service
+    articles = ArticlePanier.objects.select_related('produit').order_by('service', 'produit__objet')
+    
+    panier_par_service = {}
+    for item in articles:
+        if item.service not in panier_par_service:
+            panier_par_service[item.service] = []
+        panier_par_service[item.service].append(item)
+
+    return render(request, 'panier.html', {
+        'profil_actif': profil_actif,
+        'panier_par_service': panier_par_service,
+        'nb_total_articles': articles.count()
+    })
 
 def page_deconnexion(request):
     logout(request)
