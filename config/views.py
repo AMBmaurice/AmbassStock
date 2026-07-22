@@ -33,6 +33,7 @@ def get_profil_actif(user):
             acces_statistiques = True
             acces_gestion_utilisateurs = True
             acces_factures = True
+            acces_panier = True
 
         return ProfilAdmin()
 
