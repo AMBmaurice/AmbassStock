@@ -104,6 +104,12 @@
             <a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a>
         </li>
         {% endif %}
+
+        {% if profil_actif.acces_panier %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
+        </li>
+        {% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
