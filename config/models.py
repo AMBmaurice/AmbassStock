@@ -57,6 +57,7 @@ class ProfilUtilisateur(models.Model):
     acces_gestion_demandes = models.BooleanField(default=False)
     acces_gestion_utilisateurs = models.BooleanField(default=False)
     acces_factures = models.BooleanField(default=False)
+    acces_panier = models.BooleanField(default=True)  # Nouvel accès pour l'onglet Panier
     type_profil = models.CharField(max_length=20, default='services')
 
     def __str__(self):
@@ -71,6 +72,7 @@ class DeclarationHebdomadaire(models.Model):
         ('2ème Secrétaire', '2ème Secrétaire'),
         ('Diplomate', 'Diplomate'),
         ('Administration', 'Administration'),
+        ('Sécurité', 'Sécurité'),
     ]
 
     CHOIX_REPONSES = [
@@ -107,6 +109,7 @@ class DemandeService(models.Model):
         ('2ème Secrétaire', '2ème Secrétaire'),
         ('Diplomate', 'Diplomate'),
         ('Administration', 'Administration'),
+        ('Sécurité', 'Sécurité'),
     ]
 
     CHOIX_STATUTS = [
@@ -124,6 +127,26 @@ class DemandeService(models.Model):
 
     def __str__(self):
         return f"{self.service} - {self.type_demande} ({self.statut})"
+
+class ArticlePanier(models.Model):
+    CHOIX_SERVICES = [
+        ('Consulaire', 'Consulaire'),
+        ('Secrétaire', 'Secrétaire'),
+        ('Secrétaire AMB', 'Secrétaire AMB'),
+        ('1ère Secrétaire', '1ère Secrétaire'),
+        ('2ème Secrétaire', '2ème Secrétaire'),
+        ('Diplomate', 'Diplomate'),
+        ('Administration', 'Administration'),
+        ('Sécurité', 'Sécurité'),
+    ]
+
+    produit = models.ForeignKey(Produit, on_delete=models.CASCADE, related_name='dans_paniers')
+    service = models.CharField(max_length=50, choices=CHOIX_SERVICES)
+    quantite_demandee = models.IntegerField(default=1)
+    date_ajout = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.service} - {self.produit.objet} ({self.quantite_demandee})"
 
 class Facture(models.Model):
     date_commande = models.DateField()
