@@ -25,7 +25,6 @@
         .page-title { font-size: 2.2rem; font-weight: 700; color: #2c351c; margin-bottom: 12px; margin-top: 10px; }
         .welcome-text { font-size: 1.1rem; line-height: 1.65; color: #495430; max-width: 1000px; margin-bottom: 25px; }
         
-        /* BANNIÈRE D'AVERTISSEMENT PANIER */
         .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; padding: 18px 22px; border-radius: 16px; font-weight: 600; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; }
         .info-red-banner { background-color: #FCEAE8; border: 1px solid rgba(186, 60, 42, 0.3); border-left: 6px solid #BA3C2A; color: #7A2417; padding: 18px 22px; border-radius: 16px; font-weight: 600; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; }
 
@@ -61,7 +60,6 @@
         .btn-add-inline:hover { background-color: #495430; }
         .btn-add-inline:disabled { background-color: #C2C8BE !important; color: #777777 !important; cursor: not-allowed !important; opacity: 0.7; }
 
-        /* BOUTON FLOTTANT DU PANIER */
         .floating-cart-btn {
             position: fixed;
             bottom: 35px;
@@ -102,7 +100,6 @@
         .pagination a, .pagination span { padding: 10px 16px; border: 1px solid #D0D6CE; border-radius: 10px; text-decoration: none; color: #495430; background: white; font-weight: 600; }
         .pagination .current { background: #5E6D3E; color: white; border-color: #5E6D3E; }
 
-        /* MODALES */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
         .modal-box { background: #ffffff; border-radius: 24px; width: 100%; max-width: 720px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
         .modal-close { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7A8278; }
@@ -257,7 +254,6 @@ function toggleSidebar() {
         <span><strong>Commandes fermées :</strong> La préparation des listes est verrouillée du mercredi 12h00 au jeudi 17h00. Vous pourrez de nouveau ajouter des articles pour la semaine prochaine à partir de jeudi 17h00.</span>
     </div>
     {% else %}
-    <!-- BANNIÈRE D'AVERTISSEMENT PAR DÉFAUT -->
     <div class="info-green-banner">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         <span><strong>Attention :</strong> Lorsque vous avez fini votre liste de courses, merci de bien vouloir vous rendre dans le panier situé en bas à droite de votre écran pour valider votre demande. Dans le cas contraire, votre demande ne sera pas comptabilisée.</span>
@@ -319,7 +315,7 @@ function toggleSidebar() {
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
             
-            <div class="card-details" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}')">
+            <div class="card-details" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}')">
                 <span class="product-ref">{{ produit.reference }}</span>
                 <span class="product-name">{{ produit.objet }}</span>
             </div> 
@@ -336,7 +332,7 @@ function toggleSidebar() {
                 {% endif %}
             </div>
 
-            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}')"></div>
+            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}')"></div>
         </div>
         {% empty %}
         <p id="emptyDjangoMsg" style="text-align: center; color: #777777; font-style: italic; padding: 30px;">Aucun produit trouvé dans l'inventaire.</p>
@@ -379,6 +375,18 @@ function toggleSidebar() {
             <div class="detail-item"><span class="detail-label">Désignation</span><span class="view-value" id="valNom">-</span><input type="text" id="txtNom" form="editForm" name="objet" class="edit-input" required></div>
             <div class="detail-item"><span class="detail-label">Catégorie</span><span class="view-value" id="valCategorie">-</span><input type="text" id="txtCategorie" form="editForm" name="categorie" class="edit-input" required></div>
             <div class="detail-item"><span class="detail-label">Emplacement</span><span class="view-value" id="valEmplacement">-</span><input type="text" id="txtEmplacement" form="editForm" name="emplacement" class="edit-input"></div>
+            
+            <!-- CHAMP FOURNISSEUR -->
+            <div class="detail-item">
+                <span class="detail-label">Fournisseur</span>
+                <span class="view-value" id="valFournisseur">-</span>
+                <select id="txtFournisseur" form="editForm" name="fournisseur" class="edit-input" style="height: 42px; width: 100%; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 1rem; background: #ffffff;">
+                    <option value="Le Voltigeur">Le Voltigeur</option>
+                    <option value="All Office">All Office</option>
+                    <option value="Divers">Divers</option>
+                </select>
+            </div>
+
             <div class="detail-item"><span class="detail-label">Stock Réel</span><span class="view-value" id="valStock">-</span><input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required></div>
             <div class="detail-item"><span class="detail-label">Quota Alerte</span><span class="view-value" id="valQuota">-</span><input type="number" id="txtQuota" form="editForm" name="quota_minimum" class="edit-input" required></div>
         </div>
@@ -467,7 +475,8 @@ function toggleSidebar() {
             categorie: "{{ produit.categorie|escapejs }}",
             stock: "{{ produit.quantite }}",
             emplacement: "{{ produit.emplacement|escapejs }}",
-            quota: "{{ produit.quota_minimum|default_if_none:'' }}"
+            quota: "{{ produit.quota_minimum|default_if_none:'' }}",
+            fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -509,7 +518,7 @@ function toggleSidebar() {
                     : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')">+ Ajouter au panier</button>`;
 
                 card.innerHTML = `
-                    <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}')">
+                    <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}')">
                         <span class="product-ref">${p.reference}</span>
                         <span class="product-name">${p.nom}</span>
                     </div>
@@ -610,12 +619,13 @@ function toggleSidebar() {
     function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
     // 4. DÉTAILS PRODUIT & ADMIN
-    function openProductDetails(id, ref, nom, cat, stock, emp, quota) {
+    function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur) {
         document.getElementById('hiddenProduitId').value = id;
         document.getElementById('lblReference').textContent = ref;
         document.getElementById('valNom').textContent = nom;
         document.getElementById('valCategorie').textContent = cat;
         document.getElementById('valEmplacement').textContent = emp || "-";
+        document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
         document.getElementById('valStock').textContent = stock;
         document.getElementById('valQuota').textContent = quota || "-";
 
@@ -623,6 +633,7 @@ function toggleSidebar() {
         document.getElementById('txtNom').value = nom;
         document.getElementById('txtCategorie').value = cat;
         document.getElementById('txtEmplacement').value = emp;
+        document.getElementById('txtFournisseur').value = fournisseur || "Divers";
         document.getElementById('txtStock').value = stock;
         document.getElementById('txtQuota').value = quota;
 
