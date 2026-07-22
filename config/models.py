@@ -21,6 +21,7 @@ class Produit(models.Model):
     quota_minimum = models.IntegerField(default=5)
     # Pour le quota adaptatif dans le temps
     derniere_activite = models.DateTimeField(default=timezone.now)
+    fournisseur = models.CharField(max_length=50, blank=True, null=True, default="Divers")
 
     class Meta:
         ordering = ["objet"]
