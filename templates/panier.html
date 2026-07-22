@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Liste de courses / Panier</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
+        .sidebar-menu { list-style: none; padding: 0 15px; }
+        .sidebar-item { margin-bottom: 10px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
+        .page-title { font-size: 2rem; font-weight: 700; color: #2c351c; margin-bottom: 25px; }
+        
+        .service-card { background: white; border: 1px solid #E2E6E1; border-radius: 20px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .service-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #5E6D3E; padding-bottom: 15px; margin-bottom: 20px; }
+        .service-title { font-size: 1.4rem; font-weight: 700; color: #2c351c; }
+        
+        .table-panier { width: 100%; border-collapse: collapse; text-align: left; }
+        .table-panier th { padding: 12px; font-size: 0.85rem; color: #7A8278; text-transform: uppercase; border-bottom: 1px solid #E2E6E1; }
+        .table-panier td { padding: 14px 12px; border-bottom: 1px solid #F1F3F0; font-size: 0.95rem; }
+        
+        .btn-deliver { background-color: #5E6D3E; color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-deliver:hover { background-color: #495430; }
+        .btn-remove { background: none; border: none; color: #BA3C2A; font-weight: 600; cursor: pointer; }
+        .btn-remove:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link">Accueil</a></li>
+        <li class="sidebar-item"><a href="/inventaire/" class="sidebar-link">Inventaire</a></li>
+        <li class="sidebar-item"><a href="/panier/" class="sidebar-link active">Panier / Liste de courses</a></li>
+        <li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link">Gestion des stocks</a></li>
+        <li class="sidebar-item"><a href="/historique/" class="sidebar-link">Historique</a></li>
+        <li class="sidebar-item"><a href="/statistiques/" class="sidebar-link">Statistiques</a></li>
+        <li class="sidebar-item"><a href="/factures/" class="sidebar-link">Factures</a></li>
+    </ul>
+</div>
+
+<div class="main-content">
+    <h2 class="page-title">Liste de courses / Commandes des services</h2>
+
+    {% for service_nom, items in panier_par_service.items %}
+    <div class="service-card">
+        <div class="service-header">
+            <div class="service-title">Service : <strong>{{ service_nom }}</strong></div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="valider_livraison_service">
+                <input type="hidden" name="service" value="{{ service_nom }}">
+                <button type="submit" class="btn-deliver">Valider la livraison & Déduire du stock</button>
+            </form>
+        </div>
+
+        <table class="table-panier">
+            <thead>
+                <tr>
+                    <th>Référence</th>
+                    <th>Article</th>
+                    <th>Emplacement</th>
+                    <th>Quantité demandée</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td><code>{{ item.produit.reference }}</code></td>
+                    <td><strong>{{ item.produit.objet }}</strong></td>
+                    <td>{{ item.produit.emplacement|default:"Réserve" }}</td>
+                    <td><strong style="color: #5E6D3E; font-size: 1.1rem;">{{ item.quantite_demandee }}</strong></td>
+                    <td style="text-align: right;">
+                        <form method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_type" value="retirer_item">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <button type="submit" class="btn-remove">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% empty %}
+    <div class="service-card" style="text-align: center; padding: 50px; color: #7A8278; font-style: italic;">
+        Le panier est actuellement vide. Aucun service n'a fait de demande de fournitures.
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>
