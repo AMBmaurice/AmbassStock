@@ -224,8 +224,27 @@ def page_inventaire(request):
         profil_actif and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
     )
 
+    # **GESTION DU CRÉNEAU DE BLOCAGE DES COMMANDES (Mercredi 12h00 -> Jeudi 17h00)**
+    maintenant = timezone.now()
+    jour_semaine = maintenant.weekday()  # 0=Lundi, 2=Mercredi, 3=Jeudi...
+    heure_actuelle = maintenant.time()
+
+    est_mercredi_apres_midi = (jour_semaine == 2 and heure_actuelle >= datetime.strptime("12:00", "%H:%M").time())
+    est_jeudi_avant_17h = (jour_semaine == 3 and heure_actuelle < datetime.strptime("17:00", "%H:%M").time())
+    
+    # Blocage actif si mercredi après 12h00 OU jeudi avant 17h00
+    panier_bloque = est_mercredi_apres_midi or est_jeudi_avant_17h
+
     if request.method == "POST":
         action_type = request.POST.get('action_type')
+
+        # **SÉCURITÉ : EMPÊCHER L'AJOUT AU PANIER SI BLOQUÉ (SAUF POUR L'ADMIN)**
+        if action_type in ["ajouter_panier_groupe", "ajouter_panier"] and panier_bloque and not is_admin:
+            messages.error(
+                request, 
+                "Les ajouts au panier sont fermés du mercredi 12h00 au jeudi 17h00 afin de préparer les retraits. Aucune modification n'est acceptée durant ce créneau."
+            )
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
         # 1. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT)
         if action_type == "ajouter_panier_groupe":
@@ -478,6 +497,7 @@ def page_inventaire(request):
     return render(request, 'inventaire.html', {
         'profil_actif': profil_actif,
         'is_admin': is_admin,
+        'panier_bloque': panier_bloque,  # Variable essentielle transmise au template
         'page_obj': page_obj,
         'tous_les_produits_complets': tous_les_produits_complets,
         'produits_dans_panier': produits_dans_panier,
