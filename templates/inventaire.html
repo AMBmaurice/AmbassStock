@@ -29,12 +29,12 @@
         .btn-pdf-export:hover { background-color: #495430; transform: translateY(-1px); }
 
         .inventory-list { display: flex; flex-direction: column; gap: 12px; }
-        .inventory-card { background-color: #ffffff; border: 1px solid #E0E4DE; border-radius: 14px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
-        .inventory-card:hover { transform: translateY(-3px); border-color: #5E6D3E; }
-        .card-details { display: flex; flex-direction: column; gap: 6px; }
+        .inventory-card { background-color: #ffffff; border: 1px solid #E0E4DE; border-radius: 14px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; transition: transform 0.2s, border-color 0.2s; gap: 15px; }
+        .inventory-card:hover { border-color: #5E6D3E; }
+        .card-details { display: flex; flex-direction: column; gap: 6px; cursor: pointer; flex-grow: 1; }
         .product-ref { font-size: 0.85rem; font-weight: 600; color: #495430; text-transform: uppercase; }
         .product-name { font-size: 1.1rem; font-weight: 500; }
-        .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .status-green { background-color: #2bd14e; }
         .status-yellow { background-color: #ffcc00; }
         .status-red { background-color: #ff3b30; animation: elegantPulse 2s infinite ease-in-out; }
@@ -222,12 +222,54 @@
             
     <div class="inventory-list" id="inventoryList" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
         {% for produit in page_obj %}
-        <div class="inventory-card django-card" id="card-{{ produit.reference }}" data-status="{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum }}')">
-            <div class="card-details">
+        <div class="inventory-card django-card" id="card-{{ produit.reference }}" data-status="{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}">
+            <div class="card-details" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum }}')">
                 <span class="product-ref">{{ produit.reference }}</span>
-                <span class="product-name" id="name-{{ produit.reference }}">{{ produit.objet }}</span>
+                <span class="product-name" id="name-{{ produit.reference }}">{{ produit.objet }} (Stock : {{ produit.quantite }})</span>
             </div> 
-            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" id="dot-{{ produit.reference }}"></div>
+
+            <!-- BLOC DYNAMIQUE DU PANIER -->
+            <div style="display: flex; align-items: center; gap: 10px;" onclick="event.stopPropagation();">
+                {% if produit.item_panier %}
+                    <span style="font-size: 0.85rem; color: #5E6D3E; font-weight: 700; background: #EBF2E9; padding: 6px 12px; border-radius: 8px;">
+                        {{ produit.item_panier.quantite_demandee }} au panier ({{ produit.item_panier.service }})
+                    </span>
+                    <form method="POST" action="" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="retirer_panier">
+                        <input type="hidden" name="panier_id" value="{{ produit.item_panier.id }}">
+                        <button type="submit" style="background: rgba(186, 60, 42, 0.1); color: #BA3C2A; border: 1px solid rgba(186, 60, 42, 0.2); padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">
+                            Retirer du panier
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="POST" action="" style="display: flex; align-items: center; gap: 8px;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action_type" value="ajouter_panier">
+                        <input type="hidden" name="produit_id" value="{{ produit.id }}">
+
+                        <input type="number" name="quantite" value="1" min="1" max="{{ produit.quantite }}" style="width: 55px; height: 38px; padding: 0 6px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.9rem; text-align: center; font-weight: 600; background: #FAFBF9;" required>
+
+                        <select name="service" style="height: 38px; padding: 0 8px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.85rem; background-color: #FAFBF9; font-weight: 500;" required>
+                            <option value="" disabled selected>Service...</option>
+                            <option value="Consulaire">Consulaire</option>
+                            <option value="Secrétaire">Secrétaire</option>
+                            <option value="Secrétaire AMB">Secrétaire AMB</option>
+                            <option value="1ère Secrétaire">1ère Secrétaire</option>
+                            <option value="2ème Secrétaire">2ème Secrétaire</option>
+                            <option value="Diplomate">Diplomate</option>
+                            <option value="Administration">Administration</option>
+                            <option value="Sécurité">Sécurité</option>
+                        </select>
+
+                        <button type="submit" style="height: 38px; padding: 0 14px; background-color: #5E6D3E; color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap;">
+                            Ajouter au panier
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" id="dot-{{ produit.reference }}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum }}')"></div>
         </div>
         {% empty %}
         <p id="emptyDjangoMsg" style="text-align: center; color: #777777; font-style: italic; padding: 20px; width: 100%;">Aucun produit trouvé dans l'inventaire.</p>
@@ -304,11 +346,14 @@
                 </div>
             </div>
                                             
-            {% if request.user.is_superuser %}
+            <!-- BOUTONS D'ÉDITION ET SUPPRESSION VISIBLES UNIQUEMENT POUR L'ADMINISTRATEUR -->
+            {% if is_admin %}
             <div class="modal-actions" id="modalAdminActions">
                 <button type="button" id="btnModifyMode" class="btn-action-primary btn-modify" onclick="enableEditMode()">Modifier le produit</button>
                 <button type="submit" id="btnSaveData" class="btn-action-primary btn-save">Enregistrer les modifications</button>
-                <button type="button" class="btn-delete" onclick="soumettreSuppressionSecurisee()">Supprimer cet article definitivement</button>
+                {% if request.user.is_superuser %}
+                <button type="button" class="btn-delete" onclick="soumettreSuppressionSecurisee()">Supprimer cet article définitivement</button>
+                {% endif %}
             </div>
                 
             <div class="hint-warning"><span>Attention : La suppression définitive d'un produit rompt son lien avec l'historique de l'inventaire actif.</span></div>
@@ -418,12 +463,11 @@
                 newCard.innerHTML = `
                     <div class="card-details">
                         <span class="product-ref">${produit.reference}</span>
-                        <span class="product-name">${produit.nom}</span>
+                        <span class="product-name">${produit.nom} (Stock : ${produit.stock})</span>
                     </div>
                     <div class="status-dot status-${colorClass}"></div>
                 `;
                 
-                // Correction critique pour l'ouverture propre de la modale
                 newCard.addEventListener('click', function() {
                     openProductDetails(produit.id, produit.reference, produit.nom, produit.categorie, produit.stock, produit.emplacement, produit.quota);
                 });
@@ -450,7 +494,7 @@
         const stock = parseInt(document.getElementById('txtStock').value) || 0;
         const quota = parseInt(document.getElementById('txtQuota').value) || 0;
         const dot = document.getElementById('modalStatusDot');
-                                            
+                                                    
         if (stock <= quota) {
             dot.className = 'status-dot status-red';
         } else if (stock <= quota + 10) {
@@ -510,8 +554,8 @@
         
         document.getElementById('quotaContainer').style.display = 'flex';
         
-        document.getElementById('btnModifyMode').style.display = 'none';
-        document.getElementById('btnSaveData').style.display = 'block';
+        if(document.getElementById('btnModifyMode')) document.getElementById('btnModifyMode').style.display = 'none';
+        if(document.getElementById('btnSaveData')) document.getElementById('btnSaveData').style.display = 'block';
     }
         
     function disableEditMode() {
