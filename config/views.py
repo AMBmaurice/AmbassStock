@@ -213,21 +213,62 @@ def page_accueil(request):
 
 
 def page_inventaire(request):
-    profil_actif = get_profil_actif(request.user)
     if not request.user.is_authenticated:
         return redirect('/connexion/')
-                
+
+    profil_actif = get_profil_actif(request.user)
+    
+    # Vérification du rôle Administrateur
+    is_admin = request.user.is_superuser or (
+        profil_actif and (
+            getattr(profil_actif, 'type_profil', '') == 'admin' or 
+            getattr(profil_actif, 'role', '') == 'Administrateur'
+        )
+    )
+
     if request.method == "POST":
         action_type = request.POST.get('action_type')
-            
-        if action_type == "modification":
+
+        # 1. AJOUT D'UN PRODUIT AU PANIER PAR UN SERVICE
+        if action_type == "ajouter_panier":
             produit_id = request.POST.get('produit_id')
-            
+            service = request.POST.get('service')
+            quantite = int(request.POST.get('quantite', 1))
+
+            try:
+                produit = Produit.objects.get(id=produit_id)
+                # Créer ou mettre à jour la quantité pour le service concerné
+                item, created = ArticlePanier.objects.get_or_create(
+                    produit=produit,
+                    service=service,
+                    defaults={'quantite_demandee': quantite}
+                )
+                if not created:
+                    item.quantite_demandee = quantite
+                    item.save()
+                messages.success(request, f'"{produit.objet}" ajouté au panier du service {service}.')
+            except Produit.DoesNotExist:
+                pass
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # 2. RETRAIT D'UN PRODUIT DU PANIER
+        elif action_type == "retirer_panier":
+            panier_id = request.POST.get('panier_id')
+            try:
+                ArticlePanier.objects.filter(id=panier_id).delete()
+                messages.success(request, "Article retiré du panier.")
+            except Exception:
+                pass
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # 3. MODIFICATION PRODUIT (ADMIN)
+        elif action_type == "modification" and is_admin:
+            produit_id = request.POST.get('produit_id')
             current_page = request.POST.get('page', '1')
             recherche_term = request.POST.get('q', '')
             statut_filtre = request.POST.get('statut', 'all')
             tri_filtre = request.POST.get('tri', 'alpha')
-            
+
             try:
                 produit = Produit.objects.get(id=produit_id)
                 produit.reference = request.POST.get('reference')
@@ -237,11 +278,11 @@ def page_inventaire(request):
                 produit.quantite = int(request.POST.get('quantite', 0))
                 produit.quota_minimum = int(request.POST.get('quota_minimum', 0))
                 produit.save()
-            
+
                 messages.success(request, f'Modification du produit "{produit.objet}" enregistrée avec succès !')
             except Produit.DoesNotExist:
                 pass
-            
+
             redirect_url = f'/inventaire/?page={current_page}'
             if recherche_term:
                 redirect_url += f'&q={recherche_term}'
@@ -249,25 +290,26 @@ def page_inventaire(request):
                 redirect_url += f'&statut={statut_filtre}'
             if tri_filtre and tri_filtre != 'alpha':
                 redirect_url += f'&tri={tri_filtre}'
-            
+
             return redirect(redirect_url)
-            
+
+        # 4. SUPPRESSION DÉFINITIVE (SUPERUSER / ADMIN)
         elif action_type == "suppression_definitive" and request.user.is_superuser:
             produit_id = request.POST.get('produit_id')
-            current_page = request.POST.get('page', '1') 
+            current_page = request.POST.get('page', '1')
             recherche_term = request.POST.get('q', '')
             statut_filtre = request.POST.get('statut', 'all')
-            tri_filtre = request.POST.get('tri', 'alpha')    
-                    
+            tri_filtre = request.POST.get('tri', 'alpha')
+
             try:
                 produit = Produit.objects.get(id=produit_id)
                 nom_produit_supprime = produit.objet
                 produit.delete()
-                
+
                 messages.success(request, f'Le produit "{nom_produit_supprime}" a été supprimé définitivement.')
             except Produit.DoesNotExist:
                 pass
-            
+
             redirect_url = f'/inventaire/?page={current_page}'
             if recherche_term:
                 redirect_url += f'&q={recherche_term}'
@@ -275,16 +317,17 @@ def page_inventaire(request):
                 redirect_url += f'&statut={statut_filtre}'
             if tri_filtre and tri_filtre != 'alpha':
                 redirect_url += f'&tri={tri_filtre}'
-            
+
             return redirect(redirect_url)
 
+        # 5. GÉNÉRATION DU PDF D'INVENTAIRE
         elif action_type == "generer_recapitulatif_pdf":
             produits_actifs = Produit.objects.exclude(emplacement="Archivé").filter(quantite__gt=0).order_by('emplacement', 'objet')
-            
+
             buffer = io.BytesIO()
             doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
             story = []
-            
+
             styles = getSampleStyleSheet()
             style_titre = ParagraphStyle(
                 'TitrePDF',
@@ -318,11 +361,11 @@ def page_inventaire(request):
                 leading=13,
                 textColor=colors.white
             )
-            
+
             date_generation = timezone.now().strftime('%d/%m/%Y à %H:%M')
             story.append(Paragraph("Récapitulatif officiel de l'inventaire", style_titre))
             story.append(Paragraph(f"Document généré le {date_generation} — Uniquement les articles disponibles en réserve", style_meta))
-            
+
             donnees_table = [[
                 Paragraph("Référence", style_entete),
                 Paragraph("Désignation de l'objet", style_entete),
@@ -330,7 +373,7 @@ def page_inventaire(request):
                 Paragraph("Emplacement", style_entete),
                 Paragraph("Stock", style_entete)
             ]]
-            
+
             for prod in produits_actifs:
                 donnees_table.append([
                     Paragraph(prod.reference, style_cellule),
@@ -339,7 +382,7 @@ def page_inventaire(request):
                     Paragraph(prod.emplacement or "-", style_cellule),
                     Paragraph(str(prod.quantite), style_cellule)
                 ])
-            
+
             tableau_inventaire = Table(donnees_table, colWidths=[80, 160, 110, 120, 50])
             tableau_inventaire.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
@@ -352,30 +395,31 @@ def page_inventaire(request):
                 ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
                 ('TOPPADDING', (0, 1), (-1, -1), 8),
             ]))
-            
+
             story.append(tableau_inventaire)
             doc.build(story)
-            
+
             buffer.seek(0)
             date_fichier = timezone.now().strftime('%Y_%m_%d')
             response = HttpResponse(buffer.read(), content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="Recapitulatif_Inventaire_{date_fichier}.pdf"'
             return response
-            
+
+    # FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
     recherche_term = request.GET.get('q', '').strip()
     statut_filtre = request.GET.get('statut', 'all')
     tri_filtre = request.GET.get('tri', 'alpha')
-            
+
     if tri_filtre == 'emplacement':
         tous_les_produits = Produit.objects.all().order_by('emplacement', 'objet')
     else:
         tous_les_produits = Produit.objects.all().order_by('objet')
-                
+
     if recherche_term:
         tous_les_produits = tous_les_produits.filter(
             Q(objet__icontains=recherche_term) | Q(reference__icontains=recherche_term)
         )
-                
+
     if statut_filtre and statut_filtre != 'all':
         produits_filtres_ids = []
         for p in tous_les_produits:
@@ -388,25 +432,31 @@ def page_inventaire(request):
                     status = 'green'
             else:
                 status = 'green'
-            
+
             if status == statut_filtre:
                 produits_filtres_ids.append(p.id)
-    
+
         tous_les_produits = tous_les_produits.filter(id__in=produits_filtres_ids)
-            
+
     tous_les_produits_complets = list(tous_les_produits)
-        
+
+    # Récupération des articles actuellement au panier sous forme de dictionnaire {produit_id: article_panier}
+    paniers_actifs = ArticlePanier.objects.all()
+    produits_dans_panier = {p.produit_id: p for p in paniers_actifs}
+
     paginator = Paginator(tous_les_produits, 15)
     page_number = request.GET.get('page', '1')
     page_obj = paginator.get_page(page_number)
-    
+
     return render(request, 'inventaire.html', {
         'profil_actif': profil_actif,
+        'is_admin': is_admin,
         'page_obj': page_obj,
         'tous_les_produits_complets': tous_les_produits_complets,
+        'produits_dans_panier': produits_dans_panier,
         'recherche_term': recherche_term,
         'statut_filtre': statut_filtre,
-        'tri_filtre': tri_filtre   
+        'tri_filtre': tri_filtre
     })
 
 
