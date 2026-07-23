@@ -1156,14 +1156,14 @@ def page_inventaire(request):
           produit.fournisseur = fournisseur_recu
 
         # **ENREGISTREMENT DU PRIX DU PRODUIT**
-        **prix_recu = request.POST.get('prix')**
-        **if prix_recu:**
-        **  try:**
-        **    produit.prix = float(prix_recu.replace(',', '.'))**
-        **  except ValueError:**
-        **    pass**
-        **else:**
-        **  produit.prix = None**
+        prix_recu = request.POST.get('prix')
+        if prix_recu:
+          try:
+            produit.prix = float(prix_recu.replace(',', '.'))
+          except ValueError:
+            pass
+        else:
+          produit.prix = None
 
         produit.save()
 
