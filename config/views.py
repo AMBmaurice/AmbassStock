@@ -1637,6 +1637,191 @@ def test_database(request):
 
     return HttpResponse(f"Produit créé avec l'ID {produit.id}")
 
+def page_liste_courses(request):
+  if not request.user.is_authenticated:
+    return redirect('/connexion/')
+
+  profil_actif = get_profil_actif(request.user)
+
+  is_admin = request.user.is_superuser or (
+      profil_actif
+      and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
+  )
+
+  if not is_admin:
+    messages.error(
+        request, 'Accès réservé exclusivement aux administrateurs.'
+    )
+    return redirect('/accueil/')
+
+  # Génération du Bon de Commande PDF par fournisseur
+  if request.method == 'POST':
+    action_type = request.POST.get('action_type')
+
+    if action_type == 'imprimer_bon_commande':
+      fournisseur_nom = request.POST.get('fournisseur', 'Fournisseur')
+      items_json = request.POST.get('items_json', '[]')
+
+      buffer = io.BytesIO()
+      doc = SimpleDocTemplate(
+          buffer,
+          pagesize=letter,
+          rightMargin=40,
+          leftMargin=40,
+          topMargin=40,
+          bottomMargin=40,
+      )
+      story = []
+      styles = getSampleStyleSheet()
+
+      style_titre = ParagraphStyle(
+          'TitrePDF',
+          parent=styles['Heading1'],
+          fontName='Helvetica-Bold',
+          fontSize=20,
+          leading=24,
+          textColor=colors.HexColor('#2C351C'),
+          spaceAfter=10,
+      )
+      style_meta = ParagraphStyle(
+          'MetaPDF',
+          parent=styles['Normal'],
+          fontName='Helvetica',
+          fontSize=10,
+          textColor=colors.HexColor('#7A8278'),
+          spaceAfter=20,
+      )
+      style_cellule = ParagraphStyle(
+          'CellPDF',
+          parent=styles['Normal'],
+          fontName='Helvetica',
+          fontSize=10,
+          leading=13,
+      )
+      style_entete = ParagraphStyle(
+          'HeaderPDF',
+          parent=styles['Normal'],
+          fontName='Helvetica-Bold',
+          fontSize=10,
+          leading=13,
+          textColor=colors.white,
+      )
+
+      date_gen = timezone.now().strftime('%d/%m/%Y à %H:%M')
+      story.append(
+          Paragraph(
+              f'BON DE COMMANDE — {fournisseur_nom.upper()}', style_titre
+          )
+      )
+      story.append(
+          Paragraph(
+              f'Document édité le {date_gen} par AmbassStock Administration',
+              style_meta,
+          )
+      )
+
+      donnees_table = [[
+          Paragraph('Référence', style_entete),
+          Paragraph("Désignation de l'article", style_entete),
+          Paragraph('P.U. Est. (€)', style_entete),
+          Paragraph('Qté', style_entete),
+          Paragraph('Total Est. (€)', style_entete),
+      ]]
+
+      total_fournisseur = 0.0
+      if items_json:
+        try:
+          items = json.loads(items_json)
+          for item in items:
+            prix_u = float(item.get('prix') or 0.0)
+            qte = int(item.get('qty', 1))
+            total_ligne = prix_u * qte
+            total_fournisseur += total_ligne
+
+            donnees_table.append([
+                Paragraph(str(item.get('ref', '-')), style_cellule),
+                Paragraph(str(item.get('nom', '-')), style_cellule),
+                Paragraph(
+                    f'{prix_u:.2f} €' if prix_u > 0 else 'N/C', style_cellule
+                ),
+                Paragraph(str(qte), style_cellule),
+                Paragraph(
+                    f'{total_ligne:.2f} €' if prix_u > 0 else 'N/C',
+                    style_cellule,
+                ),
+            ])
+        except Exception:
+          pass
+
+      donnees_table.append([
+          Paragraph('<b>TOTAL ESTIMÉ HT</b>', style_cellule),
+          Paragraph('', style_cellule),
+          Paragraph('', style_cellule),
+          Paragraph('', style_cellule),
+          Paragraph(f'<b>{total_fournisseur:.2f} €</b>', style_cellule),
+      ])
+
+      tableau = Table(
+          donnees_table, colWidths=[90, 220, 70, 50, 90]
+      )
+      tableau.setStyle(
+          TableStyle([
+              ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
+              ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+              ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+              ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E6E1')),
+              (
+                  'ROWBACKGROUNDS',
+                  (0, 1),
+                  (-1, -2),
+                  [colors.HexColor('#FAFBF9'), colors.white],
+              ),
+              ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+              ('TOPPADDING', (0, 0), (-1, -1), 8),
+          ])
+      )
+
+      story.append(tableau)
+      doc.build(story)
+
+      buffer.seek(0)
+      nom_fichier_clean = re.sub(r'[^a-zA-Z0-9_]', '_', fournisseur_nom)
+      response = HttpResponse(buffer.read(), content_type='application/pdf')
+      response['Content-Disposition'] = (
+          f'attachment; filename="Bon_Commande_{nom_fichier_clean}.pdf"'
+      )
+      return response
+
+  # Récupération de tous les produits actifs
+  produits_actifs = Produit.objects.exclude(emplacement='Archivé').order_by(
+      'fournisseur', 'objet'
+  )
+
+  # Récupération des produits en alerte (pour l'import automatique)
+  produits_alertes = []
+  for p in produits_actifs:
+    if p.quota_minimum is not None and p.quantite <= p.quota_minimum:
+      produits_alertes.append(p)
+
+  fournisseurs_existants = (
+      Produit.objects.exclude(fournisseur__isnull=True)
+      .exclude(fournisseur='')
+      .values_list('fournisseur', flat=True)
+      .distinct()
+      .order_by('fournisseur')
+  )
+
+  return render(
+      request,
+      'liste_courses.html',
+      {
+          'profil_actif': profil_actif,
+          'is_admin': is_admin,
+          'produits_actifs': produits_actifs,
+          'produits_alertes': produits_alertes,
+          'fournisseurs_existants': fournisseurs_existants,
+      },
+  )
 
 def generer_pdf_statistiques(request):
     if not request.user.is_authenticated:
