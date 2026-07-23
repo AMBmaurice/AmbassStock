@@ -318,7 +318,7 @@ function toggleSidebar() {
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
             
-            <div class="card-details" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}')">
+            <div class="card-details" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|default_if_none:'' }}')">
                 <span class="product-ref">{{ produit.reference }}</span>
                 <span class="product-name">{{ produit.objet }}</span>
             </div> 
@@ -335,7 +335,7 @@ function toggleSidebar() {
                 {% endif %}
             </div>
 
-            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}')"></div>
+            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|default_if_none:'' }}')"></div>
         </div>
         {% empty %}
         <p id="emptyDjangoMsg" style="text-align: center; color: #777777; font-style: italic; padding: 30px;">Aucun produit trouvé dans l'inventaire.</p>
@@ -388,6 +388,13 @@ function toggleSidebar() {
                     <option value="All Office">All Office</option>
                     <option value="Divers">Divers</option>
                 </select>
+            </div>
+
+            <!-- **NOUVEAU CHAMP PRIX** -->
+            <div class="detail-item">
+                <span class="detail-label">Prix (€)</span>
+                <span class="view-value" id="valPrix">-</span>
+                <input type="number" step="0.01" min="0" id="txtPrix" form="editForm" name="prix" class="edit-input" placeholder="0.00">
             </div>
 
             <div class="detail-item"><span class="detail-label">Stock Réel</span><span class="view-value" id="valStock">-</span><input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required></div>
@@ -490,7 +497,8 @@ function toggleSidebar() {
             stock: "{{ produit.quantite }}",
             emplacement: "{{ produit.emplacement|escapejs }}",
             quota: "{{ produit.quota_minimum|default_if_none:'' }}",
-            fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}"
+            fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}",
+            prix: "{{ produit.prix|default_if_none:'' }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -532,7 +540,7 @@ function toggleSidebar() {
                     : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')">+ Ajouter au panier</button>`;
 
                 card.innerHTML = `
-                    <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}')">
+                    <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}', '${p.prix}')">
                         <span class="product-ref">${p.reference}</span>
                         <span class="product-name">${p.nom}</span>
                     </div>
@@ -673,14 +681,19 @@ function toggleSidebar() {
     }
     function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // DÉTAILS PRODUIT & ADMIN
-    function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur) {
+    // **DÉTAILS PRODUIT & ADMIN AVEC PRISES EN COMPTE DU PRIX**
+    function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         document.getElementById('hiddenProduitId').value = id;
         document.getElementById('lblReference').textContent = ref;
         document.getElementById('valNom').textContent = nom;
         document.getElementById('valCategorie').textContent = cat;
         document.getElementById('valEmplacement').textContent = emp || "-";
         document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
+        
+        // AFFICHAGE ET RÉCUPÉRATION DU PRIX
+        document.getElementById('valPrix').textContent = prix ? (parseFloat(prix).toFixed(2) + " €") : "-";
+        document.getElementById('txtPrix').value = prix || "";
+
         document.getElementById('valStock').textContent = stock;
         document.getElementById('valQuota').textContent = quota || "-";
 
