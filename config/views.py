@@ -1654,11 +1654,80 @@ def page_liste_courses(request):
     )
     return redirect('/accueil/')
 
-  # Génération du Bon de Commande PDF par fournisseur
   if request.method == 'POST':
     action_type = request.POST.get('action_type')
 
-    if action_type == 'imprimer_bon_commande':
+    # **1. VALIDATION / RÉCEPTION DE LA COMMANDE (SARA)**
+    if action_type == 'valider_reception_commande':
+      demande_id = request.POST.get('demande_id')
+      quantite_recue = int(request.POST.get('quantite_recue', 0))
+      prix_reel_paye = float(request.POST.get('prix_reel_paye', 0.0))
+
+      try:
+        item = ArticlePanier.objects.select_related('produit').get(id=demande_id)
+        prod = item.produit
+
+        if quantite_recue > 0:
+          # Ajout effectif dans le stock physique (comme une entrée)
+          prod.quantite = F('quantite') + quantite_recue
+          prod.save()
+          prod.refresh_from_db()
+
+          # Enregistrement dans le journal des mouvements
+          MouvementStock.objects.create(
+              produit=prod,
+              quantite=quantite_recue,
+              type_mouvement='ENTREE',
+              objet=prod.objet,
+              service='Administration (Réception commande)',
+          )
+
+          # Comparaison du prix total payé par rapport à l'estimé
+          prix_attendu_total = float(prod.prix or 0.0) * float(
+              item.quantite_demandee
+          )
+          if abs(prix_reel_paye - prix_attendu_total) > 0.01:
+            messages.warning(
+                request,
+                f"Réception validée avec écart de prix pour '{prod.objet}' :"
+                f' Prévu = {prix_attendu_total:.2f} € | Réel payé ='
+                f' {prix_reel_paye:.2f} €.',
+            )
+          else:
+            messages.success(
+                request,
+                f"Réception validée : {quantite_recue} x '{prod.objet}' ajoutés"
+                ' au stock avec conformité du montant.',
+            )
+        else:
+          messages.info(
+              request, f"Quantité reçue nulle pour '{prod.objet}', non ajoutée."
+          )
+
+        item.delete()
+      except ArticlePanier.DoesNotExist:
+        messages.error(request, 'Commande introuvable.')
+
+      return redirect('/liste-courses/')
+
+    # **2. REFUS DE LA COMMANDE**
+    elif action_type == 'refuser_commande':
+      demande_id = request.POST.get('demande_id')
+      try:
+        item = ArticlePanier.objects.select_related('produit').get(id=demande_id)
+        nom_objet = item.produit.objet
+        item.delete()
+        messages.info(
+            request,
+            f"La commande de '{nom_objet}' a été refusée et retirée du suivi.",
+        )
+      except ArticlePanier.DoesNotExist:
+        pass
+
+      return redirect('/liste-courses/')
+
+    # **3. GÉNÉRATION DU BON DE COMMANDE PDF**
+    elif action_type == 'imprimer_bon_commande':
       fournisseur_nom = request.POST.get('fournisseur', 'Fournisseur')
       items_json = request.POST.get('items_json', '[]')
 
@@ -1792,12 +1861,10 @@ def page_liste_courses(request):
       )
       return response
 
-  # Récupération de tous les produits actifs
   produits_actifs = Produit.objects.exclude(emplacement='Archivé').order_by(
       'fournisseur', 'objet'
   )
 
-  # Récupération des produits en alerte (pour l'import automatique)
   produits_alertes = []
   for p in produits_actifs:
     if p.quota_minimum is not None and p.quantite <= p.quota_minimum:
@@ -1811,8 +1878,12 @@ def page_liste_courses(request):
       .order_by('fournisseur')
   )
 
-  # **RÉCUPÉRATION DES DEMANDES ET SUGGESTIONS DES SERVICES**
   demandes = DemandeService.objects.all().order_by('-date_demande')
+
+  # **RÉCUPÉRATION DES COMMANDES EN COURS (ISSUE DU PANIER GLOBAL)**
+  commandes_en_cours = ArticlePanier.objects.select_related('produit').order_by(
+      '-est_urgente', 'service', 'produit__objet'
+  )
 
   return render(
       request,
@@ -1824,6 +1895,7 @@ def page_liste_courses(request):
           'produits_alertes': produits_alertes,
           'fournisseurs_existants': fournisseurs_existants,
           'demandes': demandes,
+          'commandes_en_cours': commandes_en_cours,
       },
   )
     
