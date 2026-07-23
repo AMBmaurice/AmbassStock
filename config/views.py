@@ -5,31 +5,29 @@ import unicodedata
 import zoneinfo
 from datetime import date, datetime, timedelta
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.core.paginator import Paginator
-from django.http import JsonResponse, HttpResponse
-from django.utils import timezone
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import F, Sum, Count, Q
-from django.contrib import messages
+from django.db.models import Count, F, Q, Sum
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
-
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from .models import (
-    Produit, 
-    ProfilUtilisateur, 
-    DeclarationHebdomadaire, 
-    DemandeService, 
-    Facture, 
-    MouvementStock, 
     ArticlePanier,
-    HistoriqueStock
+    DeclarationHebdomadaire,
+    DemandeService,
+    Facture,
+    MouvementStock,
+    Produit,
+    ProfilUtilisateur,
 )
 
 def get_profil_actif(user):
