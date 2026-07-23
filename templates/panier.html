@@ -35,11 +35,15 @@
         .panier-table td { padding: 16px; border-bottom: 1px solid #F1F3F0; font-size: 0.98rem; color: #333333; vertical-align: middle; }
         .panier-table tr:hover td { background-color: #FAFBF9; }
 
-        .btn-submit { height: 44px; padding: 0 25px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .btn-submit { height: 40px; padding: 0 20px; background-color: #5E6D3E; color: white; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
         .btn-submit:hover { background-color: #495430; }
 
-        .btn-delete { background: none; border: none; color: #BA3C2A; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
-        .btn-delete:hover { text-decoration: underline; }
+        /* **BOUTONS VALIDER & REFUSER** */
+        .btn-validate-item { background-color: #EBF2E9; color: #5E6D3E; border: 1px solid #5E6D3E; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .btn-validate-item:hover { background-color: #5E6D3E; color: white; }
+
+        .btn-refuse-item { background-color: #FCEAE8; color: #BA3C2A; border: 1px solid #BA3C2A; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .btn-refuse-item:hover { background-color: #BA3C2A; color: white; }
     </style>
 </head>
 <body>
@@ -161,7 +165,17 @@ function toggleSidebar() {
 
 <div class="main-content">
     <h2 class="page-title">Panier / Liste de courses</h2>
-    <p class="welcome-text">Retrouvez ci-dessous la liste des fournitures demandées par les différents services. L'administration peut préparer les commandes et valider la livraison afin de mettre à jour le stock physique.</p>
+    <p class="welcome-text">Retrouvez ci-dessous la liste des fournitures demandées par les différents services. Validez pour déduire du stock ou refusez pour annuler la demande.</p>
+
+    {% if messages %}
+        <div style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px;">
+            {% for message in messages %}
+                <div style="padding: 16px 20px; border-radius: 14px; background-color: #EBF9EE; color: #1E7E34; border: 1px solid #C2EED0; font-weight: 500;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
     <hr class="section-divider">
 
@@ -173,7 +187,7 @@ function toggleSidebar() {
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="valider_livraison_service">
                 <input type="hidden" name="service" value="{{ service_nom }}">
-                <button type="submit" class="btn-submit">Valider la livraison & Déduire du stock</button>
+                <button type="submit" class="btn-submit">Tout valider & déduire du stock</button>
             </form>
         </div>
 
@@ -184,8 +198,9 @@ function toggleSidebar() {
                         <th>Référence</th>
                         <th>Désignation de l'article</th>
                         <th>Emplacement</th>
+                        <th>Stock Actuel</th>
                         <th>Quantité demandée</th>
-                        <th style="text-align: right;">Action</th>
+                        <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,14 +209,26 @@ function toggleSidebar() {
                         <td style="color: #7A8278;"><code>{{ item.produit.reference }}</code></td>
                         <td><strong>{{ item.produit.objet }}</strong></td>
                         <td>{{ item.produit.emplacement|default:"Réserve" }}</td>
+                        <td>{{ item.produit.quantite }}</td>
                         <td><strong style="color: #5E6D3E; font-size: 1.1rem;">{{ item.quantite_demandee }}</strong></td>
                         <td style="text-align: right;">
-                            <form method="POST" action="" style="display: inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="action_type" value="retirer_item">
-                                <input type="hidden" name="item_id" value="{{ item.id }}">
-                                <button type="submit" class="btn-delete">Supprimer</button>
-                            </form>
+                            <div style="display: inline-flex; gap: 8px;">
+                                <!-- **BOUTON VALIDER (DÉDUIT DU STOCK)** -->
+                                <form method="POST" action="" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="valider_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-validate-item">✓ Valider</button>
+                                </form>
+
+                                <!-- **BOUTON REFUSER (SANS TOUCHER AU STOCK)** -->
+                                <form method="POST" action="" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="refuser_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-refuse-item">✕ Refuser</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
