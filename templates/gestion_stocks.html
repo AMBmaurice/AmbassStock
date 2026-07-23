@@ -152,6 +152,12 @@
             <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
         </li>
         {% endif %}
+
+        {% if is_admin or request.user.is_superuser %}
+<li class="sidebar-item" style="margin-bottom: 4px;">
+    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
+</li>
+{% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
