@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Liste de courses Administration</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
+        .sidebar-menu { list-style: none; padding: 0 15px; }
+        .sidebar-item { margin-bottom: 10px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
+
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
+        .page-title { font-size: 2.2rem; font-weight: 700; color: #2c351c; margin-bottom: 10px; }
+        .welcome-text { font-size: 1.05rem; color: #495430; margin-bottom: 30px; }
+
+        .top-action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #ffffff; padding: 20px 28px; border-radius: 20px; border: 1px solid #E2E6E1; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); }
+        .grand-total-box { display: flex; flex-direction: column; }
+        .grand-total-label { font-size: 0.85rem; font-weight: 700; color: #7A8278; text-transform: uppercase; }
+        .grand-total-amount { font-size: 2.2rem; font-weight: 800; color: #2c351c; }
+
+        .btn-action-main { padding: 12px 22px; background-color: #BA3C2A; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-action-main:hover { background-color: #962F20; }
+
+        .btn-add-item { padding: 12px 22px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-add-item:hover { background-color: #495430; }
+
+        .supplier-card { background: #ffffff; border-radius: 20px; border: 1px solid #E2E6E1; padding: 25px 30px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
+        .supplier-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F1F3F0; padding-bottom: 16px; margin-bottom: 20px; }
+        .supplier-title { font-size: 1.4rem; font-weight: 700; color: #2c351c; display: flex; align-items: center; gap: 10px; }
+        .supplier-subtotal { font-size: 1.1rem; font-weight: 700; color: #5E6D3E; }
+
+        .items-table { width: 100%; border-collapse: collapse; }
+        .items-table th { text-align: left; font-size: 0.82rem; text-transform: uppercase; color: #7A8278; padding: 12px 10px; border-bottom: 1px solid #E2E6E1; }
+        .items-table td { padding: 14px 10px; border-bottom: 1px solid #F7F9F6; font-size: 0.95rem; vertical-align: middle; }
+
+        .qty-controls { display: flex; align-items: center; gap: 6px; }
+        .btn-qty-mini { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #D0D6CE; background: #FAFBF9; font-weight: 700; cursor: pointer; }
+        .btn-qty-mini:hover { background: #EBF2E9; color: #5E6D3E; }
+
+        .btn-print-supplier { padding: 8px 16px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-print-supplier:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
+
+        /* MODALE CATALOGUE */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.4); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-box { background: #ffffff; border-radius: 24px; width: 100%; max-width: 700px; padding: 35px; position: relative; max-height: 85vh; overflow-y: auto; }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7A8278; }
+        .catalog-search { width: 100%; height: 46px; border: 1px solid #D0D6CE; border-radius: 12px; padding: 0 16px; font-size: 1rem; margin-bottom: 20px; outline: none; }
+        .catalog-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #F1F3F0; }
+        .catalog-item:hover { background-color: #FAFBF9; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="appSidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
+        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem;">AmbassStock</span>
+    </div>
+        
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}
+        <li class="sidebar-item"><a href="/inventaire/" class="sidebar-link">Inventaire</a></li>
+        {% endif %}
+        {% if profil_actif.acces_stocks %}
+        <li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link">Gestion des stocks</a></li>
+        {% endif %}
+        {% if profil_actif.acces_historique %}
+        <li class="sidebar-item"><a href="/historique/" class="sidebar-link">Historique</a></li>
+        {% endif %}
+        {% if is_admin %}
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link active">Liste de courses</a></li>
+        {% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}
+        <li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link">Gestion des demandes</a></li>
+        {% endif %}
+        {% if profil_actif.acces_statistiques %}
+        <li class="sidebar-item"><a href="/statistiques/" class="sidebar-link">Statistiques</a></li>
+        {% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}
+        <li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link">Gestion des utilisateurs</a></li>
+        {% endif %}
+        {% if profil_actif.acces_factures %}
+        <li class="sidebar-item"><a href="/factures/" class="sidebar-link">Factures</a></li>
+        {% endif %}
+    </ul>
+            
+    <div style="margin-top: auto; padding: 15px;">
+        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252;">Déconnexion</a>
+    </div>
+</div>
+
+<div class="main-content">
+    <h2 class="page-title">Liste de courses (Administration)</h2>
+    <p class="welcome-text">Préparez vos commandes fournisseurs, estimez les coûts totaux et éditez vos bons de commande.</p>
+
+    <!-- BARRE D'ACTIONS SUPERIEURE -->
+    <div class="top-action-bar">
+        <div class="grand-total-box">
+            <span class="grand-total-label">Total Estimé Global</span>
+            <span class="grand-total-amount" id="lblGrandTotal">0,00 €</span>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="button" class="btn-action-main" onclick="importerAlertesStock()">
+                🚨 Importer les alertes de stock ({{ produits_alertes|length }})
+            </button>
+            <button type="button" class="btn-add-item" onclick="openModal('catalogModal')">
+                ➕ Ajouter un produit du catalogue
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTENEUR DES LISTES PAR FOURNISSEUR -->
+    <div id="supplierSectionsContainer">
+        <div id="emptyCourseMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: white; border-radius: 20px; border: 1px solid #E2E6E1;">
+            Votre liste de courses est vide. Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
+        </div>
+    </div>
+</div>
+
+<!-- MODALE CATALOGUE DE PRODUITS -->
+<div class="modal-overlay" id="catalogModal" onclick="if(event.target === this) closeModal('catalogModal');">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('catalogModal')">✕</button>
+        <h3 style="font-size: 1.5rem; color: #2c351c; margin-bottom: 20px;">Catalogue Produits</h3>
+        <input type="text" id="txtCatalogSearch" class="catalog-search" placeholder="Rechercher un produit par nom, ref ou fournisseur..." oninput="filtrerCatalogue()">
+
+        <div id="catalogList" style="max-height: 400px; overflow-y: auto;">
+            {% for p in produits_actifs %}
+            <div class="catalog-item" data-search="{{ p.objet|lower }} {{ p.reference|lower }} {{ p.fournisseur|lower }}">
+                <div>
+                    <strong>{{ p.objet }}</strong> <code style="font-size:0.8rem; color:#7A8278;">[{{ p.reference }}]</code>
+                    <div style="font-size: 0.82rem; color: #5E6D3E; font-weight: 600;">Fournisseur: {{ p.fournisseur|default:'Divers' }} | Prix: {% if p.prix %}{{ p.prix }} €{% else %}Non renseigné{% endif %}</div>
+                </div>
+                <button type="button" class="btn-add-item" style="padding: 6px 14px; font-size: 0.85rem;" 
+                        onclick="ajouterProduitListe('{{ p.id }}', '{{ p.reference|escapejs }}', '{{ p.objet|escapejs }}', '{{ p.fournisseur|default:'Divers'|escapejs }}', '{{ p.prix|default_if_none:'0' }}')">
+                    + Ajouter
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- FORMULAIRE CACHÉ DE GÉNÉRATION PDF -->
+<form id="pdfForm" method="POST" action="">
+    {% csrf_token %}
+    <input type="hidden" name="action_type" value="imprimer_bon_commande">
+    <input type="hidden" name="fournisseur" id="pdfFournisseurInput">
+    <input type="hidden" name="items_json" id="pdfItemsInput">
+</form>
+
+<script>
+    // Base de données des alertes
+    const alertesStock = [
+        {% for p in produits_alertes %}
+        {
+            id: "{{ p.id }}",
+            ref: "{{ p.reference|escapejs }}",
+            nom: "{{ p.objet|escapejs }}",
+            fournisseur: "{{ p.fournisseur|default:'Divers'|escapejs }}",
+            prix: parseFloat("{{ p.prix|default_if_none:'0' }}") || 0,
+            qty: Math.max(1, (parseInt("{{ p.quota_minimum|default:'10' }}") * 2) - parseInt("{{ p.quantite }}"))
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    let listeCourse = JSON.parse(localStorage.getItem('admin_liste_course') || '{}');
+
+    function sauvegarderCourse() {
+        localStorage.setItem('admin_liste_course', JSON.stringify(listeCourse));
+        renderListeCourse();
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function filtrerCatalogue() {
+        let q = document.getElementById('txtCatalogSearch').value.toLowerCase().trim();
+        document.querySelectorAll('.catalog-item').forEach(item => {
+            let search = item.getAttribute('data-search');
+            item.style.display = search.includes(q) ? 'flex' : 'none';
+        });
+    }
+
+    function ajouterProduitListe(id, ref, nom, fournisseur, prixStr) {
+        let prix = parseFloat(prixStr) || 0;
+        if (listeCourse[id]) {
+            listeCourse[id].qty += 1;
+        } else {
+            listeCourse[id] = { id, ref, nom, fournisseur: fournisseur || 'Divers', prix, qty: 1 };
+        }
+        sauvegarderCourse();
+        closeModal('catalogModal');
+    }
+
+    function modifierQty(id, delta) {
+        if (!listeCourse[id]) return;
+        let newQty = listeCourse[id].qty + delta;
+        if (newQty <= 0) delete listeCourse[id];
+        else listeCourse[id].qty = newQty;
+        sauvegarderCourse();
+    }
+
+    function importerAlertesStock() {
+        if (alertesStock.length === 0) {
+            alert("Aucun produit n'est actuellement en alerte de stock.");
+            return;
+        }
+        alertesStock.forEach(item => {
+            if (!listeCourse[item.id]) {
+                listeCourse[item.id] = { ...item };
+            }
+        });
+        sauvegarderCourse();
+    }
+
+    function imprimerBonCommande(fournisseurNom) {
+        let itemsFournisseur = Object.values(listeCourse).filter(i => i.fournisseur === fournisseurNom);
+        if (itemsFournisseur.length === 0) return;
+
+        document.getElementById('pdfFournisseurInput').value = fournisseurNom;
+        document.getElementById('pdfItemsInput').value = JSON.stringify(itemsFournisseur);
+        document.getElementById('pdfForm').submit();
+    }
+
+    function renderListeCourse() {
+        let container = document.getElementById('supplierSectionsContainer');
+        let keys = Object.keys(listeCourse);
+
+        if (keys.length === 0) {
+            container.innerHTML = `
+                <div id="emptyCourseMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: white; border-radius: 20px; border: 1px solid #E2E6E1;">
+                    Votre liste de courses est vide. Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
+                </div>`;
+            document.getElementById('lblGrandTotal').textContent = '0,00 €';
+            return;
+        }
+
+        // Grouper par fournisseur
+        let groupes = {};
+        let grandTotal = 0;
+
+        keys.forEach(k => {
+            let item = listeCourse[k];
+            if (!groupes[item.fournisseur]) groupes[item.fournisseur] = [];
+            groupes[item.fournisseur].push(item);
+        });
+
+        let html = '';
+
+        Object.keys(groupes).sort().forEach(fournisseur => {
+            let items = groupes[fournisseur];
+            let sousTotal = 0;
+
+            let rowsHtml = '';
+            items.forEach(item => {
+                let totalLigne = item.prix * item.qty;
+                sousTotal += totalLigne;
+
+                rowsHtml += `
+                    <tr>
+                        <td><code>${item.ref}</code></td>
+                        <td><strong>${item.nom}</strong></td>
+                        <td>${item.prix > 0 ? item.prix.toFixed(2) + ' €' : '<span style="color:#999;">N/C</span>'}</td>
+                        <td>
+                            <div class="qty-controls">
+                                <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', -1)">-</button>
+                                <span style="padding: 0 8px; font-weight: 700;">${item.qty}</span>
+                                <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', 1)">+</button>
+                            </div>
+                        </td>
+                        <td><strong>${totalLigne > 0 ? totalLigne.toFixed(2) + ' €' : '-'}</strong></td>
+                        <td style="text-align: right;">
+                            <button type="button" style="background:none; border:none; color:#BA3C2A; font-weight:600; cursor:pointer;" onclick="delete listeCourse['${item.id}']; sauvegarderCourse();">Retirer</button>
+                        </td>
+                    </tr>`;
+            });
+
+            grandTotal += sousTotal;
+
+            html += `
+                <div class="supplier-card">
+                    <div class="supplier-header">
+                        <div class="supplier-title">🏢 ${fournisseur}</div>
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <span class="supplier-subtotal">Sous-total : ${sousTotal.toFixed(2)} €</span>
+                            <button type="button" class="btn-print-supplier" onclick="imprimerBonCommande('${fournisseur.replace(/'/g, "\\'")}')">
+                                📄 Bon de commande PDF
+                            </button>
+                        </div>
+                    </div>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Référence</th>
+                                <th>Désignation</th>
+                                <th>Prix Unit. Est.</th>
+                                <th>Quantité</th>
+                                <th>Total Est.</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                </div>`;
+        });
+
+        container.innerHTML = html;
+        document.getElementById('lblGrandTotal').textContent = grandTotal.toFixed(2) + ' €';
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        renderListeCourse();
+    });
+</script>
+</body>
+</html>
