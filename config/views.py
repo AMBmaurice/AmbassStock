@@ -1071,14 +1071,17 @@ def page_factures(request):
 
 
 def afficher_facture(request, facture_id):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
-    facture = get_object_or_404(Facture, pk=facture_id)
-    if facture.fichier_facture:
-        url = facture.fichier_facture.url
-        url_propre = url.replace('Factures/factures/', 'factures/')
-        return redirect(url_propre)
-    return redirect('/factures/')
+  if not request.user.is_authenticated:
+    return redirect('/connexion/')
+
+  facture = get_object_or_404(Facture, pk=facture_id)
+
+  if facture.fichier_facture:
+    # Redirection directe vers l'URL valide du fichier S3/Supabase**
+    return redirect(facture.fichier_facture.url)
+
+  messages.error(request, 'Aucun fichier disponible pour cette facture.')
+  return redirect('/factures/')
 
     
 def page_gestion_demandes(request):
