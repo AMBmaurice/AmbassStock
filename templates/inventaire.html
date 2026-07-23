@@ -254,7 +254,7 @@ function toggleSidebar() {
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
-        <span><strong>Commandes fermées :</strong> La préparation des listes est verrouillée du mercredi 12h00 au jeudi 17h00. Vous pourrez de nouveau ajouter des articles pour la semaine prochaine à partir de jeudi 17h00.</span>
+        <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, vous pouvez effectuer une <strong>demande urgente</strong> dans le panier.</span>
     </div>
     {% else %}
     <div class="info-green-banner">
@@ -324,15 +324,9 @@ function toggleSidebar() {
             </div> 
 
             <div onclick="event.stopPropagation();">
-                {% if panier_bloque and not is_admin %}
-                <button type="button" class="btn-add-inline" disabled title="Les ajouts au panier sont fermés du mercredi 12h au jeudi 17h">
-                    Fermé jusqu'à jeudi 17h
-                </button>
-                {% else %}
                 <button type="button" class="btn-add-inline" onclick="ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}')">
                     + Ajouter au panier
                 </button>
-                {% endif %}
             </div>
 
             <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}')"></div>
@@ -430,14 +424,15 @@ function toggleSidebar() {
                 <tbody id="cartTableBody"></tbody>
             </table>
 
-            <!-- FORMULAIRE DE SOUMISSION AVEC ONSUBMIT -->
+            <!-- FORMULAIRE DE SOUMISSION AVEC ENVOI DU STATUT URGENT -->
             <form method="POST" action="" onsubmit="preparerSoumissionPanier()" style="display:flex; flex-direction:column; gap:18px; background:#FAFBF9; padding:22px; border-radius:16px; border:1px solid #E2E6E1;">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="ajouter_panier_groupe">
                 <input type="hidden" name="panier_json" id="cartJsonData">
+                <input type="hidden" name="est_urgente" id="hiddenEstUrgente" value="false">
 
                 <div>
-                    <label style="font-size: 0.85rem; font-weight: 700; color: #495430; text-transform: uppercase;">A quel service sont destinés ces articles ? <span style="color:#BA3C2A;">*</span></label>
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #495430; text-transform: uppercase;">À quel service sont destinés ces articles ? <span style="color:#BA3C2A;">*</span></label>
                     <select name="service" id="selectServicePanier" onchange="verifierServicePanier()" style="width:100%; height:46px; border-radius:10px; border:1px solid #D0D6CE; padding:0 12px; margin-top:6px; font-size:0.95rem; font-weight:500; background:#ffffff;" required>
                         <option value="" disabled selected>Sélectionner un service pour valider...</option>
                         <option value="Consulaire">Consulaire</option>
@@ -449,6 +444,19 @@ function toggleSidebar() {
                         <option value="Administration">Administration</option>
                         <option value="Sécurité">Sécurité</option>
                     </select>
+                </div>
+
+                <!-- **CASE À COCHER DE DEMANDE URGENTE** -->
+                <div style="background-color: #FCEAE8; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(186, 60, 42, 0.2);">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; color: #BA3C2A; font-size: 0.92rem;">
+                        <input type="checkbox" id="chkUrgent" onchange="basculerUrgence(this.checked)" style="width: 18px; height: 18px; accent-color: #BA3C2A;">
+                        🚨 Demande urgente (Dépassement de délai autorisé)
+                    </label>
+
+                    <div id="blocMotifUrgence" style="display: none; margin-top: 12px;">
+                        <label style="font-size: 0.8rem; font-weight: 700; color: #7A2417; text-transform: uppercase;">Motif / Justificatif de l'urgence <span style="color:#BA3C2A;">*</span></label>
+                        <input type="text" name="motif_urgence" id="txtMotifUrgence" oninput="verifierServicePanier()" placeholder="Ex: Réunion ministérielle de dernière minute..." style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #BA3C2A; padding: 0 12px; margin-top: 4px; font-size: 0.9rem;">
+                    </div>
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px;">
@@ -517,17 +525,13 @@ function toggleSidebar() {
                 let card = document.createElement('div');
                 card.className = 'inventory-card temp-search-card';
 
-                let boutonActionHtml = estBloqueSemaine 
-                    ? `<button type="button" class="btn-add-inline" disabled>Fermé jusqu'à jeudi 17h</button>`
-                    : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')">+ Ajouter au panier</button>`;
-
                 card.innerHTML = `
                     <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}')">
                         <span class="product-ref">${p.reference}</span>
                         <span class="product-name">${p.nom}</span>
                     </div>
                     <div onclick="event.stopPropagation();">
-                        ${boutonActionHtml}
+                        <button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')">+ Ajouter au panier</button>
                     </div>
                     <div class="status-dot status-${parseInt(p.stock) <= parseInt(p.quota || 0) ? 'red' : 'green'}"></div>
                 `;
@@ -540,7 +544,6 @@ function toggleSidebar() {
 
     // 3. GESTION DU PANIER
     function ajouterAuPanier(id, nom, ref, stock) {
-        if (estBloqueSemaine) return;
         let max = parseInt(stock) || 999;
         if (panierLocal[id]) {
             if (panierLocal[id].qty < max) panierLocal[id].qty++;
@@ -602,13 +605,30 @@ function toggleSidebar() {
         verifierServicePanier();
     }
 
+    // **GESTION DE L'URGENCE ET DÉBLOCAGE DU BOUTON**
+    function basculerUrgence(isUrgent) {
+        document.getElementById('hiddenEstUrgente').value = isUrgent ? "true" : "false";
+        document.getElementById('blocMotifUrgence').style.display = isUrgent ? "block" : "none";
+        document.getElementById('txtMotifUrgence').required = isUrgent;
+        verifierServicePanier();
+    }
+
     function verifierServicePanier() {
         let select = document.getElementById('selectServicePanier');
         let btn = document.getElementById('btnSubmitCart');
-        if (estBloqueSemaine) {
+        let chkUrgent = document.getElementById('chkUrgent');
+        let isUrgent = chkUrgent ? chkUrgent.checked : false;
+        
+        let serviceValide = select && select.value;
+        let panierRempli = Object.keys(panierLocal).length > 0;
+        let motifRempli = !isUrgent || (document.getElementById('txtMotifUrgence').value.trim() !== "");
+
+        if (estBloqueSemaine && !isUrgent) {
             btn.disabled = true;
+            btn.textContent = "Commandes fermées jusqu'à jeudi 17h";
         } else {
-            btn.disabled = !(select && select.value && Object.keys(panierLocal).length > 0);
+            btn.disabled = !(serviceValide && panierRempli && motifRempli);
+            btn.textContent = isUrgent ? "🚨 Transmettre la demande URGENTE" : "Valider et transmettre au panier global";
         }
     }
 
