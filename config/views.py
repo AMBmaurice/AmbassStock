@@ -1196,14 +1196,14 @@ def page_inventaire(request):
         'tri_filtre': tri_filtre
     })
 
-# Vue pour l'onglet Panier avec Valider / Refuser par article
+# Views.py - Vue pour l'onglet Panier
 def page_panier(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
         
     profil_actif = get_profil_actif(request.user)
 
-    # Vérification des privilèges Administrateur
+    # **VÉRIFICATION DES PRIVILÈGES ADMINISTRATEUR**
     is_admin = request.user.is_superuser or (
         profil_actif and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
     )
@@ -1212,32 +1212,47 @@ def page_panier(request):
         action_type = request.POST.get('action_type')
 
         if not is_admin:
-            messages.error(request, "Seule l'administration est autorisée à traiter le panier.")
+            messages.error(request, "Seule l'administration est autorisée à gérer les demandes du panier.")
             return redirect('/panier/')
 
-        # **1. VALIDER UN ARTICLE INDIVIDUEL (Déduit du stock + retire du panier)**
+        # **1. FAIRE SORTIR UN ARTICLE INDIVIDUEL DU STOCK**
         if action_type == "valider_item":
             item_id = request.POST.get('item_id')
+            # **RÉCUPÉRATION DE LA QUANTITÉ ÉVENTUELLEMENT AJUSTÉE PAR L'ADMINISTRATEUR**
+            nouvelle_quantite = int(request.POST.get('quantite_demandee', 1))
+
             try:
                 item = ArticlePanier.objects.select_related('produit').get(id=item_id)
                 prod = item.produit
-                
-                # Déduction du stock physique avec sécurité pour ne pas descendre sous 0
-                prod.quantite = max(0, prod.quantite - item.quantite_demandee)
+                service_nom = item.service
+
+                # **DÉDUCTION DU STOCK PHYSIQUE**
+                prod.quantite = max(0, prod.quantite - nouvelle_quantite)
                 prod.save()
 
-                service_nom = item.service
-                nom_objet = prod.objet
-                
-                # Suppression de l'article du panier
+                # **ENREGISTREMENT DANS L'HISTORIQUE DES MOUVEMENTS DE STOCK**
+                try:
+                    from .models import HistoriqueStock
+                    HistoriqueStock.objects.create(
+                        produit=prod,
+                        service=service_nom,
+                        quantite=nouvelle_quantite,
+                        type_mouvement="Sortie de stock",
+                        utilisateur=request.user
+                    )
+                except Exception:
+                    pass  # Sécurité si le modèle d'historique porte un nom différent
+
+                # **SUPPRESSION DE L'ARTICLE DU PANIER APPRÈS SORTIE EFFECTUÉE**
                 item.delete()
 
-                messages.success(request, f"L'article '{nom_objet}' pour le service {service_nom} a été validé et déduit du stock !")
+                messages.success(request, f"Sortie de stock validée : {nouvelle_quantite} x '{prod.objet}' pour le service {service_nom}.")
             except ArticlePanier.DoesNotExist:
-                pass
+                messages.error(request, "Article introuvable.")
+
             return redirect('/panier/')
 
-        # **2. REFUSER UN ARTICLE INDIVIDUEL (Retire du panier sans toucher au stock)**
+        # **2. REFUSER ET SUPPRIMER L'ARTICLE (SANS TOUCHER AU STOCK)**
         elif action_type == "refuser_item":
             item_id = request.POST.get('item_id')
             try:
@@ -1246,27 +1261,64 @@ def page_panier(request):
                 service_nom = item.service
                 
                 item.delete()
-                messages.info(request, f"L'article '{nom_objet}' pour le service {service_nom} a été refusé.")
+                messages.info(request, f"La demande de '{nom_objet}' pour le service {service_nom} a été refusée et supprimée du panier.")
             except ArticlePanier.DoesNotExist:
                 pass
+
             return redirect('/panier/')
 
-        # **3. VALIDER TOUTE LA COMMANDE D'UN SERVICE EN UNE FOIS**
+        # **3. AJUSTER ET SAUVEGARDER LA QUANTITÉ SANS VALIDER LA SORTIE TOUT DE SUITE**
+        elif action_type == "modifier_quantite":
+            item_id = request.POST.get('item_id')
+            nouvelle_quantite = int(request.POST.get('quantite_demandee', 1))
+
+            try:
+                item = ArticlePanier.objects.get(id=item_id)
+                item.quantite_demandee = nouvelle_quantite
+                item.save()
+                messages.success(request, f"Quantité mise à jour : {nouvelle_quantite} unités pour {item.produit.objet}.")
+            except ArticlePanier.DoesNotExist:
+                pass
+
+            return redirect('/panier/')
+
+        # **4. TOUT VALIDER POUR UN SERVICE EN UNE SEULE FOIS**
         elif action_type == "valider_livraison_service":
             service_nom = request.POST.get('service')
             articles_service = ArticlePanier.objects.filter(service=service_nom).select_related('produit')
 
             if articles_service.exists():
+                count = 0
                 for item in articles_service:
                     prod = item.produit
-                    prod.quantite = max(0, prod.quantite - item.quantite_demandee)
+                    qty = item.quantite_demandee
+
+                    # **DÉDUCTION DU STOCK PHYSIQUE**
+                    prod.quantite = max(0, prod.quantite - qty)
                     prod.save()
+
+                    # **ENREGISTREMENT DANS L'HISTORIQUE**
+                    try:
+                        from .models import HistoriqueStock
+                        HistoriqueStock.objects.create(
+                            produit=prod,
+                            service=service_nom,
+                            quantite=qty,
+                            type_mouvement="Sortie de stock",
+                            utilisateur=request.user
+                        )
+                    except Exception:
+                        pass
+                    count += 1
                 
                 articles_service.delete()
-                messages.success(request, f"Toute la commande du service {service_nom} a été validée et déduite du stock !")
+                messages.success(request, f"Toutes les demandes du service {service_nom} ({count} articles) ont été validées et déduites de l'inventaire !")
+            else:
+                messages.warning(request, f"Aucune demande trouvée pour le service {service_nom}.")
+
             return redirect('/panier/')
 
-    # Récupération et groupement des articles par service
+    # **RÉCUPÉRATION ET REGROUPEMENT DES ARTICLES PAR SERVICE**
     articles = ArticlePanier.objects.select_related('produit').order_by('service', 'produit__objet')
     
     panier_par_service = {}
