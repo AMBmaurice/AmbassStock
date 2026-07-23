@@ -62,7 +62,7 @@
         .alert-success { background-color: #EBF9EE; border: 1px solid #C2EED0; color: #1E7E34; padding: 16px; border-radius: 12px; margin-bottom: 25px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03); }
                     
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.4); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .modal-card { background-color: #ffffff; border-radius: 24px; width: 100%; max-width: 650px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.12); animation: scaleUp 0.2s ease-out; }
+        .modal-card { background-color: #ffffff; border-radius: 24px; width: 100%; max-width: 650px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.12); animation: scaleUp 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
 
         .mini-modal-card { max-width: 420px; text-align: center; padding: 30px; border-radius: 20px; }
         .mini-modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
@@ -243,10 +243,10 @@
                 <button type="submit" class="btn-submit"> Valider l'entrée en réserve</button>
             </form>
         </div>
-             
+              
         <hr class="form-separator-line">
         {% endif %}
-                                                    
+                                                        
         <div class="form-container-box">
             <div class="section-title-container">
                 <h4 class="section-title"> Enregistrement des sorties</h4>
@@ -306,7 +306,7 @@
                         <label class="form-label" style="font-size: 0.88rem; color: #7A8278; font-weight: 500; text-transform: uppercase;">Quantité retirée</label>
                         <input type="number" name="quantite" id="quantiteOutput" class="form-input" min="1" placeholder="Nombre d'unités à extraire" required oninput="calculatePredictionOutput()" style="width: 100%; height: 46px; padding: 0 16px; border: 1px solid rgba(73, 84, 48, 0.25); border-radius: 12px; outline: none;">
                     </div>
-                                                
+                                                                
                     <div class="form-group" style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;">
                         <label class="form-label" style="font-size: 0.88rem; color: #7A8278; font-weight: 500; text-transform: uppercase;">Date de la sortie</label>
                         <input type="date" name="date_sortie" class="form-input" value="{{ date_du_jour }}" required style="width: 100%; height: 46px; padding: 0 16px; border: 1px solid rgba(73, 84, 48, 0.25); border-radius: 12px; outline: none;">
@@ -317,13 +317,14 @@
                             <span id="predictionMessageOutput" style="font-size: 0.95rem; color: #495430; font-weight: 500;">Le stock restant sera de ...</span>
                         </div>
                     </div>
-                                                
+                                                                
                     <button type="submit" class="btn-submit btn-submit-output" style="width: 100%; height: 48px; background-color: #495430; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer;">Valider la sortie de l'inventaire</button>
                 </form>
             </div>
         </div>
     </div>
                                                 
+    <!-- MODALE DE CRÉATION DE PRODUIT (AJOUT DU PRIX ET DU FOURNISSEUR DYNAMIQUE) -->
     <div class="modal-overlay" id="productModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -346,10 +347,8 @@
                     <label for="id_categorie" style="font-size: 0.88rem; color: #7A8278; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">Catégorie</label>
                     <div style="position: relative; width: 100%;">
                         <select name="categorie" id="id_categorie" required 
-                                style="width: 100%; height: 46px; padding: 0 16px; border: 1px solid rgba(73, 84, 48, 0.25); border-radius: 12px; outline: none; background-color: #FAFBF9; font-size: 0.95rem; color: #2c351c; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; transition: all 0.3s ease; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);"
-                                onchange="liveRefGen();"
-                                onfocus="this.style.borderColor='#495430'; this.style.backgroundColor='#ffffff'; this.style.boxShadow='0 0 0 4px rgba(73, 84, 48, 0.1)';"
-                                onblur="this.style.borderColor='rgba(73, 84, 48, 0.25)'; this.style.backgroundColor='#FAFBF9'; this.style.boxShadow='none';">
+                                style="width: 100%; height: 46px; padding: 0 16px; border: 1px solid rgba(73, 84, 48, 0.25); border-radius: 12px; outline: none; background-color: #FAFBF9; font-size: 0.95rem; color: #2c351c; font-weight: 500; cursor: pointer; appearance: none; -webkit-appearance: none; transition: all 0.3s ease;"
+                                onchange="liveRefGen();">
                             <option value="" disabled selected>-- Sélectionner la catégorie de l'article --</option>
                             <option value="Écriture">Écriture (ECR)</option>
                             <option value="Bureau">Bureau (BUR)</option>
@@ -360,9 +359,6 @@
                             <option value="Enveloppe">Enveloppe (ENV)</option>
                             <option value="Équipement">Équipement (EQU)</option>
                         </select>
-                        <div style="position: absolute; top: 50%; right: 16px; transform: translateY(-50%); pointer-events: none; color: #495430; display: flex; align-items: center;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </div>
                     </div>
                 </div>
 
@@ -370,7 +366,7 @@
                     <label class="form-label">Nom du produit / Objet</label>
                     <input type="text" id="inputNom" name="nom" class="form-input" placeholder="Ex: Stylo à bille..." required oninput="liveRefGen()">
                 </div>
-                                                                                                    
+                                                                                                                        
                 <div class="form-group">
                     <label class="form-label">Marque</label>
                     <input type="text" id="inputMarque" name="marque_texte" class="form-input" placeholder="Ex: BIC..." required oninput="liveRefGen()">
@@ -381,6 +377,33 @@
                     <input type="text" id="inputSpec" name="spec_texte" class="form-input" placeholder="Ex: ROUGE, BLEU, A4..." required oninput="liveRefGen()">
                 </div>
                 
+                <!-- **SELECTION / CRÉATION DU FOURNISSEUR** -->
+                <div class="form-group">
+                    <label class="form-label">Fournisseur</label>
+                    <select name="fournisseur_select" id="id_fournisseur_select" class="form-select" onchange="gererAffichageNouveauFournisseur(this.value)" required>
+                        <option value="Le Voltigeur">Le Voltigeur</option>
+                        <option value="All Office">All Office</option>
+                        <option value="Divers" selected>Divers</option>
+                        {% for f in fournisseurs_existants %}
+                            {% if f != "Le Voltigeur" and f != "All Office" and f != "Divers" %}
+                                <option value="{{ f }}">{{ f }}</option>
+                            {% endif %}
+                        {% endfor %}
+                        <option value="AUTRE" style="font-weight: 700; color: #8C4A32;">+ Ajouter un nouveau fournisseur...</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="blocNouveauFournisseur" style="display: none;">
+                    <label class="form-label" style="color: #8C4A32;">Nom du nouveau fournisseur</label>
+                    <input type="text" name="fournisseur_nouveau" id="id_fournisseur_nouveau" class="form-input" placeholder="Ex: Lyreco, Kalamazoo..." style="border-color: #8C4A32;">
+                </div>
+
+                <!-- **NOUVEAU CHAMP PRIX (€)** -->
+                <div class="form-group">
+                    <label class="form-label">Prix unitaire (€)</label>
+                    <input type="number" step="0.01" min="0" name="prix" class="form-input" placeholder="Ex: 12.50 (Optionnel)">
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Quantité initiale</label>
                     <input type="number" name="quantite_initiale" class="form-input" min="0" placeholder="Ex: 50" required>
@@ -394,6 +417,9 @@
                         <div class="location-tile" data-value="Armoire B" onclick="selectLocationTile(this)">Armoire B</div>
                         <div class="location-tile" data-value="Armoire C" onclick="selectLocationTile(this)">Armoire C</div>
                         <div class="location-tile" data-value="Armoire D" onclick="selectLocationTile(this)">Armoire D</div>
+                        <div class="location-tile" data-value="Armoire E" onclick="selectLocationTile(this)">Armoire E</div>
+                        <div class="location-tile" data-value="Armoire F" onclick="selectLocationTile(this)">Armoire F</div>
+                        <div class="location-tile" data-value="Armoire G" onclick="selectLocationTile(this)">Armoire G</div>
                     </div>
                 </div>
                     
@@ -454,6 +480,19 @@
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         
+        // **GESTION DE L'AFFICHAGE DU CHAMP POUR NOUVEAU FOURNISSEUR**
+        function gererAffichageNouveauFournisseur(valeur) {
+            const bloc = document.getElementById('blocNouveauFournisseur');
+            const input = document.getElementById('id_fournisseur_nouveau');
+            if (valeur === 'AUTRE') {
+                bloc.style.display = 'flex';
+                input.required = true;
+            } else {
+                bloc.style.display = 'none';
+                input.required = false;
+            }
+        }
+
         function triggerDoubleConfirmation() {
             const ref = document.getElementById('hiddenProductDelete').value;
             const name = document.getElementById('searchSelectDelete').value; 
@@ -590,12 +629,9 @@
             }
         }
 
-        // MINUTEUR DE 3 SECONDES (3000ms) POUR LES NOTIFICATIONS FLASH
         document.addEventListener("DOMContentLoaded", function() {
             const messageBoxes = document.querySelectorAll('.flash-message-box');
-            
             messageBoxes.forEach(function(box) {
-                // Lancement du minuteur à 3 secondes
                 setTimeout(function() {
                     box.style.transition = "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s ease";
                     box.style.opacity = "0";
@@ -608,7 +644,7 @@
                             container.remove();
                         }
                     }, 500);
-                }, 3000); // 3000 millisecondes = 3 secondes
+                }, 3000);
             });
         });
     </script>
