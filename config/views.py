@@ -1940,6 +1940,20 @@ def page_liste_courses(request):
           'commandes_en_cours': commandes_en_cours,
       },
   )
+
+def page_mon_profil(request):
+  if not request.user.is_authenticated:
+    return redirect('/connexion/')
+
+  profil_actif = get_profil_actif(request.user)
+
+  return render(
+      request,
+      'mon_profil.html',
+      {
+          'profil_actif': profil_actif,
+      },
+  )
     
 def generer_pdf_statistiques(request):
     if not request.user.is_authenticated:
