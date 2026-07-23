@@ -146,11 +146,10 @@
             <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
         </li>
         
-        {% if profil_actif.acces_inventaire %}
+        <!-- **INVENTAIRE ACCESSIBLE À TOUS LES UTILISATEURS** -->
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
         </li>
-        {% endif %}
         
         {% if profil_actif.acces_stocks %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
@@ -188,17 +187,15 @@
         </li>
         {% endif %}
 
-        {% if profil_actif.acces_panier %}
+        <!-- **PANIER EXCLUSIVEMENT RÉSERVÉ AUX ADMINS** -->
+        {% if is_admin or request.user.is_superuser %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
         </li>
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
+        </li>
         {% endif %}
-
-        {% if is_admin or request.user.is_superuser %}
-<li class="sidebar-item" style="margin-bottom: 4px;">
-    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-</li>
-{% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -385,7 +382,6 @@ function toggleSidebar() {
             <div class="detail-item"><span class="detail-label">Catégorie</span><span class="view-value" id="valCategorie">-</span><input type="text" id="txtCategorie" form="editForm" name="categorie" class="edit-input" required></div>
             <div class="detail-item"><span class="detail-label">Emplacement</span><span class="view-value" id="valEmplacement">-</span><input type="text" id="txtEmplacement" form="editForm" name="emplacement" class="edit-input"></div>
             
-            <!-- CHAMP FOURNISSEUR -->
             <div class="detail-item">
                 <span class="detail-label">Fournisseur</span>
                 <span class="view-value" id="valFournisseur">-</span>
@@ -396,7 +392,6 @@ function toggleSidebar() {
                 </select>
             </div>
 
-            <!-- **NOUVEAU CHAMP PRIX** -->
             <div class="detail-item">
                 <span class="detail-label">Prix (€)</span>
                 <span class="view-value" id="valPrix">-</span>
@@ -407,7 +402,6 @@ function toggleSidebar() {
             <div class="detail-item"><span class="detail-label">Quota Alerte</span><span class="view-value" id="valQuota">-</span><input type="number" id="txtQuota" form="editForm" name="quota_minimum" class="edit-input" required></div>
         </div>
 
-        <!-- ACTIONS ADMINISTRATEUR -->
         {% if request.user.is_superuser or profil_actif.type_profil == 'administrateur' or profil_actif.type_profil == 'admin' %}
         <form id="editForm" method="POST" action="">
             {% csrf_token %}
@@ -443,7 +437,6 @@ function toggleSidebar() {
                 <tbody id="cartTableBody"></tbody>
             </table>
 
-            <!-- FORMULAIRE DE SOUMISSION AVEC SÉCURITÉ DE VÉRIFICATION -->
             <form method="POST" action="" onsubmit="return preparerSoumissionPanier(event)" style="display:flex; flex-direction:column; gap:18px; background:#FAFBF9; padding:22px; border-radius:16px; border:1px solid #E2E6E1;">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="ajouter_panier_groupe">
@@ -472,7 +465,7 @@ function toggleSidebar() {
                         🚨 Demande urgente (Dépassement de délai autorisé)
                     </label>
 
-                    <div id="blocMotifUrgence" style="display: none; margin-top: 12px;">
+                    <div id="blocMotifUrgencePanier" style="display: none; margin-top: 12px;">
                         <label style="font-size: 0.8rem; font-weight: 700; color: #7A2417; text-transform: uppercase;">Motif / Justificatif de l'urgence <span style="color:#BA3C2A;">*</span></label>
                         <input type="text" name="motif_urgence" id="txtMotifUrgence" oninput="verifierServicePanier()" placeholder="Ex: Réunion ministérielle de dernière minute..." style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #BA3C2A; padding: 0 12px; margin-top: 4px; font-size: 0.9rem;">
                     </div>
@@ -492,7 +485,6 @@ function toggleSidebar() {
 <script>
     const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
 
-    // 1. BASE COMPLÈTE DE TOUT L'INVENTAIRE POUR LA RECHERCHE GLOBALE
     const fullInventory = [
         {% for produit in tous_les_produits_complets %}
         {
@@ -515,7 +507,6 @@ function toggleSidebar() {
         return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
     }
 
-    // 2. RECHERCHE GLOBALE SUR TOUTES LES PAGES
     function filtrerInventaireGlobal() {
         const recherche = normaliser(document.getElementById('searchInput').value);
         const container = document.getElementById('inventoryList');
@@ -562,7 +553,6 @@ function toggleSidebar() {
         noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
     }
 
-    // 3. GESTION DU PANIER
     function ajouterAuPanier(id, nom, ref, stock) {
         let max = parseInt(stock) || 999;
         if (panierLocal[id]) {
@@ -625,10 +615,9 @@ function toggleSidebar() {
         verifierServicePanier();
     }
 
-    // GESTION DE L'URGENCE ET DÉBLOCAGE DU BOUTON
     function basculerUrgence(isUrgent) {
         document.getElementById('hiddenEstUrgente').value = isUrgent ? "true" : "false";
-        document.getElementById('blocMotifUrgence').style.display = isUrgent ? "block" : "none";
+        document.getElementById('blocMotifUrgencePanier').style.display = isUrgent ? "block" : "none";
         document.getElementById('txtMotifUrgence').required = isUrgent;
         verifierServicePanier();
     }
@@ -646,11 +635,9 @@ function toggleSidebar() {
 
         if (estBloqueSemaine) {
             if (!isUrgent) {
-                // BLOQUÉ TANT QUE L'URGENCE N'EST PAS COCHÉE
                 btn.disabled = true;
                 btn.textContent = "Commandes fermées — Cochez 'Demande urgente'";
             } else {
-                // DÉBLOQUÉ SEULEMENT SI SERVICE + PANIER + MOTIF SONT VALIDES
                 btn.disabled = !(serviceValide && panierRempli && motifRempli);
                 btn.textContent = "🚨 Transmettre la demande URGENTE";
             }
@@ -665,7 +652,6 @@ function toggleSidebar() {
         }
     }
 
-    // VÉRIFICATION À LA SOUMISSION DU FORMULAIRE
     function preparerSoumissionPanier(event) {
         let chkUrgent = document.getElementById('chkUrgent');
         let isUrgent = chkUrgent ? chkUrgent.checked : false;
@@ -687,7 +673,6 @@ function toggleSidebar() {
     }
     function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // **DÉTAILS PRODUIT & ADMIN AVEC PRISES EN COMPTE DU PRIX**
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         document.getElementById('hiddenProduitId').value = id;
         document.getElementById('lblReference').textContent = ref;
@@ -696,7 +681,6 @@ function toggleSidebar() {
         document.getElementById('valEmplacement').textContent = emp || "-";
         document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
         
-        // AFFICHAGE ET RÉCUPÉRATION DU PRIX
         document.getElementById('valPrix').textContent = prix ? (parseFloat(prix).toFixed(2) + " €") : "-";
         document.getElementById('txtPrix').value = prix || "";
 
