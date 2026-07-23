@@ -8,6 +8,7 @@ urlpatterns = [
     path('connexion/', views.page_connexion, name='connexion'),
     path('deconnexion/', views.page_deconnexion, name='deconnexion'),
     path('accueil/', views.page_accueil, name='accueil'),
+    path('mon-profil/', views.page_mon_profil, name='mon_profil'),
     
     # Liens connectés aux vues de l'application
     path('statistiques/', views.page_statistiques, name='statistiques'),
