@@ -15,8 +15,8 @@ urlpatterns = [
     path('factures/', views.page_factures, name='factures'),
     
     # **ROUTES POUR L'AFFICHAGE DES FACTURES (SÉCURITÉ DOUBLE NOM)**
-    **path('factures/<int:facture_id>/', views.afficher_facture, name='afficher_facture'),**
-    **path('factures/voir/<int:facture_id>/', views.afficher_facture, name='voir_facture'),**
+    path('factures/<int:facture_id>/', views.afficher_facture, name='afficher_facture'),
+    path('factures/voir/<int:facture_id>/', views.afficher_facture, name='voir_facture'),
     
     path('gestion-demandes/', views.page_gestion_demandes, name='gestion_demandes'),
     path('gestion-utilisateurs/', views.page_gestion_utilisateurs, name='gestion_utilisateurs'),
