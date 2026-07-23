@@ -124,6 +124,9 @@
 
         .btn-submit-cart { height: 48px; padding: 0 28px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; }
         .btn-submit-cart:disabled { background-color: #C2C8BE !important; color: #888888 !important; cursor: not-allowed !important; opacity: 0.7; }
+        
+        .select-custom, .input-custom { height: 46px; padding: 0 14px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; outline: none; background: #FAFBF9; width: 100%; color: #2c351c; }
+        .select-custom:focus, .input-custom:focus { border-color: #5E6D3E; background: #ffffff; }
     </style>
 </head>
 <body>
@@ -146,7 +149,7 @@
             <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
         </li>
         
-        <!-- **INVENTAIRE ACCESSIBLE À TOUS LES UTILISATEURS** -->
+        <!-- INVENTAIRE ACCESSIBLE À TOUS LES UTILISATEURS -->
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
         </li>
@@ -187,7 +190,7 @@
         </li>
         {% endif %}
 
-        <!-- **PANIER EXCLUSIVEMENT RÉSERVÉ AUX ADMINS** -->
+        <!-- PANIER EXCLUSIVEMENT RÉSERVÉ AUX ADMINS -->
         {% if is_admin or request.user.is_superuser %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
@@ -250,14 +253,21 @@ function toggleSidebar() {
     <h2 class="page-title">Inventaire</h2>
     <p class="welcome-text">Consultez la disponibilité des fournitures en réserve et ajoutez vos besoins directement à votre liste de courses.</p>
 
-    <!-- BANNIÈRE FERMETURE DES COMMANDES (MERCREDI 12H - JEUDI 17H) -->
+    <!-- **BANNIÈRE FERMETURE DES COMMANDES AVEC BOUTON DE TICKET D'URGENCE (MERCREDI 12H - JEUDI 17H)** -->
     {% if panier_bloque and not is_admin %}
-    <div class="info-red-banner">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
-        <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, vous pouvez effectuer une <strong>demande urgente</strong> dans le panier flottant.</span>
+    <div class="info-red-banner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, vous pouvez effectuer une demande urgente.</span>
+        </div>
+        
+        <!-- **BOUTON DE CRÉATION DE TICKET D'URGENCE** -->
+        <button type="button" onclick="ouvrirModalTicketUrgence()" style="background-color: #BA3C2A; color: #ffffff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(186, 60, 42, 0.3); font-size: 0.9rem; transition: transform 0.1s;" onactive="this.style.transform='scale(0.97)'">
+            🚨 Créer un ticket d'urgence
+        </button>
     </div>
     {% else %}
     <div class="info-green-banner">
@@ -328,7 +338,7 @@ function toggleSidebar() {
 
             <div onclick="event.stopPropagation();">
                 {% if panier_bloque and not is_admin %}
-                <button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le panier et cochez 'Demande urgente'.">
+                <button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Cliquez sur 'Créer un ticket d'urgence' dans le bandeau rouge.">
                     Fermé (Utiliser le panier)
                 </button>
                 {% else %}
@@ -369,6 +379,75 @@ function toggleSidebar() {
     </svg>
     <div class="floating-cart-badge" id="cartBadgeCount">0</div>
 </button>
+
+<!-- **MODALE TICKET D'URGENCE DÉDIÉE (PÉRIODE DE FERMETURE)** -->
+<div class="modal-overlay" id="ticketUrgenceModal" onclick="if(event.target === this) fermerModal('ticketUrgenceModal');">
+    <div class="modal-box" style="max-width: 680px;">
+        <button class="modal-close" onclick="fermerModal('ticketUrgenceModal')">✕</button>
+        <h3 class="modal-title" style="color: #BA3C2A; display: flex; align-items: center; gap: 10px;">
+            🚨 Créer un ticket d'urgence
+        </h3>
+
+        <form method="POST" action="" style="display:flex; flex-direction:column; gap:18px;">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="ajouter_panier_groupe">
+            <input type="hidden" name="est_urgente" value="true">
+            <input type="hidden" name="panier_json" id="jsonTicketUrgence">
+
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 700; color: #495430; text-transform: uppercase;">Service demandeur <span style="color:#BA3C2A;">*</span></label>
+                <select name="service" id="selectServiceUrgent" class="select-custom" required style="margin-top: 6px;">
+                    <option value="" disabled selected>Sélectionner votre service...</option>
+                    <option value="Consulaire">Consulaire</option>
+                    <option value="Secrétaire">Secrétaire</option>
+                    <option value="Secrétaire AMB">Secrétaire AMB</option>
+                    <option value="1ère Secrétaire">1ère Secrétaire</option>
+                    <option value="2ème Secrétaire">2ème Secrétaire</option>
+                    <option value="Diplomate">Diplomate</option>
+                    <option value="Administration">Administration</option>
+                    <option value="Sécurité">Sécurité</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="font-size: 0.85rem; font-weight: 700; color: #BA3C2A; text-transform: uppercase;">Objet / Motif de l'urgence <span style="color:#BA3C2A;">*</span></label>
+                <input type="text" name="motif_urgence" id="txtMotifUrgenceModal" required placeholder="Ex: Réunion ministérielle imprévue, rupture critique..." class="input-custom" style="margin-top: 6px; border-color: #BA3C2A;">
+            </div>
+
+            <!-- SELECTION DANS LE CATALOGUE COMPLET -->
+            <div style="background: #FAFBF9; padding: 20px; border-radius: 16px; border: 1px solid #E2E6E1;">
+                <label style="font-size: 0.85rem; font-weight: 700; color: #495430; text-transform: uppercase; display: block; margin-bottom: 10px;">Sélectionner les articles requis dans la réserve</label>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <select id="selectProduitCatalogue" class="select-custom" style="flex-grow: 1; font-size: 0.9rem;">
+                        <option value="" disabled selected>Choisir un article...</option>
+                        {% for p in tous_les_produits_complets %}
+                            <option value="{{ p.id }}" data-nom="{{ p.objet|escapejs }}" data-ref="{{ p.reference|escapejs }}" data-max="{{ p.quantite }}">
+                                {{ p.objet }} (Stock disponible: {{ p.quantite }}) — [{{ p.reference }}]
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" id="qtyProduitCatalogue" value="1" min="1" class="input-custom" style="width: 75px; text-align: center;">
+                    <button type="button" onclick="ajouterProduitTicketUrgent()" class="btn-add-inline" style="background-color: #BA3C2A; height: 46px; white-space: nowrap;">Ajouter</button>
+                </div>
+
+                <!-- TABLEAU DE RÉCAPITULATION POUR LE TICKET URGENT -->
+                <table class="cart-summary-table" style="margin-top: 10px; margin-bottom: 0;">
+                    <thead>
+                        <tr><th>Désignation</th><th style="width: 80px;">Qté</th><th style="text-align: right;">Action</th></tr>
+                    </thead>
+                    <tbody id="tbodyTicketUrgent">
+                        <tr><td colspan="3" style="text-align: center; color: #777777; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="submit" onclick="return preparerSoumissionTicketUrgent()" class="btn-submit" style="background-color: #BA3C2A; width: 100%; height: 50px; font-size: 1rem; font-weight: 700; margin-top: 5px;">
+                🚨 Valider et transmettre le ticket d'urgence
+            </button>
+        </form>
+    </div>
+</div>
 
 <!-- MODALE DÉTAIL PRODUIT -->
 <div class="modal-overlay" id="productModal" onclick="if(event.target === this) fermerModal('productModal');">
@@ -458,19 +537,6 @@ function toggleSidebar() {
                     </select>
                 </div>
 
-                <!-- CASE À COCHER DE DEMANDE URGENTE -->
-                <div style="background-color: #FCEAE8; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(186, 60, 42, 0.2);">
-                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; color: #BA3C2A; font-size: 0.92rem;">
-                        <input type="checkbox" id="chkUrgent" onchange="basculerUrgence(this.checked)" style="width: 18px; height: 18px; accent-color: #BA3C2A;">
-                        🚨 Demande urgente (Dépassement de délai autorisé)
-                    </label>
-
-                    <div id="blocMotifUrgencePanier" style="display: none; margin-top: 12px;">
-                        <label style="font-size: 0.8rem; font-weight: 700; color: #7A2417; text-transform: uppercase;">Motif / Justificatif de l'urgence <span style="color:#BA3C2A;">*</span></label>
-                        <input type="text" name="motif_urgence" id="txtMotifUrgence" oninput="verifierServicePanier()" placeholder="Ex: Réunion ministérielle de dernière minute..." style="width: 100%; height: 40px; border-radius: 8px; border: 1px solid #BA3C2A; padding: 0 12px; margin-top: 4px; font-size: 0.9rem;">
-                    </div>
-                </div>
-
                 <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px;">
                     <button type="button" onclick="viderPanier()" style="background:none; border:none; color:#BA3C2A; font-weight:600; cursor:pointer; font-size:0.9rem;">Vider le panier</button>
                     <button type="submit" id="btnSubmitCart" class="btn-submit-cart" disabled>
@@ -502,6 +568,7 @@ function toggleSidebar() {
     ];
 
     let panierLocal = {};
+    **let articlesTicketUrgent = {};**
 
     function normaliser(str) {
         return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -533,7 +600,7 @@ function toggleSidebar() {
                 card.className = 'inventory-card temp-search-card';
 
                 let boutonActionHtml = estBloqueSemaine 
-                    ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le panier.">Fermé (Utiliser le panier)</button>`
+                    ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le ticket d'urgence.">Fermé (Utiliser le panier)</button>`
                     : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')">+ Ajouter au panier</button>`;
 
                 card.innerHTML = `
@@ -615,55 +682,93 @@ function toggleSidebar() {
         verifierServicePanier();
     }
 
-    function basculerUrgence(isUrgent) {
-        document.getElementById('hiddenEstUrgente').value = isUrgent ? "true" : "false";
-        document.getElementById('blocMotifUrgencePanier').style.display = isUrgent ? "block" : "none";
-        document.getElementById('txtMotifUrgence').required = isUrgent;
-        verifierServicePanier();
-    }
-
     function verifierServicePanier() {
         let select = document.getElementById('selectServicePanier');
         let btn = document.getElementById('btnSubmitCart');
-        let chkUrgent = document.getElementById('chkUrgent');
-        let isUrgent = chkUrgent ? chkUrgent.checked : false;
-        
         let serviceValide = select && select.value !== "";
         let panierRempli = Object.keys(panierLocal).length > 0;
-        let txtMotif = document.getElementById('txtMotifUrgence');
-        let motifRempli = txtMotif && txtMotif.value.trim() !== "";
 
         if (estBloqueSemaine) {
-            if (!isUrgent) {
-                btn.disabled = true;
-                btn.textContent = "Commandes fermées — Cochez 'Demande urgente'";
-            } else {
-                btn.disabled = !(serviceValide && panierRempli && motifRempli);
-                btn.textContent = "🚨 Transmettre la demande URGENTE";
-            }
+            btn.disabled = true;
+            btn.textContent = "Commandes fermées — Utilisez 'Créer un ticket d'urgence'";
         } else {
-            if (isUrgent) {
-                btn.disabled = !(serviceValide && panierRempli && motifRempli);
-                btn.textContent = "🚨 Transmettre la demande URGENTE";
-            } else {
-                btn.disabled = !(serviceValide && panierRempli);
-                btn.textContent = "Valider et transmettre au panier global";
-            }
+            btn.disabled = !(serviceValide && panierRempli);
+            btn.textContent = "Valider et transmettre au panier global";
         }
     }
 
     function preparerSoumissionPanier(event) {
-        let chkUrgent = document.getElementById('chkUrgent');
-        let isUrgent = chkUrgent ? chkUrgent.checked : false;
-
-        if (estBloqueSemaine && !isUrgent) {
+        if (estBloqueSemaine) {
             if (event) event.preventDefault();
-            alert("Les commandes sont actuellement fermées. Vous devez obligatoirement cocher 'Demande urgente' et préciser un motif pour valider.");
+            alert("Les commandes sont actuellement fermées. Veuillez créer un ticket d'urgence dans le bandeau rouge.");
             return false;
         }
 
         const jsonString = JSON.stringify(panierLocal);
         document.getElementById('cartJsonData').value = jsonString;
+        return true;
+    }
+
+    // LOGIQUE JS DÉDIÉE AU TICKET D'URGENCE**
+    function ouvrirModalTicketUrgence() {
+        document.getElementById('ticketUrgenceModal').style.display = 'flex';
+    }
+
+    function ajouterProduitTicketUrgent() {
+        const select = document.getElementById('selectProduitCatalogue');
+        const qtyInput = document.getElementById('qtyProduitCatalogue');
+        if (!select.value) return;
+
+        const option = select.options[select.selectedIndex];
+        const id = select.value;
+        const nom = option.getAttribute('data-nom');
+        const ref = option.getAttribute('data-ref');
+        const max = parseInt(option.getAttribute('data-max')) || 999;
+        const qty = parseInt(qtyInput.value) || 1;
+
+        if (articlesTicketUrgent[id]) {
+            articlesTicketUrgent[id].qty = Math.min(max, articlesTicketUrgent[id].qty + qty);
+        } else {
+            articlesTicketUrgent[id] = { id: id, nom: nom, ref: ref, qty: Math.min(max, qty) };
+        }
+
+        renderTableauTicketUrgent();
+    }
+
+    function supprimerItemTicketUrgent(id) {
+        delete articlesTicketUrgent[id];
+        renderTableauTicketUrgent();
+    }
+
+    function renderTableauTicketUrgent() {
+        const tbody = document.getElementById('tbodyTicketUrgent');
+        const keys = Object.keys(articlesTicketUrgent);
+
+        if (keys.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #777777; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        keys.forEach(k => {
+            const item = articlesTicketUrgent[k];
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${item.nom}</strong> <small style="color:#777;">(${item.ref})</small></td>
+                    <td><strong>${item.qty}</strong></td>
+                    <td style="text-align: right;"><button type="button" onclick="supprimerItemTicketUrgent('${item.id}')" style="background:none; border:none; color:#BA3C2A; font-weight:700; cursor:pointer;">Retirer</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    function preparerSoumissionTicketUrgent() {
+        const keys = Object.keys(articlesTicketUrgent);
+        if (keys.length === 0) {
+            alert("Veuillez ajouter au moins un article dans votre ticket d'urgence.");
+            return false;
+        }
+        document.getElementById('jsonTicketUrgence').value = JSON.stringify(articlesTicketUrgent);
         return true;
     }
 
