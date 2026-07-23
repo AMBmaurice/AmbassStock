@@ -192,11 +192,9 @@
             <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
         </li>
         
-        {% if profil_actif.acces_inventaire %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
         </li>
-        {% endif %}
         
         {% if profil_actif.acces_stocks %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
@@ -234,17 +232,14 @@
         </li>
         {% endif %}
 
-        {% if profil_actif.acces_panier %}
+        {% if is_admin or request.user.is_superuser %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
         </li>
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
+        </li>
         {% endif %}
-
-        {% if is_admin or request.user.is_superuser %}
-<li class="sidebar-item" style="margin-bottom: 4px;">
-    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-</li>
-{% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -326,20 +321,21 @@ function toggleSidebar() {
                 
     <h3>Tableau de bord</h3>
 
-    <!-- BLOC D'INFORMATION DES RETRAITS ET ÉMARGEMENTS -->
+    <!-- **BLOC D'INFORMATION DES RETRAITS AVEC LISTE À PUCES** -->
     <div style="background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; padding: 20px 24px; border-radius: 16px; font-weight: 500; margin-bottom: 30px; font-size: 0.95rem; line-height: 1.6; display: flex; align-items: flex-start; gap: 14px;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
         </svg>
-        <div class="info-green-banner">
-    <ul style="margin-left: 20px; display: flex; flex-direction: column; gap: 8px;">
-        <li>Les retraits s'effectuent tous les jeudis à partir de 15h50, merci d'être consciencieux et de veiller à venir aux bons horaires.</li>
-        <li>Vous êtes priés de bien vouloir valider votre liste de courses avant le mercredi matin de chaque semaine, le cas échéant vous devrez attendre la semaine suivante pour pouvoir retirer, aucune exception ne sera faite !</li>
-        <li>Merci de bien vouloir renseigner dans la section dédiée si vous avez retiré ou non la semaine précédente, tout abus dans les retards ou oublis pourra être sanctionné.</li>
-    </ul>
-</div>
+        <div style="flex-grow: 1;">
+            <ul style="margin-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+                <li>Les retraits s'effectuent tous les jeudis à partir de 15h50, merci d'être consciencieux et de veiller à venir aux bons horaires.</li>
+                <li>Vous êtes priés de bien vouloir valider votre liste de courses avant le mercredi matin de chaque semaine, le cas échéant vous devrez attendre la semaine suivante pour pouvoir retirer, aucune exception ne sera faite !</li>
+                <li>Merci de bien vouloir renseigner dans la section dédiée si vous avez retiré ou non la semaine précédente, tout abus dans les retards ou oublis pourra être sanctionné.</li>
+            </ul>
+        </div>
+    </div>
 
     <div class="dashboard-grid">
                         
