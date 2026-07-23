@@ -1076,13 +1076,37 @@ def afficher_facture(request, facture_id):
 
   facture = get_object_or_404(Facture, pk=facture_id)
 
-  if facture.fichier_facture:
-    # Redirection directe vers l'URL valide du fichier S3/Supabase**
-    return redirect(facture.fichier_facture.url)
+  if not facture.fichier_facture:
+    messages.error(request, 'Aucun fichier pour cette facture.')
+    return redirect('/factures/')
 
-  messages.error(request, 'Aucun fichier disponible pour cette facture.')
-  return redirect('/factures/')
+  try:
+    # **Lecture directe du flux de fichier depuis Supabase S3**
+    fichier = facture.fichier_facture.open('rb')
 
+    # **Renvoie le document directement au navigateur**
+    response = FileResponse(fichier)
+
+    # Détection du type de fichier (PDF ou Image)
+    nom_fichier = facture.fichier_facture.name.lower()
+    if nom_fichier.endswith('.pdf'):
+      response['Content-Type'] = 'application/pdf'
+    elif nom_fichier.endswith('.png'):
+      response['Content-Type'] = 'image/png'
+    elif nom_fichier.endswith(('.jpg', '.jpeg')):
+      response['Content-Type'] = 'image/jpeg'
+
+    # 'inline' force l'affichage direct dans le navigateur au lieu du téléchargement
+    response['Content-Disposition'] = (
+        f'inline; filename="{facture.fichier_facture.name.split("/")[-1]}"'
+    )
+    return response
+
+  except Exception as e:
+    messages.error(
+        request, f'Impossible d\'ouvrir le document de la facture : {e}'
+    )
+    return redirect('/factures/')
     
 def page_gestion_demandes(request):
     if not request.user.is_authenticated:
