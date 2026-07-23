@@ -149,7 +149,6 @@
             <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
         </li>
         
-        <!-- INVENTAIRE ACCESSIBLE À TOUS LES UTILISATEURS -->
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
         </li>
@@ -190,7 +189,6 @@
         </li>
         {% endif %}
 
-        <!-- PANIER EXCLUSIVEMENT RÉSERVÉ AUX ADMINS -->
         {% if is_admin or request.user.is_superuser %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
@@ -253,7 +251,6 @@ function toggleSidebar() {
     <h2 class="page-title">Inventaire</h2>
     <p class="welcome-text">Consultez la disponibilité des fournitures en réserve et ajoutez vos besoins directement à votre liste de courses.</p>
 
-    <!-- **BANNIÈRE FERMETURE DES COMMANDES AVEC BOUTON DE TICKET D'URGENCE (MERCREDI 12H - JEUDI 17H)** -->
     {% if panier_bloque and not is_admin %}
     <div class="info-red-banner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div style="display: flex; align-items: center; gap: 14px;">
@@ -264,8 +261,7 @@ function toggleSidebar() {
             <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, vous pouvez effectuer une demande urgente.</span>
         </div>
         
-        <!-- **BOUTON DE CRÉATION DE TICKET D'URGENCE** -->
-        <button type="button" onclick="ouvrirModalTicketUrgence()" style="background-color: #BA3C2A; color: #ffffff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(186, 60, 42, 0.3); font-size: 0.9rem; transition: transform 0.1s;" onactive="this.style.transform='scale(0.97)'">
+        <button type="button" onclick="ouvrirModalTicketUrgence()" style="background-color: #BA3C2A; color: #ffffff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(186, 60, 42, 0.3); font-size: 0.9rem;">
             🚨 Créer un ticket d'urgence
         </button>
     </div>
@@ -292,7 +288,7 @@ function toggleSidebar() {
             {% csrf_token %}
             <input type="hidden" name="action_type" value="generer_recapitulatif_pdf">
             <button type="submit" class="btn-pdf-export">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 8 9"></polyline></svg>
                 Imprimer l'inventaire actif
             </button>
         </form>
@@ -380,7 +376,7 @@ function toggleSidebar() {
     <div class="floating-cart-badge" id="cartBadgeCount">0</div>
 </button>
 
-<!-- **MODALE TICKET D'URGENCE DÉDIÉE (PÉRIODE DE FERMETURE)** -->
+<!-- MODALE TICKET D'URGENCE DÉDIÉE (PÉRIODE DE FERMETURE) -->
 <div class="modal-overlay" id="ticketUrgenceModal" onclick="if(event.target === this) fermerModal('ticketUrgenceModal');">
     <div class="modal-box" style="max-width: 680px;">
         <button class="modal-close" onclick="fermerModal('ticketUrgenceModal')">✕</button>
@@ -568,7 +564,7 @@ function toggleSidebar() {
     ];
 
     let panierLocal = {};
-    **let articlesTicketUrgent = {};**
+    let articlesTicketUrgent = {};
 
     function normaliser(str) {
         return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
@@ -709,15 +705,17 @@ function toggleSidebar() {
         return true;
     }
 
-    // LOGIQUE JS DÉDIÉE AU TICKET D'URGENCE**
     function ouvrirModalTicketUrgence() {
-        document.getElementById('ticketUrgenceModal').style.display = 'flex';
+        const modal = document.getElementById('ticketUrgenceModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
     }
 
     function ajouterProduitTicketUrgent() {
         const select = document.getElementById('selectProduitCatalogue');
         const qtyInput = document.getElementById('qtyProduitCatalogue');
-        if (!select.value) return;
+        if (!select || !select.value) return;
 
         const option = select.options[select.selectedIndex];
         const id = select.value;
@@ -742,6 +740,7 @@ function toggleSidebar() {
 
     function renderTableauTicketUrgent() {
         const tbody = document.getElementById('tbodyTicketUrgent');
+        if (!tbody) return;
         const keys = Object.keys(articlesTicketUrgent);
 
         if (keys.length === 0) {
@@ -776,7 +775,11 @@ function toggleSidebar() {
         document.getElementById('cartModal').style.display = 'flex'; 
         verifierServicePanier();
     }
-    function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function fermerModal(id) { 
+        const modal = document.getElementById(id);
+        if (modal) modal.style.display = 'none'; 
+    }
 
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         document.getElementById('hiddenProduitId').value = id;
