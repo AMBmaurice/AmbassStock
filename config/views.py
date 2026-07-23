@@ -20,6 +20,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from django.core.mail import send_mail
+from django.http import FileResponse, Http404
 
 from .models import (
     ArticlePanier,
