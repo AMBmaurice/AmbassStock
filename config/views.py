@@ -224,7 +224,7 @@ def page_inventaire(request):
         profil_actif and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
     )
 
-    # **GESTION DU CRÉNEAU DE BLOCAGE DES COMMANDES (Mercredi 12h00 -> Jeudi 17h00)**
+    # GESTION DU CRÉNEAU DE BLOCAGE DES COMMANDES (Mercredi 12h00 -> Jeudi 17h00)
     maintenant = timezone.now()
     jour_semaine = maintenant.weekday()  # 0=Lundi, 2=Mercredi, 3=Jeudi...
     heure_actuelle = maintenant.time()
@@ -238,38 +238,52 @@ def page_inventaire(request):
     if request.method == "POST":
         action_type = request.POST.get('action_type')
 
-        # **SÉCURITÉ : EMPÊCHER L'AJOUT AU PANIER SI BLOQUÉ (SAUF POUR L'ADMIN)**
-        if action_type in ["ajouter_panier_groupe", "ajouter_panier"] and panier_bloque and not is_admin:
-            messages.error(
-                request, 
-                "Les ajouts au panier sont fermés du mercredi 12h00 au jeudi 17h00 afin de préparer les retraits. Aucune modification n'est acceptée durant ce créneau."
-            )
-            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
         # 1. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT)
         if action_type == "ajouter_panier_groupe":
             service = request.POST.get('service')
             panier_raw = request.POST.get('panier_json')
+            
+            # **RÉCUPÉRATION DES INFORMATIONS D'URGENCE**
+            est_urgente = request.POST.get('est_urgente') == 'true'
+            motif_urgence = request.POST.get('motif_urgence', '').strip()
+
+            # **SÉCURITÉ : AUTORISÉ SI HORS PÉRIODE DE BLOCAGE, SI ADMIN, OU SI DEMANDE URGENTE**
+            if panier_bloque and not is_admin and not est_urgente:
+                messages.error(
+                    request, 
+                    "Les ajouts au panier sont fermés du mercredi 12h00 au jeudi 17h00. Cochez 'Demande urgente' et précisez un motif si votre besoin ne peut pas attendre."
+                )
+                return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
             if service and panier_raw:
                 try:
                     panier_dict = json.loads(panier_raw)
                     for prod_id, item_data in panier_dict.items():
                         produit = Produit.objects.get(id=prod_id)
-                        # Récupère la quantité sous 'qty' ou 'quantite'
                         quantite = int(item_data.get('qty', item_data.get('quantite', 1)))
 
-                        # Ajout ou cumul de la quantité pour ce service
+                        # CRÉATION OU MISE À JOUR AVEC PRISE EN COMPTE DU STATUT URGENT ET DU MOTIF
                         article_panier, created = ArticlePanier.objects.get_or_create(
                             produit=produit,
                             service=service,
-                            defaults={'quantite_demandee': quantite}
+                            defaults={
+                                'quantite_demandee': quantite,
+                                'est_urgente': est_urgente,**
+                                'motif_urgence': motif_urgence if est_urgente else None
+                            }
                         )
                         if not created:
                             article_panier.quantite_demandee += quantite
+                            if est_urgente:
+                                article_panier.est_urgente = True
+                                article_panier.motif_urgence = motif_urgence
                             article_panier.save()
 
-                    messages.success(request, f"La demande de fournitures pour le service {service} a été enregistrée avec succès !")
+                    # MESSAGE DE CONFIRMATION ADAPTÉ SELON L'URGENCE
+                    if est_urgente:
+                        messages.warning(request, f"🚨 Demande URGENTE transmise avec succès pour le service {service} !")
+                    else:
+                        messages.success(request, f"La demande de fournitures pour le service {service} a été enregistrée avec succès !")
                 except Exception:
                     messages.error(request, "Une erreur est survenue lors de l'enregistrement de votre panier.")
 
@@ -277,6 +291,11 @@ def page_inventaire(request):
 
         # 2. AJOUT D'UN PRODUIT UNIQUE AU PANIER
         elif action_type == "ajouter_panier":
+            # **SÉCURITÉ BLOCAGE HEBDOMADAIRE SANS URGENCE**
+            if panier_bloque and not is_admin:
+                messages.error(request, "Les ajouts directs sont fermés. Veuillez passer par le panier global pour effectuer une demande urgente.")
+                return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
             produit_id = request.POST.get('produit_id')
             service = request.POST.get('service')
             quantite = int(request.POST.get('quantite', 1))
@@ -323,7 +342,7 @@ def page_inventaire(request):
                 produit.quantite = int(request.POST.get('quantite', 0))
                 produit.quota_minimum = int(request.POST.get('quota_minimum', 0))
                 
-                # **ENREGISTREMENT DU FOURNISSEUR**
+                # ENREGISTREMENT DU FOURNISSEUR
                 fournisseur_recu = request.POST.get('fournisseur')
                 if fournisseur_recu:
                     produit.fournisseur = fournisseur_recu
@@ -511,7 +530,6 @@ def page_inventaire(request):
         'statut_filtre': statut_filtre,
         'tri_filtre': tri_filtre
     })
-
 
 def page_gestion_stocks(request): 
     profil_actif = get_profil_actif(request.user)
