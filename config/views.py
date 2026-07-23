@@ -1261,7 +1261,7 @@ def page_panier(request):
                 except Exception:
                     pass  # Sécurité si le modèle d'historique porte un nom différent
 
-                # **SUPPRESSION DE L'ARTICLE DU PANIER APPRÈS SORTIE EFFECTUÉE**
+                # **SUPPRESSION DE L'ARTICLE DU PANIER APRÈS SORTIE EFFECTUÉE**
                 item.delete()
 
                 messages.success(request, f"Sortie de stock validée : {nouvelle_quantite} x '{prod.objet}' pour le service {service_nom}.")
@@ -1336,19 +1336,26 @@ def page_panier(request):
 
             return redirect('/panier/')
 
-    # **RÉCUPÉRATION ET REGROUPEMENT DES ARTICLES PAR SERVICE**
-    articles = ArticlePanier.objects.select_related('produit').order_by('service', 'produit__objet')
+    # **RÉCUPÉRATION ET SÉPARATION DES ARTICLES (URGENCES VS NORMALES)**
+    articles = ArticlePanier.objects.select_related('produit').order_by('-est_urgente', 'service', 'produit__objet')
     
     panier_par_service = {}
+    urgences_liste = []
+
     for item in articles:
-        if item.service not in panier_par_service:
-            panier_par_service[item.service] = []
-        panier_par_service[item.service].append(item)
+        # **Si l'article est marqué comme urgent, on l'isole pour le bloc prioritaire**
+        if getattr(item, 'est_urgente', False):
+            urgences_liste.append(item)
+        else:
+            if item.service not in panier_par_service:
+                panier_par_service[item.service] = []
+            panier_par_service[item.service].append(item)
 
     return render(request, 'panier.html', {
         'profil_actif': profil_actif,
         'is_admin': is_admin,
         'panier_par_service': panier_par_service,
+        'urgences_liste': urgences_liste,
     })
     
 def page_deconnexion(request):
