@@ -145,6 +145,8 @@ class ArticlePanier(models.Model):
     service = models.CharField(max_length=50, choices=CHOIX_SERVICES)
     quantite_demandee = models.IntegerField(default=1)
     date_ajout = models.DateTimeField(default=timezone.now)
+    est_urgente = models.BooleanField(default=False)
+    motif_urgence = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.service} - {self.produit.objet} ({self.quantite_demandee})"
