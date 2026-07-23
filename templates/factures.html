@@ -248,10 +248,10 @@ function toggleSidebar() {
                             </td>
                             <td>
                                 {% if f.fichier_facture %}
-                                    <strong><a href="{{ f.fichier_facture.url }}" class="btn-download" target="_blank">Voir le document</a></strong>
-                                {% else %}
-                                    <span style="color: #7A8278; font-style: italic;">Aucun fichier</span>
-                                {% endif %}
+    <strong><a href="{% url 'afficher_facture' f.id %}" class="btn-download" target="_blank">Voir le document</a></strong>
+{% else %}
+    <span style="color: #7A8278; font-style: italic;">Aucun fichier</span>
+{% endif %}
                             </td>
                         </tr>
                         {% empty %}
