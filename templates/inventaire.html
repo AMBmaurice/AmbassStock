@@ -254,7 +254,7 @@ function toggleSidebar() {
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
         </svg>
-        <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, vous pouvez effectuer une <strong>demande urgente</strong> dans le panier.</span>
+        <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, vous pouvez effectuer une <strong>demande urgente</strong> dans le panier flottant.</span>
     </div>
     {% else %}
     <div class="info-green-banner">
@@ -324,9 +324,16 @@ function toggleSidebar() {
             </div> 
 
             <div onclick="event.stopPropagation();">
+                <!-- **DÉSACTIVATION EN PÉRIODE DE FERMETURE SAUF POUR L'ADMIN** -->
+                {% if panier_bloque and not is_admin %}
+                <button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le panier et cochez 'Demande urgente'.">
+                    Fermé (Utiliser le panier)
+                </button>
+                {% else %}
                 <button type="button" class="btn-add-inline" onclick="ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}')">
                     + Ajouter au panier
                 </button>
+                {% endif %}
             </div>
 
             <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}')"></div>
@@ -525,13 +532,17 @@ function toggleSidebar() {
                 let card = document.createElement('div');
                 card.className = 'inventory-card temp-search-card';
 
+                let boutonActionHtml = estBloqueSemaine 
+                    ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le panier.">Fermé (Utiliser le panier)</button>`
+                    : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')">+ Ajouter au panier</button>`;
+
                 card.innerHTML = `
                     <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}')">
                         <span class="product-ref">${p.reference}</span>
                         <span class="product-name">${p.nom}</span>
                     </div>
                     <div onclick="event.stopPropagation();">
-                        <button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')">+ Ajouter au panier</button>
+                        ${boutonActionHtml}
                     </div>
                     <div class="status-dot status-${parseInt(p.stock) <= parseInt(p.quota || 0) ? 'red' : 'green'}"></div>
                 `;
@@ -605,7 +616,7 @@ function toggleSidebar() {
         verifierServicePanier();
     }
 
-    // **GESTION DE L'URGENCE ET DÉBLOCAGE DU BOUTON**
+    // GESTION DE L'URGENCE ET DÉBLOCAGE DU BOUTON
     function basculerUrgence(isUrgent) {
         document.getElementById('hiddenEstUrgente').value = isUrgent ? "true" : "false";
         document.getElementById('blocMotifUrgence').style.display = isUrgent ? "block" : "none";
@@ -621,7 +632,8 @@ function toggleSidebar() {
         
         let serviceValide = select && select.value;
         let panierRempli = Object.keys(panierLocal).length > 0;
-        let motifRempli = !isUrgent || (document.getElementById('txtMotifUrgence').value.trim() !== "");
+        let motifInput = document.getElementById('txtMotifUrgence');
+        let motifRempli = !isUrgent || (motifInput && motifInput.value.trim() !== "");
 
         if (estBloqueSemaine && !isUrgent) {
             btn.disabled = true;
