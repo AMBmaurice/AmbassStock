@@ -38,7 +38,7 @@
         .btn-submit { height: 42px; padding: 0 22px; background-color: #5E6D3E; color: white; border: none; border-radius: 10px; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s; }
         .btn-submit:hover { background-color: #495430; }
 
-        /* **BOUTONS D'ACTION EXPLICITES** */
+        /* BOUTONS D'ACTION EXPLICITES */
         .btn-action-out { background-color: #5E6D3E; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
         .btn-action-out:hover { background-color: #495430; }
 
@@ -183,14 +183,100 @@ function toggleSidebar() {
         </div>
     {% endif %}
 
+    <!-- **BLOC DÉDIÉ AUX DEMANDES URGENTES EN ATTENTE** -->
+    {% if urgences_liste %}
+    <div class="card-box" style="border: 2px solid #BA3C2A; background-color: #FFF8F7; margin-bottom: 35px;">
+        <div class="card-header-flex" style="border-bottom-color: #BA3C2A;">
+            <h4 class="card-title" style="color: #BA3C2A; display: flex; align-items: center; gap: 10px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                DEMANDES URGENTES EN ATTENTE (À TRAITER IMMÉDIATEMENT)
+            </h4>
+        </div>
+
+        <div class="table-container">
+            <table class="panier-table">
+                <thead>
+                    <tr style="background-color: #FCEAE8;">
+                        <th>Service</th>
+                        <th>Désignation de l'article</th>
+                        <th>Motif de l'urgence</th>
+                        <th>Stock Actuel</th>
+                        <th>Quantité accordée</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in urgences_liste %}
+                    <tr>
+                        <td><span style="background: #BA3C2A; color: white; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 0.82rem;">{{ item.service }}</span></td>
+                        <td><strong>{{ item.produit.objet }}</strong> <br><small style="color:#7A8278;">Ref: {{ item.produit.reference }}</small></td>
+                        <td><em style="color: #7A2417; font-weight: 600;">"{{ item.motif_urgence|default:"Non spécifié" }}"</em></td>
+                        <td><strong style="color:#495430;">{{ item.produit.quantite }}</strong></td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="number" 
+                                       id="input-qty-urg-{{ item.id }}" 
+                                       name="quantite_demandee" 
+                                       value="{{ item.quantite_demandee }}" 
+                                       min="1" 
+                                       max="{{ item.produit.quantite }}"
+                                       class="qty-input-edit" 
+                                       form="form-validate-urg-{{ item.id }}">
+                                
+                                <button type="submit" 
+                                        form="form-adjust-urg-{{ item.id }}" 
+                                        class="btn-action-adjust" 
+                                        title="Enregistrer la nouvelle quantité">
+                                    Ajuster
+                                </button>
+                            </div>
+
+                            <form id="form-adjust-urg-{{ item.id }}" method="POST" action="" style="display:none;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action_type" value="modifier_quantite">
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <input type="hidden" name="quantite_demandee" id="hidden-adjust-qty-urg-{{ item.id }}">
+                            </form>
+                            <script>
+                                document.getElementById('input-qty-urg-{{ item.id }}').addEventListener('input', function() {
+                                    document.getElementById('hidden-adjust-qty-urg-{{ item.id }}').value = this.value;
+                                });
+                            </script>
+                        </td>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 8px;">
+                                <form id="form-validate-urg-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir valider la sortie URGENTE de cet article ?');" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="valider_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-action-out" style="background-color: #BA3C2A;">🚨 Faire sortir du stock</button>
+                                </form>
+
+                                <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cette demande urgente ?');" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="refuser_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-action-refuse">Refuser & Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
     <hr class="section-divider">
 
+    <!-- COMMANDES STANDARDS PAR SERVICE -->
     {% for service_nom, items in panier_par_service.items %}
     <div class="card-box">
         <div class="card-header-flex">
             <h4 class="card-title">Commande du service : <strong>{{ service_nom }}</strong></h4>
             
-            <!-- **BOUTON TOUT VALIDER AVEC MESSAGE DE SÉCURITÉ** -->
+            <!-- BOUTON TOUT VALIDER AVEC MESSAGE DE SÉCURITÉ -->
             <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir tout valider pour le service {{ service_nom|escapejs }} ? Tous les articles ci-dessous feront sortir les quantités correspondantes du stock et seront enregistrés dans l\'historique.');">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="valider_livraison_service">
@@ -219,7 +305,7 @@ function toggleSidebar() {
                         <td>{{ item.produit.emplacement|default:"Réserve" }}</td>
                         <td><strong style="color:#495430;">{{ item.produit.quantite }}</strong></td>
                         
-                        <!-- **CHAMP DE QUANTITÉ MODIFIABLE PAR L'ADMINISTRATEUR** -->
+                        <!-- CHAMP DE QUANTITÉ MODIFIABLE PAR L'ADMINISTRATEUR -->
                         <td>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <input type="number" 
@@ -255,7 +341,7 @@ function toggleSidebar() {
 
                         <td style="text-align: right;">
                             <div style="display: inline-flex; gap: 8px;">
-                                <!-- **BOUTON FAIRE SORTIR DU STOCK AVEC MESSAGE DE SÉCURITÉ** -->
+                                <!-- BOUTON FAIRE SORTIR DU STOCK AVEC MESSAGE DE SÉCURITÉ -->
                                 <form id="form-validate-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir faire sortir cet article du stock de l\'inventaire ?');" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="valider_item">
@@ -263,7 +349,7 @@ function toggleSidebar() {
                                     <button type="submit" class="btn-action-out">Faire sortir du stock</button>
                                 </form>
 
-                                <!-- **BOUTON REFUSER & SUPPRIMER AVEC MESSAGE DE SÉCURITÉ** -->
+                                <!-- BOUTON REFUSER & SUPPRIMER AVEC MESSAGE DE SÉCURITÉ -->
                                 <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cet article ? Il sera retiré de la demande sans modifier le stock.');" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="refuser_item">
@@ -279,9 +365,11 @@ function toggleSidebar() {
         </div>
     </div>
     {% empty %}
+    {% if not urgences_liste %}
     <div class="card-box" style="text-align: center; padding: 60px; color: #7A8278; font-style: italic;">
         Le panier est actuellement vide. Aucun service n'a encore enregistré de demande de fournitures.
     </div>
+    {% endif %}
     {% endfor %}
 </div>
 
