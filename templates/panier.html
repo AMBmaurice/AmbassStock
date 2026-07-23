@@ -35,15 +35,21 @@
         .panier-table td { padding: 16px; border-bottom: 1px solid #F1F3F0; font-size: 0.98rem; color: #333333; vertical-align: middle; }
         .panier-table tr:hover td { background-color: #FAFBF9; }
 
-        .btn-submit { height: 40px; padding: 0 20px; background-color: #5E6D3E; color: white; border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .btn-submit { height: 42px; padding: 0 22px; background-color: #5E6D3E; color: white; border: none; border-radius: 10px; font-size: 0.92rem; font-weight: 700; cursor: pointer; transition: background-color 0.2s; }
         .btn-submit:hover { background-color: #495430; }
 
-        /* **BOUTONS VALIDER & REFUSER** */
-        .btn-validate-item { background-color: #EBF2E9; color: #5E6D3E; border: 1px solid #5E6D3E; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-        .btn-validate-item:hover { background-color: #5E6D3E; color: white; }
+        /* **BOUTONS D'ACTION EXPLICITES** */
+        .btn-action-out { background-color: #5E6D3E; color: #ffffff; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
+        .btn-action-out:hover { background-color: #495430; }
 
-        .btn-refuse-item { background-color: #FCEAE8; color: #BA3C2A; border: 1px solid #BA3C2A; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
-        .btn-refuse-item:hover { background-color: #BA3C2A; color: white; }
+        .btn-action-refuse { background-color: #FAFBF9; color: #BA3C2A; border: 1px solid #BA3C2A; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .btn-action-refuse:hover { background-color: #BA3C2A; color: #ffffff; }
+
+        .btn-action-adjust { background-color: #FAFBF9; color: #495430; border: 1px solid #D0D6CE; padding: 8px 12px; border-radius: 8px; font-weight: 600; font-size: 0.82rem; cursor: pointer; transition: all 0.2s; }
+        .btn-action-adjust:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
+
+        .qty-input-edit { width: 75px; height: 38px; padding: 0 8px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 1rem; font-weight: 700; color: #2c351c; text-align: center; background: #ffffff; outline: none; }
+        .qty-input-edit:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
     </style>
 </head>
 <body>
@@ -165,7 +171,7 @@ function toggleSidebar() {
 
 <div class="main-content">
     <h2 class="page-title">Panier / Liste de courses</h2>
-    <p class="welcome-text">Retrouvez ci-dessous la liste des fournitures demandées par les différents services. Validez pour déduire du stock ou refusez pour annuler la demande.</p>
+    <p class="welcome-text">Retrouvez ci-dessous les demandes de fournitures par service. Ajustez les quantités si besoin, puis validez pour faire sortir du stock et enregistrer dans l'historique.</p>
 
     {% if messages %}
         <div style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px;">
@@ -183,11 +189,13 @@ function toggleSidebar() {
     <div class="card-box">
         <div class="card-header-flex">
             <h4 class="card-title">Commande du service : <strong>{{ service_nom }}</strong></h4>
-            <form method="POST" action="">
+            
+            <!-- **BOUTON TOUT VALIDER AVEC MESSAGE DE SÉCURITÉ** -->
+            <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir tout valider pour le service {{ service_nom|escapejs }} ? Tous les articles ci-dessous feront sortir les quantités correspondantes du stock et seront enregistrés dans l\'historique.');">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="valider_livraison_service">
                 <input type="hidden" name="service" value="{{ service_nom }}">
-                <button type="submit" class="btn-submit">Tout valider & déduire du stock</button>
+                <button type="submit" class="btn-submit">Tout valider</button>
             </form>
         </div>
 
@@ -199,7 +207,7 @@ function toggleSidebar() {
                         <th>Désignation de l'article</th>
                         <th>Emplacement</th>
                         <th>Stock Actuel</th>
-                        <th>Quantité demandée</th>
+                        <th>Quantité accordée</th>
                         <th style="text-align: right;">Actions</th>
                     </tr>
                 </thead>
@@ -209,24 +217,58 @@ function toggleSidebar() {
                         <td style="color: #7A8278;"><code>{{ item.produit.reference }}</code></td>
                         <td><strong>{{ item.produit.objet }}</strong></td>
                         <td>{{ item.produit.emplacement|default:"Réserve" }}</td>
-                        <td>{{ item.produit.quantite }}</td>
-                        <td><strong style="color: #5E6D3E; font-size: 1.1rem;">{{ item.quantite_demandee }}</strong></td>
+                        <td><strong style="color:#495430;">{{ item.produit.quantite }}</strong></td>
+                        
+                        <!-- **CHAMP DE QUANTITÉ MODIFIABLE PAR L'ADMINISTRATEUR** -->
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <input type="number" 
+                                       id="input-qty-{{ item.id }}" 
+                                       name="quantite_demandee" 
+                                       value="{{ item.quantite_demandee }}" 
+                                       min="1" 
+                                       max="{{ item.produit.quantite }}"
+                                       class="qty-input-edit" 
+                                       form="form-validate-{{ item.id }}">
+                                
+                                <button type="submit" 
+                                        form="form-adjust-{{ item.id }}" 
+                                        class="btn-action-adjust" 
+                                        title="Enregistrer la nouvelle quantité sans valider la sortie">
+                                    Ajuster
+                                </button>
+                            </div>
+
+                            <!-- FORMULAIRE CACHÉ DE MISE À JOUR DE LA QUANTITÉ -->
+                            <form id="form-adjust-{{ item.id }}" method="POST" action="" style="display:none;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action_type" value="modifier_quantite">
+                                <input type="hidden" name="item_id" value="{{ item.id }}">
+                                <input type="hidden" name="quantite_demandee" id="hidden-adjust-qty-{{ item.id }}">
+                            </form>
+                            <script>
+                                document.getElementById('input-qty-{{ item.id }}').addEventListener('input', function() {
+                                    document.getElementById('hidden-adjust-qty-{{ item.id }}').value = this.value;
+                                });
+                            </script>
+                        </td>
+
                         <td style="text-align: right;">
                             <div style="display: inline-flex; gap: 8px;">
-                                <!-- **BOUTON VALIDER (DÉDUIT DU STOCK)** -->
-                                <form method="POST" action="" style="display: inline;">
+                                <!-- **BOUTON FAIRE SORTIR DU STOCK AVEC MESSAGE DE SÉCURITÉ** -->
+                                <form id="form-validate-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir faire sortir cet article du stock de l\'inventaire ?');" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="valider_item">
                                     <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <button type="submit" class="btn-validate-item">✓ Valider</button>
+                                    <button type="submit" class="btn-action-out">Faire sortir du stock</button>
                                 </form>
 
-                                <!-- **BOUTON REFUSER (SANS TOUCHER AU STOCK)** -->
-                                <form method="POST" action="" style="display: inline;">
+                                <!-- **BOUTON REFUSER & SUPPRIMER AVEC MESSAGE DE SÉCURITÉ** -->
+                                <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cet article ? Il sera retiré de la demande sans modifier le stock.');" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="refuser_item">
                                     <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <button type="submit" class="btn-refuse-item">✕ Refuser</button>
+                                    <button type="submit" class="btn-action-refuse">Refuser & Supprimer</button>
                                 </form>
                             </div>
                         </td>
