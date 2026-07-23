@@ -1006,7 +1006,7 @@ def page_inventaire(request):
       and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
   )
 
-  # 3. GESTION STRICTE DU CRÉNEAU DE BLOCAGE DES COMMANDES (Heure de Paris)
+  # 3. GESTION STRICTE DU CRÉNEAU DE BLOCAGE DES COMMANDES (Heure locale de Paris)
   maintenant_paris = timezone.now().astimezone(
       zoneinfo.ZoneInfo('Europe/Paris')
   )
@@ -1034,7 +1034,7 @@ def page_inventaire(request):
       est_urgente = request.POST.get('est_urgente') == 'true'
       motif_urgence = request.POST.get('motif_urgence', '').strip()
 
-      # SÉCURITÉ : Bloqué du mercredi 12h au jeudi 17h SAUF si c'est un admin OU une demande urgente
+      # SÉCURITÉ STRICTE : Bloqué du mercredi 12h au jeudi 17h SAUF si c'est un admin OU une demande urgente
       if panier_bloque and not is_admin and not est_urgente:
         messages.error(
             request,
@@ -1083,7 +1083,9 @@ def page_inventaire(request):
             )
         except Exception:
           messages.error(
-              request, "Une erreur est survenue lors de l'enregistrement de votre panier."
+              request,
+              "Une erreur est survenue lors de l'enregistrement de votre"
+              ' panier.',
           )
 
       return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
@@ -1188,7 +1190,8 @@ def page_inventaire(request):
 
         messages.success(
             request,
-            f'Le produit "{nom_produit_supprime}" a été supprimé définitvement.',
+            f'Le produit "{nom_produit_supprime}" a été supprimé'
+            ' définitivement.',
         )
       except Produit.DoesNotExist:
         pass
@@ -1319,7 +1322,7 @@ def page_inventaire(request):
       )
       return response
 
-  # FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
+  # 10. FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
   recherche_term = request.GET.get('q', '').strip()
   statut_filtre = request.GET.get('statut', 'all')
   tri_filtre = request.GET.get('tri', 'alpha')
@@ -1379,6 +1382,7 @@ def page_inventaire(request):
           'tri_filtre': tri_filtre,
       },
   )
+    
 def page_panier(request):
   if not request.user.is_authenticated:
     return redirect('/connexion/')
