@@ -430,8 +430,8 @@ function toggleSidebar() {
                 <tbody id="cartTableBody"></tbody>
             </table>
 
-            <!-- FORMULAIRE DE SOUMISSION AVEC ENVOI DU STATUT URGENT -->
-            <form method="POST" action="" onsubmit="preparerSoumissionPanier()" style="display:flex; flex-direction:column; gap:18px; background:#FAFBF9; padding:22px; border-radius:16px; border:1px solid #E2E6E1;">
+            <!-- FORMULAIRE DE SOUMISSION AVEC SÉCURITÉ DE VÉRIFICATION -->
+            <form method="POST" action="" onsubmit="return preparerSoumissionPanier(event)" style="display:flex; flex-direction:column; gap:18px; background:#FAFBF9; padding:22px; border-radius:16px; border:1px solid #E2E6E1;">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="ajouter_panier_groupe">
                 <input type="hidden" name="panier_json" id="cartJsonData">
@@ -632,9 +632,11 @@ function toggleSidebar() {
 
         if (estBloqueSemaine) {
             if (!isUrgent) {
+                // BLOQUÉ TANT QUE L'URGENCE N'EST PAS COCHÉE
                 btn.disabled = true;
                 btn.textContent = "Commandes fermées — Cochez 'Demande urgente'";
             } else {
+                // DÉBLOQUÉ SEULEMENT SI SERVICE + PANIER + MOTIF SONT VALIDES
                 btn.disabled = !(serviceValide && panierRempli && motifRempli);
                 btn.textContent = "🚨 Transmettre la demande URGENTE";
             }
@@ -649,10 +651,20 @@ function toggleSidebar() {
         }
     }
 
-    // FONCTION EXÉCUTÉE AUTOMATIQUEMENT À LA SOUMISSION DU FORMULAIRE
-    function preparerSoumissionPanier() {
+    // VÉRIFICATION À LA SOUMISSION DU FORMULAIRE
+    function preparerSoumissionPanier(event) {
+        let chkUrgent = document.getElementById('chkUrgent');
+        let isUrgent = chkUrgent ? chkUrgent.checked : false;
+
+        if (estBloqueSemaine && !isUrgent) {
+            if (event) event.preventDefault();
+            alert("Les commandes sont actuellement fermées. Vous devez obligatoirement cocher 'Demande urgente' et préciser un motif pour valider.");
+            return false;
+        }
+
         const jsonString = JSON.stringify(panierLocal);
         document.getElementById('cartJsonData').value = jsonString;
+        return true;
     }
 
     function ouvrirModalPanier() { 
@@ -661,7 +673,7 @@ function toggleSidebar() {
     }
     function fermerModal(id) { document.getElementById(id).style.display = 'none'; }
 
-    // 4. DÉTAILS PRODUIT & ADMIN
+    // DÉTAILS PRODUIT & ADMIN
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur) {
         document.getElementById('hiddenProduitId').value = id;
         document.getElementById('lblReference').textContent = ref;
@@ -707,6 +719,7 @@ function toggleSidebar() {
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+        verifierServicePanier();
         const messageBoxes = document.querySelectorAll('.flash-message-box');
         messageBoxes.forEach(function(box) {
             setTimeout(function() {
