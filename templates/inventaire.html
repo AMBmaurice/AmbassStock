@@ -25,6 +25,7 @@
         .page-title { font-size: 2.2rem; font-weight: 700; color: #2c351c; margin-bottom: 12px; margin-top: 10px; }
         .welcome-text { font-size: 1.1rem; line-height: 1.65; color: #495430; max-width: 1000px; margin-bottom: 25px; }
         
+        /* BANNIÈRE D'AVERTISSEMENT PANIER */
         .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; padding: 18px 22px; border-radius: 16px; font-weight: 600; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; }
         .info-red-banner { background-color: #FCEAE8; border: 1px solid rgba(186, 60, 42, 0.3); border-left: 6px solid #BA3C2A; color: #7A2417; padding: 18px 22px; border-radius: 16px; font-weight: 600; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; }
 
@@ -60,6 +61,7 @@
         .btn-add-inline:hover { background-color: #495430; }
         .btn-add-inline:disabled { background-color: #C2C8BE !important; color: #777777 !important; cursor: not-allowed !important; opacity: 0.7; }
 
+        /* BOUTON FLOTTANT DU PANIER */
         .floating-cart-btn {
             position: fixed;
             bottom: 35px;
@@ -100,6 +102,7 @@
         .pagination a, .pagination span { padding: 10px 16px; border: 1px solid #D0D6CE; border-radius: 10px; text-decoration: none; color: #495430; background: white; font-weight: 600; }
         .pagination .current { background: #5E6D3E; color: white; border-color: #5E6D3E; }
 
+        /* MODALES */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
         .modal-box { background: #ffffff; border-radius: 24px; width: 100%; max-width: 720px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
         .modal-close { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7A8278; }
@@ -427,7 +430,8 @@ function toggleSidebar() {
                 <tbody id="cartTableBody"></tbody>
             </table>
 
-            <form method="POST" action="" style="display:flex; flex-direction:column; gap:18px; background:#FAFBF9; padding:22px; border-radius:16px; border:1px solid #E2E6E1;">
+            <!-- FORMULAIRE DE SOUMISSION AVEC ONSUBMIT -->
+            <form method="POST" action="" onsubmit="preparerSoumissionPanier()" style="display:flex; flex-direction:column; gap:18px; background:#FAFBF9; padding:22px; border-radius:16px; border:1px solid #E2E6E1;">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="ajouter_panier_groupe">
                 <input type="hidden" name="panier_json" id="cartJsonData">
@@ -449,7 +453,7 @@ function toggleSidebar() {
 
                 <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px;">
                     <button type="button" onclick="viderPanier()" style="background:none; border:none; color:#BA3C2A; font-weight:600; cursor:pointer; font-size:0.9rem;">Vider le panier</button>
-                    <button type="submit" id="btnSubmitCart" class="btn-submit-cart" disabled onclick="preparerSoumissionPanier()">
+                    <button type="submit" id="btnSubmitCart" class="btn-submit-cart" disabled>
                         {% if panier_bloque and not is_admin %}
                         Commandes fermées jusqu'à jeudi 17h
                         {% else %}
@@ -608,8 +612,10 @@ function toggleSidebar() {
         }
     }
 
+    // FONCTION EXÉCUTÉE AUTOMATIQUEMENT À LA SOUMISSION DU FORMULAIRE
     function preparerSoumissionPanier() {
-        document.getElementById('cartJsonData').value = JSON.stringify(panierLocal);
+        const jsonString = JSON.stringify(panierLocal);
+        document.getElementById('cartJsonData').value = jsonString;
     }
 
     function ouvrirModalPanier() { 
