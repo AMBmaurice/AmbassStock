@@ -1657,7 +1657,7 @@ def page_liste_courses(request):
   if request.method == 'POST':
     action_type = request.POST.get('action_type')
 
-    # **1. VALIDATION / RÉCEPTION DE LA COMMANDE (SARA)**
+    # **1. VALIDATION / RÉCEPTION PARTIELLE OU TOTALE D'UN ARTICLE COMMANDÉ**
     if action_type == 'valider_reception_commande':
       demande_id = request.POST.get('demande_id')
       quantite_recue = int(request.POST.get('quantite_recue', 0))
@@ -1668,43 +1668,38 @@ def page_liste_courses(request):
         prod = item.produit
 
         if quantite_recue > 0:
-          # Ajout effectif dans le stock physique (comme une entrée)
+          # A. AJOUT PHYSIQUE AU STOCK DE L'INVENTAIRE
           prod.quantite = F('quantite') + quantite_recue
           prod.save()
           prod.refresh_from_db()
 
-          # Enregistrement dans le journal des mouvements
+          # B. ENREGISTREMENT DU MOUVEMENT DE STOCK (ENTRÉE)
           MouvementStock.objects.create(
               produit=prod,
               quantite=quantite_recue,
-              type_mouvement='ENTREE',
-              objet=prod.objet,
+              type_mouvement='Entrée',
               service='Administration (Réception commande)',
+              utilisateur=request.user,
           )
 
-          # Comparaison du prix total payé par rapport à l'estimé
-          prix_attendu_total = float(prod.prix or 0.0) * float(
+          # C. COMPARATIF DE PRIX ET MISE À JOUR ÉVENTUELLE
+          prix_attendu_total = float(item.produit.prix or 0.0) * float(
               item.quantite_demandee
           )
-          if abs(prix_reel_paye - prix_attendu_total) > 0.01:
+          if prix_reel_paye != prix_attendu_total:
             messages.warning(
                 request,
-                f"Réception validée avec écart de prix pour '{prod.objet}' :"
-                f' Prévu = {prix_attendu_total:.2f} € | Réel payé ='
-                f' {prix_reel_paye:.2f} €.',
+                f"Écart de prix constaté pour '{prod.objet}' : Prévu ="
+                f" {prix_attendu_total:.2f} € | Réel payé ="
+                f" {prix_reel_paye:.2f} €.",
             )
-          else:
-            messages.success(
-                request,
-                f"Réception validée : {quantite_recue} x '{prod.objet}' ajoutés"
-                ' au stock avec conformité du montant.',
-            )
-        else:
-          messages.info(
-              request, f"Quantité reçue nulle pour '{prod.objet}', non ajoutée."
-          )
 
         item.delete()
+        messages.success(
+            request,
+            f"Réception validée : {quantite_recue} x '{prod.objet}' ajoutés"
+            ' au stock.',
+        )
       except ArticlePanier.DoesNotExist:
         messages.error(request, 'Commande introuvable.')
 
@@ -1861,10 +1856,12 @@ def page_liste_courses(request):
       )
       return response
 
+  # Récupération de tous les produits actifs
   produits_actifs = Produit.objects.exclude(emplacement='Archivé').order_by(
       'fournisseur', 'objet'
   )
 
+  # Récupération des produits en alerte (pour l'import automatique)
   produits_alertes = []
   for p in produits_actifs:
     if p.quota_minimum is not None and p.quantite <= p.quota_minimum:
@@ -1878,6 +1875,7 @@ def page_liste_courses(request):
       .order_by('fournisseur')
   )
 
+  # Récupération des demandes et suggestions des services
   demandes = DemandeService.objects.all().order_by('-date_demande')
 
   # **RÉCUPÉRATION DES COMMANDES EN COURS (ISSUE DU PANIER GLOBAL)**
