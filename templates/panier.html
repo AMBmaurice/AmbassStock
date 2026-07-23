@@ -50,6 +50,20 @@
 
         .qty-input-edit { width: 75px; height: 38px; padding: 0 8px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 1rem; font-weight: 700; color: #2c351c; text-align: center; background: #ffffff; outline: none; }
         .qty-input-edit:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
+
+        /* **ANIMATION DE PULSATION ROUGE POUR LES DEMANDES URGENTES** */
+        .urgent-card-box {
+            border: 2px solid #BA3C2A !important;
+            background-color: #FFF8F7 !important;
+            margin-bottom: 35px;
+            animation: urgentPulse 1.8s infinite ease-in-out;
+        }
+
+        @keyframes urgentPulse {
+            0% { box-shadow: 0 0 0 0 rgba(186, 60, 42, 0.5); }
+            70% { box-shadow: 0 0 0 12px rgba(186, 60, 42, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(186, 60, 42, 0); }
+        }
     </style>
 </head>
 <body>
@@ -72,11 +86,10 @@
             <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
         </li>
         
-        {% if profil_actif.acces_inventaire %}
+        <!-- **INVENTAIRE ACCESSIBLE À TOUT LE MONDE** -->
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
         </li>
-        {% endif %}
         
         {% if profil_actif.acces_stocks %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
@@ -114,17 +127,15 @@
         </li>
         {% endif %}
 
-        {% if profil_actif.acces_panier %}
+        <!-- **PANIER ET LISTE DE COURSES RÉSERVÉS STRICTEMENT AUX ADMINS** -->
+        {% if is_admin or request.user.is_superuser %}
         <li class="sidebar-item" style="margin-bottom: 4px;">
             <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
         </li>
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
+        </li>
         {% endif %}
-
-        {% if is_admin or request.user.is_superuser %}
-<li class="sidebar-item" style="margin-bottom: 4px;">
-    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-</li>
-{% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -189,13 +200,13 @@ function toggleSidebar() {
         </div>
     {% endif %}
 
-    <!-- **BLOC DÉDIÉ AUX DEMANDES URGENTES EN ATTENTE** -->
+    <!-- **BLOC DÉDIÉ AUX DEMANDES URGENTES AVEC PULSATION ROUGE VIVE** -->
     {% if urgences_liste %}
-    <div class="card-box" style="border: 2px solid #BA3C2A; background-color: #FFF8F7; margin-bottom: 35px;">
+    <div class="card-box urgent-card-box">
         <div class="card-header-flex" style="border-bottom-color: #BA3C2A;">
             <h4 class="card-title" style="color: #BA3C2A; display: flex; align-items: center; gap: 10px;">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                DEMANDES URGENTES EN ATTENTE (À TRAITER IMMÉDIATEMENT)
+                🚨 DEMANDES URGENTES EN ATTENTE (À TRAITER IMMÉDIATEMENT)
             </h4>
         </div>
 
