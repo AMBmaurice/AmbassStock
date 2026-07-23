@@ -266,9 +266,9 @@ def page_inventaire(request):
                         article_panier, created = ArticlePanier.objects.get_or_create(
                             produit=produit,
                             service=service,
-                            defaults={
+                          defaults={
                                 'quantite_demandee': quantite,
-                                'est_urgente': est_urgente,**
+                                'est_urgente': est_urgente,
                                 'motif_urgence': motif_urgence if est_urgente else None
                             }
                         )
