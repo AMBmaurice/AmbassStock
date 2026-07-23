@@ -19,6 +19,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from django.core.mail import send_mail
 
 from .models import (
     ArticlePanier,
@@ -346,7 +347,8 @@ def page_inventaire(request):
           item.quantite_demandee = quantite
           item.save()
         messages.success(
-            request, f'"{produit.objet}" ajouté au panier du service {service}.'
+            request,
+            f'"{produit.objet}" ajouté au panier du service {service}.',
         )
       except Produit.DoesNotExist:
         pass
@@ -362,7 +364,7 @@ def page_inventaire(request):
         pass
       return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-    # **5. MODIFICATION PRODUIT (ADMIN) AVEC SAUVEGARDE DU FOURNISSEUR**
+    # **5. MODIFICATION PRODUIT (ADMIN) AVEC SAUVEGARDE DU FOURNISSEUR, DU PRIX ET ALERTE MAIL**
     elif action_type == 'modification' and is_admin:
       produit_id = request.POST.get('produit_id')
       current_page = request.POST.get('page', '1')
@@ -384,7 +386,20 @@ def page_inventaire(request):
         if fournisseur_recu:
           produit.fournisseur = fournisseur_recu
 
+        # Enregistrement du prix
+        prix_recu = request.POST.get('prix')
+        if prix_recu:
+          try:
+            produit.prix = float(prix_recu.replace(',', '.'))
+          except ValueError:
+            pass
+        else:
+          produit.prix = None
+
         produit.save()
+
+        # **VÉRIFICATION ET ENVOI DE L'ALERTE MAIL SI LE PAPIER DEVIENT <= 2**
+        verifier_et_envoyer_alerte_papier(produit)
 
         messages.success(
             request,
@@ -419,7 +434,8 @@ def page_inventaire(request):
 
         messages.success(
             request,
-            f'Le produit "{nom_produit_supprime}" a été supprimé définitivement.',
+            f'Le produit "{nom_produit_supprime}" a été supprimé'
+            ' définitivement.',
         )
       except Produit.DoesNotExist:
         pass
@@ -611,6 +627,29 @@ def page_inventaire(request):
       },
   )
 
+# **FONCTION D'ALERTE E-MAIL CIBLÉE POUR LE PAPIER CLAIRFONTAINE**
+def verifier_et_envoyer_alerte_papier(produit):
+  if produit.reference == 'GEN-CLA-RAM-03' and produit.quantite <= 2:
+    sujet = '🚨 ALERTE RUPTURE : Stock critique de papier blanc CLAIRFONTAINE'
+    message = (
+        f'Bonjour,\n\n'
+        f"Le produit '{produit.objet}' (Réf : {produit.reference}) vient d'atteindre un niveau critique en réserve.\n\n"
+        f'📊 Stock restant : {produit.quantite} unité(s).\n\n'
+        f'Merci de bien vouloir passer commande rapidement pour éviter toute rupture.\n\n'
+        f'Plateforme AmbassStock'
+    )
+    try:
+      send_mail(
+          subject=sujet,
+          message=message,
+          from_email=None,  # Utilise DEFAULT_FROM_EMAIL configuré dans settings.py
+          recipient_list=['admin@amb-maurice.fr'],
+          fail_silently=True,  # Évite de bloquer l'application si l'envoi réseau échoue
+      )
+    except Exception as e:
+      print(f"Erreur lors de l'envoi du mail d'alerte : {e}")
+
+
 def page_gestion_stocks(request):
   if not request.user.is_authenticated:
     return redirect('/connexion/')
@@ -678,23 +717,25 @@ def page_gestion_stocks(request):
           or 0
       )
 
-      # **RÉCUPÉRATION DU FOURNISSEUR (SELECTION OU CRÉATION DYNAMIQUE)**
+      # RÉCUPÉRATION DU FOURNISSEUR (SELECTION OU CRÉATION DYNAMIQUE)
       fournisseur_select = request.POST.get('fournisseur_select')
       fournisseur_nouveau = request.POST.get('fournisseur_nouveau', '').strip()
 
       if fournisseur_select == 'AUTRE' and fournisseur_nouveau:
-          fournisseur_final = fournisseur_nouveau
+        fournisseur_final = fournisseur_nouveau
       else:
-          fournisseur_final = fournisseur_select if fournisseur_select else 'Divers'
+        fournisseur_final = (
+            fournisseur_select if fournisseur_select else 'Divers'
+        )
 
-      # **RÉCUPÉRATION DU PRIX**
+      # RÉCUPÉRATION DU PRIX
       prix_recu = request.POST.get('prix')
       prix_valeur = None
       if prix_recu:
-          try:
-              prix_valeur = float(prix_recu.replace(',', '.'))
-          except ValueError:
-              prix_valeur = None
+        try:
+          prix_valeur = float(prix_recu.replace(',', '.'))
+        except ValueError:
+          prix_valeur = None
 
       nouveau_produit = Produit.objects.create(
           reference=reference_finale,
@@ -704,7 +745,7 @@ def page_gestion_stocks(request):
           quantite=quantite_initiale,
           quota_minimum=int(request.POST.get('quota_minimum', 10)),
           fournisseur=fournisseur_final,
-          prix=prix_valeur
+          prix=prix_valeur,
       )
 
       if quantite_initiale > 0:
@@ -764,6 +805,9 @@ def page_gestion_stocks(request):
           produit.save(update_fields=['quantite'])
           produit.refresh_from_db()
 
+        # **VÉRIFICATION ET ENVOI DE L'ALERTE MAIL SI STOCK <= 2**
+        verifier_et_envoyer_alerte_papier(produit)
+
         MouvementStock.objects.create(
             type_mouvement='SORTIE',
             objet=produit.objet,
@@ -787,7 +831,7 @@ def page_gestion_stocks(request):
         pass
       return redirect('/gestion-stocks/')
 
-  # **EXTRACTION DE LA LISTE DES FOURNISSEURS POUR LA LISTE DÉROULANTE DYNAMIQUE**
+  # EXTRACTION DE LA LISTE DES FOURNISSEURS POUR LA LISTE DÉROULANTE DYNAMIQUE
   fournisseurs_existants = (
       Produit.objects.exclude(fournisseur__isnull=True)
       .exclude(fournisseur='')
