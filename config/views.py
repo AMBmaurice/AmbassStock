@@ -1811,6 +1811,9 @@ def page_liste_courses(request):
       .order_by('fournisseur')
   )
 
+  # **RÉCUPÉRATION DES DEMANDES ET SUGGESTIONS DES SERVICES**
+  demandes = DemandeService.objects.all().order_by('-date_demande')
+
   return render(
       request,
       'liste_courses.html',
@@ -1820,9 +1823,10 @@ def page_liste_courses(request):
           'produits_actifs': produits_actifs,
           'produits_alertes': produits_alertes,
           'fournisseurs_existants': fournisseurs_existants,
+          'demandes': demandes,
       },
   )
-
+    
 def generer_pdf_statistiques(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
