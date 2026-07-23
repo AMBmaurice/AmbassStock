@@ -98,7 +98,7 @@
             border: 2px solid #ffffff;
         }
 
-        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 35px; }  
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 35px; } 
         .pagination a, .pagination span { padding: 10px 16px; border: 1px solid #D0D6CE; border-radius: 10px; text-decoration: none; color: #495430; background: white; font-weight: 600; }
         .pagination .current { background: #5E6D3E; color: white; border-color: #5E6D3E; }
 
@@ -106,7 +106,7 @@
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
         .modal-box { background: #ffffff; border-radius: 24px; width: 100%; max-width: 720px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
         .modal-close { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7A8278; }
-        .modal-title { font-size: 1.8rem; font-weight: 700; color: #2c351c; margin-bottom: 25px; }  
+        .modal-title { font-size: 1.8rem; font-weight: 700; color: #2c351c; margin-bottom: 25px; } 
 
         .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; background-color: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 16px; padding: 25px; margin-bottom: 25px; }
         .detail-item { display: flex; flex-direction: column; gap: 6px; }
@@ -324,7 +324,6 @@ function toggleSidebar() {
             </div> 
 
             <div onclick="event.stopPropagation();">
-                <!-- **DÉSACTIVATION EN PÉRIODE DE FERMETURE SAUF POUR L'ADMIN** -->
                 {% if panier_bloque and not is_admin %}
                 <button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le panier et cochez 'Demande urgente'.">
                     Fermé (Utiliser le panier)
@@ -453,7 +452,7 @@ function toggleSidebar() {
                     </select>
                 </div>
 
-                <!-- **CASE À COCHER DE DEMANDE URGENTE** -->
+                <!-- CASE À COCHER DE DEMANDE URGENTE -->
                 <div style="background-color: #FCEAE8; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(186, 60, 42, 0.2);">
                     <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 700; color: #BA3C2A; font-size: 0.92rem;">
                         <input type="checkbox" id="chkUrgent" onchange="basculerUrgence(this.checked)" style="width: 18px; height: 18px; accent-color: #BA3C2A;">
@@ -469,11 +468,7 @@ function toggleSidebar() {
                 <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px;">
                     <button type="button" onclick="viderPanier()" style="background:none; border:none; color:#BA3C2A; font-weight:600; cursor:pointer; font-size:0.9rem;">Vider le panier</button>
                     <button type="submit" id="btnSubmitCart" class="btn-submit-cart" disabled>
-                        {% if panier_bloque and not is_admin %}
-                        Commandes fermées jusqu'à jeudi 17h
-                        {% else %}
                         Valider et transmettre au panier global
-                        {% endif %}
                     </button>
                 </div>
             </form>
@@ -630,17 +625,27 @@ function toggleSidebar() {
         let chkUrgent = document.getElementById('chkUrgent');
         let isUrgent = chkUrgent ? chkUrgent.checked : false;
         
-        let serviceValide = select && select.value;
+        let serviceValide = select && select.value !== "";
         let panierRempli = Object.keys(panierLocal).length > 0;
-        let motifInput = document.getElementById('txtMotifUrgence');
-        let motifRempli = !isUrgent || (motifInput && motifInput.value.trim() !== "");
+        let txtMotif = document.getElementById('txtMotifUrgence');
+        let motifRempli = txtMotif && txtMotif.value.trim() !== "";
 
-        if (estBloqueSemaine && !isUrgent) {
-            btn.disabled = true;
-            btn.textContent = "Commandes fermées jusqu'à jeudi 17h";
+        if (estBloqueSemaine) {
+            if (!isUrgent) {
+                btn.disabled = true;
+                btn.textContent = "Commandes fermées — Cochez 'Demande urgente'";
+            } else {
+                btn.disabled = !(serviceValide && panierRempli && motifRempli);
+                btn.textContent = "🚨 Transmettre la demande URGENTE";
+            }
         } else {
-            btn.disabled = !(serviceValide && panierRempli && motifRempli);
-            btn.textContent = isUrgent ? "🚨 Transmettre la demande URGENTE" : "Valider et transmettre au panier global";
+            if (isUrgent) {
+                btn.disabled = !(serviceValide && panierRempli && motifRempli);
+                btn.textContent = "🚨 Transmettre la demande URGENTE";
+            } else {
+                btn.disabled = !(serviceValide && panierRempli);
+                btn.textContent = "Valider et transmettre au panier global";
+            }
         }
     }
 
