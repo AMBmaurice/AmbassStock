@@ -33,26 +33,49 @@ from .models import (
 )
 
 def get_profil_actif(user):
-    if not user.is_authenticated:
-        return None
+  if not user.is_authenticated:
+    return None
 
-    if user.is_superuser:
-        class ProfilAdmin:
-            acces_inventaire = True
-            acces_stocks = True
-            acces_historique = True
-            acces_statistiques = True
-            acces_gestion_utilisateurs = True
-            acces_factures = True
-            acces_panier = True
+  # 1. SI C'EST UN SUPERUTILISATEUR OU UN ADMIN
+  if user.is_superuser:
+    class ProfilAdmin:
+      acces_inventaire = True
+      acces_stocks = True
+      acces_historique = True
+      acces_statistiques = True
+      acces_gestion_utilisateurs = True
+      acces_factures = True
+      acces_panier = True  # Réservé aux admins
 
-        return ProfilAdmin()
+    return ProfilAdmin()
 
-    try:
-        return ProfilUtilisateur.objects.get(user=user)
-    except ProfilUtilisateur.DoesNotExist:
-        return None
+  # 2. PROFIL CLASSIQUE (Utilisateur 'services', etc.)
+  try:
+    profil = ProfilUtilisateur.objects.get(user=user)
 
+    # Forcer la visibilité de l'inventaire pour le compte 'services'
+    if user.username.lower() == 'services' or getattr(
+        profil, 'type_profil', ''
+    ) in ['service', 'services']:
+      profil.acces_inventaire = True
+      profil.acces_panier = False  # Masqué pour les services
+
+    return profil
+  except ProfilUtilisateur.DoesNotExist:
+    # Si le profil n'existe pas en base mais que c'est le compte 'services'
+    if user.username.lower() == 'services':
+
+      class ProfilServiceDefault:
+        acces_inventaire = True
+        acces_stocks = False
+        acces_historique = False
+        acces_statistiques = False
+        acces_gestion_utilisateurs = False
+        acces_factures = False
+        acces_panier = False
+
+      return ProfilServiceDefault()
+    return None
 
 def page_connexion(request):
     if request.user.is_authenticated: 
