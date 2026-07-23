@@ -112,11 +112,10 @@
         {% endif %}
 
         {% if is_admin or request.user.is_superuser %}
-<li class="sidebar-item" style="margin-bottom: 4px;">
-    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-</li>
-{% endif %}
-        
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
+        </li>
+        {% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -249,7 +248,7 @@ function toggleSidebar() {
                             </td>
                             <td>
                                 {% if f.fichier_facture %}
-                                    <a href="{% url 'voir_facture' f.id %}" class="btn-download" target="_blank">Voir le document</a>
+                                    <strong><a href="{{ f.fichier_facture.url }}" class="btn-download" target="_blank">Voir le document</a></strong>
                                 {% else %}
                                     <span style="color: #7A8278; font-style: italic;">Aucun fichier</span>
                                 {% endif %}
