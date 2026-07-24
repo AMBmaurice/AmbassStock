@@ -247,464 +247,394 @@ def page_accueil(request):
 
 
 def page_inventaire(request):
-  if not request.user.is_authenticated:
-    return redirect('/connexion/')
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
 
-  profil_actif = get_profil_actif(request.user)
+    profil_actif = get_profil_actif(request.user)
 
-  # Vérification du rôle Administrateur
-  is_admin = request.user.is_superuser or (
-      profil_actif
-      and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
-  )
-
-  # 1. GESTION STRICTE DU CRÉNEAU DE BLOCAGE (MERCREDI 12H00 -> JEUDI 17H00) VIA HEURE LOCALE
-  maintenant = timezone.localtime()
-  jour_semaine = maintenant.weekday()  # 0=Lundi, 1=Mardi, 2=Mercredi, 3=Jeudi...
-  heure_actuelle = maintenant.time()
-
-  heure_12h = datetime.strptime('12:00', '%H:%M').time()
-  heure_17h = datetime.strptime('17:00', '%H:%M').time()
-
-  # Mercredi après 12h00
-  est_mercredi_apres_midi = jour_semaine == 2 and heure_actuelle >= heure_12h
-  # Jeudi toute la journée avant 17h00
-  est_jeudi_avant_17h = jour_semaine == 3 and heure_actuelle < heure_17h
-
-  # Blocage actif du mercredi 12h00 au jeudi 17h00
-  panier_bloque = est_mercredi_apres_midi or est_jeudi_avant_17h
-
-  if request.method == 'POST':
-    action_type = request.POST.get('action_type')
-
-    # **AJOUT EXPLICITE DU BLOC DE CRÉATION DE PRODUIT (CORRIGE L'ERREUR 500)**
-    if action_type in ['ajout', 'ajouter_produit', 'creation'] and is_admin:
-      try:
-        reference = request.POST.get('reference', '').strip()
-        objet = request.POST.get('objet', '').strip()
-        categorie = request.POST.get('categorie', '').strip()
-        emplacement = request.POST.get('emplacement', '').strip()
-        fournisseur = request.POST.get('fournisseur', 'Divers').strip()
-
-        # Conversion sécurisée des entiers
-        quantite_raw = request.POST.get('quantite')
-        quantite = (
-            int(quantite_raw)
-            if quantite_raw and str(quantite_raw).strip()
-            else 0
-        )
-
-        quota_raw = request.POST.get('quota_minimum')
-        quota_minimum = (
-            int(quota_raw) if quota_raw and str(quota_raw).strip() else 0
-        )
-
-        # Conversion sécurisée du prix float
-        prix_raw = request.POST.get('prix')
-        prix = None
-        if prix_raw and str(prix_raw).strip():
-          try:
-            prix = float(str(prix_raw).replace(',', '.').strip())
-          except ValueError:
-            prix = None
-
-        Produit.objects.create(
-            reference=reference,
-            objet=objet,
-            categorie=categorie,
-            emplacement=emplacement,
-            fournisseur=fournisseur,
-            quantite=quantite,
-            quota_minimum=quota_minimum,
-            prix=prix,
-        )
-        messages.success(request, f'Le produit "{objet}" a été créé avec succès !')
-      except Exception as e:
-        messages.error(request, f'Erreur lors de la création du produit : {e}')
-
-      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-    # 2. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT OU TICKET URGENT)
-    elif action_type == 'ajouter_panier_groupe':
-      service = request.POST.get('service')
-      panier_raw = request.POST.get('panier_json')
-
-      # RÉCUPÉRATION DES INFORMATIONS D'URGENCE
-      est_urgente = request.POST.get('est_urgente') == 'true'
-      motif_urgence = request.POST.get('motif_urgence', '').strip()
-
-      # SÉCURITÉ : SI BLOQUÉ, SEULE UNE DEMANDE URGENTE (OU UN ADMIN) PEUT PASSER
-      if panier_bloque and not is_admin and not est_urgente:
-        messages.error(
-            request,
-            'Les commandes standard sont fermées du mercredi 12h00 au jeudi'
-            ' 17h00. Veuillez créer un ticket d\'urgence pour valider votre'
-            ' demande.',
-        )
-        return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-      if service and panier_raw:
-        try:
-          panier_dict = json.loads(panier_raw)
-          for prod_id, item_data in panier_dict.items():
-            produit = Produit.objects.get(id=prod_id)
-            quantite = int(item_data.get('qty', item_data.get('quantite', 1)))
-
-            # CRÉATION OU MISE À JOUR AVEC PRISE EN COMPTE DU STATUT URGENT ET DU MOTIF
-            article_panier, created = ArticlePanier.objects.get_or_create(
-                produit=produit,
-                service=service,
-                defaults={
-                    'quantite_demandee': quantite,
-                    'est_urgente': est_urgente,
-                    'motif_urgence': motif_urgence if est_urgente else None,
-                },
-            )
-            if not created:
-              article_panier.quantite_demandee += quantite
-              if est_urgente:
-                article_panier.est_urgente = True
-                article_panier.motif_urgence = motif_urgence
-              article_panier.save()
-
-          # MESSAGE DE CONFIRMATION ADAPTÉ SELON L'URGENCE
-          if est_urgente:
-            messages.warning(
-                request,
-                f'🚨 Demande URGENTE transmise avec succès pour le service'
-                f' {service} !',
-            )
-          else:
-            messages.success(
-                request,
-                f'La demande de fournitures pour le service {service} a été'
-                ' enregistrée avec succès !',
-            )
-        except Exception:
-          messages.error(
-              request,
-              "Une erreur est survenue lors de l'enregistrement de votre"
-              ' panier.',
-          )
-
-      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-    # 3. AJOUT D'UN PRODUIT UNIQUE AU PANIER (BOUTON EN LIGNE)
-    elif action_type == 'ajouter_panier':
-      # SÉCURITÉ BLOCAGE HEBDOMADAIRE SANS URGENCE
-      if panier_bloque and not is_admin:
-        messages.error(
-            request,
-            'Les ajouts directs sont fermés du mercredi 12h00 au jeudi 17h00.'
-            ' Veuillez créer un ticket d\'urgence.',
-        )
-        return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-      produit_id = request.POST.get('produit_id')
-      service = request.POST.get('service')
-      quantite = int(request.POST.get('quantite', 1))
-
-      try:
-        produit = Produit.objects.get(id=produit_id)
-        item, created = ArticlePanier.objects.get_or_create(
-            produit=produit,
-            service=service,
-            defaults={'quantite_demandee': quantite},
-        )
-        if not created:
-          item.quantite_demandee = quantite
-          item.save()
-        messages.success(
-            request,
-            f'"{produit.objet}" ajouté au panier du service {service}.',
-        )
-      except Produit.DoesNotExist:
-        pass
-      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-    # 4. RETRAIT D'UN PRODUIT DU PANIER
-    elif action_type == 'retirer_panier':
-      panier_id = request.POST.get('panier_id')
-      try:
-        ArticlePanier.objects.filter(id=panier_id).delete()
-        messages.success(request, 'Article retiré du panier.')
-      except Exception:
-        pass
-      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-    # 5. MODIFICATION PRODUIT (ADMIN) AVEC SAUVEGARDE DU FOURNISSEUR, DU PRIX ET ALERTE MAIL
-    elif action_type == 'modification' and is_admin:
-      produit_id = request.POST.get('produit_id')
-      current_page = request.POST.get('page', '1')
-      recherche_term = request.POST.get('q', '')
-      statut_filtre = request.POST.get('statut', 'all')
-      tri_filtre = request.POST.get('tri', 'alpha')
-
-      try:
-        produit = Produit.objects.get(id=produit_id)
-        produit.reference = request.POST.get('reference')
-        produit.objet = request.POST.get('objet')
-        produit.categorie = request.POST.get('categorie')
-        produit.emplacement = request.POST.get('emplacement')
-
-        # Conversion sécurisée de la quantité et du quota
-        quantite_raw = request.POST.get('quantite')
-        produit.quantite = (
-            int(quantite_raw)
-            if quantite_raw and str(quantite_raw).strip()
-            else 0
-        )
-
-        quota_raw = request.POST.get('quota_minimum')
-        produit.quota_minimum = (
-            int(quota_raw) if quota_raw and str(quota_raw).strip() else 0
-        )
-
-        # Enregistrement du fournisseur
-        fournisseur_recu = request.POST.get('fournisseur')
-        if fournisseur_recu:
-          produit.fournisseur = fournisseur_recu
-
-        # Enregistrement du prix
-        prix_recu = request.POST.get('prix')
-        if prix_recu and str(prix_recu).strip():
-          try:
-            produit.prix = float(str(prix_recu).replace(',', '.').strip())
-          except ValueError:
-            produit.prix = None
-        else:
-          produit.prix = None
-
-        produit.save()
-
-        # VÉRIFICATION ET ENVOI DE L'ALERTE MAIL SI LE PAPIER DEVIENT <= 2
-        verifier_et_envoyer_alerte_papier(produit)
-
-        messages.success(
-            request,
-            f'Modification du produit "{produit.objet}" enregistrée avec'
-            ' succès !',
-        )
-      except Produit.DoesNotExist:
-        pass
-
-      redirect_url = f'/inventaire/?page={current_page}'
-      if recherche_term:
-        redirect_url += f'&q={recherche_term}'
-      if statut_filtre and statut_filtre != 'all':
-        redirect_url += f'&statut={statut_filtre}'
-      if tri_filtre and tri_filtre != 'alpha':
-        redirect_url += f'&tri={tri_filtre}'
-
-      return redirect(redirect_url)
-
-    # 6. SUPPRESSION DÉFINITIVE (SUPERUSER)
-    elif action_type == 'suppression_definitive' and request.user.is_superuser:
-      produit_id = request.POST.get('produit_id')
-      current_page = request.POST.get('page', '1')
-      recherche_term = request.POST.get('q', '')
-      statut_filtre = request.POST.get('statut', 'all')
-      tri_filtre = request.POST.get('tri', 'alpha')
-
-      try:
-        produit = Produit.objects.get(id=produit_id)
-        nom_produit_supprime = produit.objet
-        produit.delete()
-
-        messages.success(
-            request,
-            f'Le produit "{nom_produit_supprime}" a été supprimé'
-            ' définitivement.',
-        )
-      except Produit.DoesNotExist:
-        pass
-
-      redirect_url = f'/inventaire/?page={current_page}'
-      if recherche_term:
-        redirect_url += f'&q={recherche_term}'
-      if statut_filtre and statut_filtre != 'all':
-        redirect_url += f'&statut={statut_filtre}'
-      if tri_filtre and tri_filtre != 'alpha':
-        redirect_url += f'&tri={tri_filtre}'
-
-      return redirect(redirect_url)
-
-    # 7. GÉNÉRATION DU PDF D'INVENTAIRE
-    elif action_type == 'generer_recapitulatif_pdf':
-      produits_actifs = (
-          Produit.objects.exclude(emplacement='Archivé')
-          .filter(quantite__gt=0)
-          .order_by('emplacement', 'objet')
-      )
-
-      buffer = io.BytesIO()
-      doc = SimpleDocTemplate(
-          buffer,
-          pagesize=letter,
-          rightMargin=40,
-          leftMargin=40,
-          topMargin=40,
-          bottomMargin=40,
-      )
-      story = []
-
-      styles = getSampleStyleSheet()
-      style_titre = ParagraphStyle(
-          'TitrePDF',
-          parent=styles['Heading1'],
-          fontName='Helvetica-Bold',
-          fontSize=24,
-          leading=28,
-          textColor=colors.HexColor('#2C351C'),
-          spaceAfter=10,
-      )
-      style_meta = ParagraphStyle(
-          'MetaPDF',
-          parent=styles['Normal'],
-          fontName='Helvetica',
-          fontSize=10,
-          textColor=colors.HexColor('#7A8278'),
-          spaceAfter=25,
-      )
-      style_cellule = ParagraphStyle(
-          'CellPDF',
-          parent=styles['Normal'],
-          fontName='Helvetica',
-          fontSize=10,
-          leading=13,
-      )
-      style_entete = ParagraphStyle(
-          'HeaderPDF',
-          parent=styles['Normal'],
-          fontName='Helvetica-Bold',
-          fontSize=10,
-          leading=13,
-          textColor=colors.white,
-      )
-
-      date_generation = timezone.now().strftime('%d/%m/%Y à %H:%M')
-      story.append(
-          Paragraph("Récapitulatif officiel de l'inventaire", style_titre)
-      )
-      story.append(
-          Paragraph(
-              f'Document généré le {date_generation} — Uniquement les articles'
-              ' disponibles en réserve',
-              style_meta,
-          )
-      )
-
-      donnees_table = [[
-          Paragraph('Référence', style_entete),
-          Paragraph("Désignation de l'objet", style_entete),
-          Paragraph('Catégorie', style_entete),
-          Paragraph('Emplacement', style_entete),
-          Paragraph('Stock', style_entete),
-      ]]
-
-      for prod in produits_actifs:
-        donnees_table.append([
-            Paragraph(prod.reference, style_cellule),
-            Paragraph(prod.objet, style_cellule),
-            Paragraph(prod.categorie, style_cellule),
-            Paragraph(prod.emplacement or '-', style_cellule),
-            Paragraph(str(prod.quantite), style_cellule),
-        ])
-
-      tableau_inventaire = Table(
-          donnees_table, colWidths=[80, 160, 110, 120, 50]
-      )
-      tableau_inventaire.setStyle(
-          TableStyle([
-              ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
-              ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-              ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-              ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-              ('TOPPADDING', (0, 0), (-1, 0), 10),
-              (
-                  'ROWBACKGROUNDS',
-                  (0, 1),
-                  (-1, -1),
-                  [colors.HexColor('#FAFBF9'), colors.white],
-              ),
-              ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E6E1')),
-              ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
-              ('TOPPADDING', (0, 1), (-1, -1), 8),
-          ])
-      )
-
-      story.append(tableau_inventaire)
-      doc.build(story)
-
-      buffer.seek(0)
-      date_fichier = timezone.now().strftime('%Y_%m_%d')
-      response = HttpResponse(buffer.read(), content_type='application/pdf')
-      response['Content-Disposition'] = (
-          'attachment;'
-          f' filename="Recapitulatif_Inventaire_{date_fichier}.pdf"'
-      )
-      return response
-
-  # 8. FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
-  recherche_term = request.GET.get('q', '').strip()
-  statut_filtre = request.GET.get('statut', 'all')
-  tri_filtre = request.GET.get('tri', 'alpha')
-
-  if tri_filtre == 'emplacement':
-    tous_les_produits = Produit.objects.all().order_by('emplacement', 'objet')
-  else:
-    tous_les_produits = Produit.objects.all().order_by('objet')
-
-  if recherche_term:
-    tous_les_produits = tous_les_produits.filter(
-        Q(objet__icontains=recherche_term)
-        | Q(reference__icontains=recherche_term)
+    # Vérification du rôle Administrateur
+    is_admin = request.user.is_superuser or (
+        profil_actif
+        and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
     )
 
-  if statut_filtre and statut_filtre != 'all':
-    produits_filtres_ids = []
-    for p in tous_les_produits:
-      if p.quota_minimum is not None:
-        if p.quantite <= p.quota_minimum:
-          status = 'red'
-        elif p.quantite <= (p.quota_minimum + 10):
-          status = 'yellow'
-        else:
-          status = 'green'
-      else:
-        status = 'green'
+    # 1. GESTION STRICTE DU CRÉNEAU DE BLOCAGE (MERCREDI 12H00 -> JEUDI 17H00) VIA HEURE LOCALE
+    maintenant = timezone.localtime()
+    jour_semaine = maintenant.weekday()  # 0=Lundi, 1=Mardi, 2=Mercredi, 3=Jeudi...
+    heure_actuelle = maintenant.time()
 
-      if status == statut_filtre:
-        produits_filtres_ids.append(p.id)
+    heure_12h = datetime.strptime('12:00', '%H:%M').time()
+    heure_17h = datetime.strptime('17:00', '%H:%M').time()
 
-    tous_les_produits = tous_les_produits.filter(id__in=produits_filtres_ids)
+    # Mercredi après 12h00
+    est_mercredi_apres_midi = jour_semaine == 2 and heure_actuelle >= heure_12h
+    # Jeudi toute la journée avant 17h00
+    est_jeudi_avant_17h = jour_semaine == 3 and heure_actuelle < heure_17h
 
-  # Récupération complète de tous les produits (pour la recherche JS globale)
-  tous_les_produits_complets = list(tous_les_produits)
+    # Blocage actif du mercredi 12h00 au jeudi 17h00
+    panier_bloque = est_mercredi_apres_midi or est_jeudi_avant_17h
 
-  # Récupération des articles actuellement en panier
-  paniers_actifs = ArticlePanier.objects.all()
-  produits_dans_panier = {p.produit_id: p for p in paniers_actifs}
+    if request.method == 'POST':
+        action_type = request.POST.get('action_type')
 
-  paginator = Paginator(tous_les_produits, 15)
-  page_number = request.GET.get('page', '1')
-  page_obj = paginator.get_page(page_number)
+        # 2. CRÉATION D'UN NOUVEAU PRODUIT (VIA LA POP-UP PAR UN ADMIN)
+        if action_type in ['ajout', 'ajouter_produit', 'creation'] and is_admin:
+            try:
+                reference = request.POST.get('reference', '').strip()
+                objet = request.POST.get('objet', '').strip()
+                categorie = request.POST.get('categorie', '').strip()
+                emplacement = request.POST.get('emplacement', '').strip()
+                fournisseur = request.POST.get('fournisseur', 'Divers').strip()
 
-  return render(
-      request,
-      'inventaire.html',
-      {
-          'profil_actif': profil_actif,
-          'is_admin': is_admin,
-          'panier_bloque': panier_bloque,
-          'page_obj': page_obj,
-          'tous_les_produits_complets': tous_les_produits_complets,
-          'produits_dans_panier': produits_dans_panier,
-          'recherche_term': recherche_term,
-          'statut_filtre': statut_filtre,
-          'tri_filtre': tri_filtre,
-      },
-  )
+                quantite_raw = request.POST.get('quantite')
+                quantite = int(quantite_raw) if quantite_raw and str(quantite_raw).strip() else 0
+
+                quota_raw = request.POST.get('quota_minimum')
+                quota_minimum = int(quota_raw) if quota_raw and str(quota_raw).strip() else 0
+
+                prix_raw = request.POST.get('prix')
+                prix = None
+                if prix_raw and str(prix_raw).strip():
+                    try:
+                        prix = float(str(prix_raw).replace(',', '.').strip())
+                    except ValueError:
+                        prix = None
+
+                Produit.objects.create(
+                    reference=reference,
+                    objet=objet,
+                    categorie=categorie,
+                    emplacement=emplacement,
+                    fournisseur=fournisseur,
+                    quantite=quantite,
+                    quota_minimum=quota_minimum,
+                    prix=prix
+                )
+                messages.success(request, f'Le produit "{objet}" a été créé avec succès !')
+            except Exception as e:
+                messages.error(request, f'Erreur lors de la création du produit : {e}')
+
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # 3. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT OU TICKET URGENT)
+        elif action_type == 'ajouter_panier_groupe':
+            service = request.POST.get('service')
+            panier_raw = request.POST.get('panier_json')
+
+            est_urgente = request.POST.get('est_urgente') == 'true'
+            motif_urgence = request.POST.get('motif_urgence', '').strip()
+
+            if panier_bloque and not is_admin and not est_urgente:
+                messages.error(
+                    request,
+                    'Les commandes standard sont fermées du mercredi 12h00 au jeudi 17h00. Veuillez créer un ticket d\'urgence pour valider votre demande.'
+                )
+                return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+            if service and panier_raw:
+                try:
+                    panier_dict = json.loads(panier_raw)
+                    for prod_id, item_data in panier_dict.items():
+                        produit = Produit.objects.get(id=prod_id)
+                        quantite = int(item_data.get('qty', item_data.get('quantite', 1)))
+
+                        article_panier, created = ArticlePanier.objects.get_or_create(
+                            produit=produit,
+                            service=service,
+                            defaults={
+                                'quantite_demandee': quantite,
+                                'est_urgente': est_urgente,
+                                'motif_urgence': motif_urgence if est_urgente else None,
+                            },
+                        )
+                        if not created:
+                            article_panier.quantite_demandee += quantite
+                            if est_urgente:
+                                article_panier.est_urgente = True
+                                article_panier.motif_urgence = motif_urgence
+                            article_panier.save()
+
+                    if est_urgente:
+                        messages.warning(request, f'🚨 Demande URGENTE transmise avec succès pour le service {service} !')
+                    else:
+                        messages.success(request, f'La demande de fournitures pour le service {service} a été enregistrée avec succès !')
+                except Exception as e:
+                    messages.error(request, f'Une erreur est survenue lors de l\'enregistrement de votre panier : {e}')
+
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # 4. AJOUT D'UN PRODUIT UNIQUE AU PANIER (BOUTON EN LIGNE)
+        elif action_type == 'ajouter_panier':
+            if panier_bloque and not is_admin:
+                messages.error(
+                    request,
+                    'Les ajouts directs sont fermés du mercredi 12h00 au jeudi 17h00. Veuillez créer un ticket d\'urgence.'
+                )
+                return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+            produit_id = request.POST.get('produit_id')
+            service = request.POST.get('service')
+            quantite = int(request.POST.get('quantite', 1))
+
+            try:
+                produit = Produit.objects.get(id=produit_id)
+                item, created = ArticlePanier.objects.get_or_create(
+                    produit=produit,
+                    service=service,
+                    defaults={'quantite_demandee': quantite},
+                )
+                if not created:
+                    item.quantite_demandee = quantite
+                    item.save()
+                messages.success(request, f'"{produit.objet}" ajouté au panier du service {service}.')
+            except Produit.DoesNotExist:
+                pass
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # 5. RETRAIT D'UN PRODUIT DU PANIER
+        elif action_type == 'retirer_panier':
+            panier_id = request.POST.get('panier_id')
+            try:
+                ArticlePanier.objects.filter(id=panier_id).delete()
+                messages.success(request, 'Article retiré du panier.')
+            except Exception:
+                pass
+            return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+        # 6. MODIFICATION PRODUIT (ADMIN)
+        elif action_type == 'modification' and is_admin:
+            produit_id = request.POST.get('produit_id')
+            current_page = request.POST.get('page', '1')
+            recherche_term = request.POST.get('q', '')
+            statut_filtre = request.POST.get('statut', 'all')
+            tri_filtre = request.POST.get('tri', 'alpha')
+
+            try:
+                produit = Produit.objects.get(id=produit_id)
+                produit.reference = request.POST.get('reference')
+                produit.objet = request.POST.get('objet')
+                produit.categorie = request.POST.get('categorie')
+                produit.emplacement = request.POST.get('emplacement')
+
+                quantite_raw = request.POST.get('quantite')
+                produit.quantite = int(quantite_raw) if quantite_raw and str(quantite_raw).strip() else 0
+
+                quota_raw = request.POST.get('quota_minimum')
+                produit.quota_minimum = int(quota_raw) if quota_raw and str(quota_raw).strip() else 0
+
+                fournisseur_recu = request.POST.get('fournisseur')
+                if fournisseur_recu:
+                    produit.fournisseur = fournisseur_recu
+
+                prix_recu = request.POST.get('prix')
+                if prix_recu and str(prix_recu).strip():
+                    try:
+                        produit.prix = float(str(prix_recu).replace(',', '.').strip())
+                    except ValueError:
+                        produit.prix = None
+                else:
+                    produit.prix = None
+
+                produit.save()
+
+                if 'verifier_et_envoyer_alerte_papier' in globals():
+                    verifier_et_envoyer_alerte_papier(produit)
+
+                messages.success(request, f'Modification du produit "{produit.objet}" enregistrée avec succès !')
+            except Produit.DoesNotExist:
+                pass
+
+            redirect_url = f'/inventaire/?page={current_page}'
+            if recherche_term:
+                redirect_url += f'&q={recherche_term}'
+            if statut_filtre and statut_filtre != 'all':
+                redirect_url += f'&statut={statut_filtre}'
+            if tri_filtre and tri_filtre != 'alpha':
+                redirect_url += f'&tri={tri_filtre}'
+
+            return redirect(redirect_url)
+
+        # 7. SUPPRESSION DÉFINITIVE (SUPERUSER)
+        elif action_type == 'suppression_definitive' and request.user.is_superuser:
+            produit_id = request.POST.get('produit_id')
+            current_page = request.POST.get('page', '1')
+            recherche_term = request.POST.get('q', '')
+            statut_filtre = request.POST.get('statut', 'all')
+            tri_filtre = request.POST.get('tri', 'alpha')
+
+            try:
+                produit = Produit.objects.get(id=produit_id)
+                nom_produit_supprime = produit.objet
+                produit.delete()
+
+                messages.success(request, f'Le produit "{nom_produit_supprime}" a été supprimé définitivement.')
+            except Produit.DoesNotExist:
+                pass
+
+            redirect_url = f'/inventaire/?page={current_page}'
+            if recherche_term:
+                redirect_url += f'&q={recherche_term}'
+            if statut_filtre and statut_filtre != 'all':
+                redirect_url += f'&statut={statut_filtre}'
+            if tri_filtre and tri_filtre != 'alpha':
+                redirect_url += f'&tri={tri_filtre}'
+
+            return redirect(redirect_url)
+
+        # 8. GÉNÉRATION DU PDF D'INVENTAIRE
+        elif action_type == 'generer_recapitulatif_pdf':
+            produits_actifs = (
+                Produit.objects.exclude(emplacement='Archivé')
+                .filter(quantite__gt=0)
+                .order_by('emplacement', 'objet')
+            )
+
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(
+                buffer,
+                pagesize=letter,
+                rightMargin=40,
+                leftMargin=40,
+                topMargin=40,
+                bottomMargin=40,
+            )
+            story = []
+
+            styles = getSampleStyleSheet()
+            style_titre = ParagraphStyle(
+                'TitrePDF',
+                parent=styles['Heading1'],
+                fontName='Helvetica-Bold',
+                fontSize=24,
+                leading=28,
+                textColor=colors.HexColor('#2C351C'),
+                spaceAfter=10,
+            )
+            style_meta = ParagraphStyle(
+                'MetaPDF',
+                parent=styles['Normal'],
+                fontName='Helvetica',
+                fontSize=10,
+                textColor=colors.HexColor('#7A8278'),
+                spaceAfter=25,
+            )
+            style_cellule = ParagraphStyle(
+                'CellPDF',
+                parent=styles['Normal'],
+                fontName='Helvetica',
+                fontSize=10,
+                leading=13,
+            )
+            style_entete = ParagraphStyle(
+                'HeaderPDF',
+                parent=styles['Normal'],
+                fontName='Helvetica-Bold',
+                fontSize=10,
+                leading=13,
+                textColor=colors.white,
+            )
+
+            date_generation = timezone.now().strftime('%d/%m/%Y à %H:%M')
+            story.append(Paragraph("Récapitulatif officiel de l'inventaire", style_titre))
+            story.append(Paragraph(f'Document généré le {date_generation} — Uniquement les articles disponibles en réserve', style_meta))
+
+            donnees_table = [[
+                Paragraph('Référence', style_entete),
+                Paragraph("Désignation de l'objet", style_entete),
+                Paragraph('Catégorie', style_entete),
+                Paragraph('Emplacement', style_entete),
+                Paragraph('Stock', style_entete),
+            ]]
+
+            for prod in produits_actifs:
+                donnees_table.append([
+                    Paragraph(prod.reference, style_cellule),
+                    Paragraph(prod.objet, style_cellule),
+                    Paragraph(prod.categorie, style_cellule),
+                    Paragraph(prod.emplacement or '-', style_cellule),
+                    Paragraph(str(prod.quantite), style_cellule),
+                ])
+
+            tableau_inventaire = Table(donnees_table, colWidths=[80, 160, 110, 120, 50])
+            tableau_inventaire.setStyle(
+                TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                    ('TOPPADDING', (0, 0), (-1, 0), 10),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#FAFBF9'), colors.white]),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E6E1')),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+                    ('TOPPADDING', (0, 1), (-1, -1), 8),
+                ])
+            )
+
+            story.append(tableau_inventaire)
+            doc.build(story)
+
+            buffer.seek(0)
+            date_fichier = timezone.now().strftime('%Y_%m_%d')
+            response = HttpResponse(buffer.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="Recapitulatif_Inventaire_{date_fichier}.pdf"'
+            return response
+
+    # 8. FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
+    recherche_term = request.GET.get('q', '').strip()
+    statut_filtre = request.GET.get('statut', 'all')
+    tri_filtre = request.GET.get('tri', 'alpha')
+
+    if tri_filtre == 'emplacement':
+        tous_les_produits = Produit.objects.all().order_by('emplacement', 'objet')
+    else:
+        tous_les_produits = Produit.objects.all().order_by('objet')
+
+    if recherche_term:
+        tous_les_produits = tous_les_produits.filter(
+            Q(objet__icontains=recherche_term) | Q(reference__icontains=recherche_term)
+        )
+
+    if statut_filtre and statut_filtre != 'all':
+        produits_filtres_ids = []
+        for p in tous_les_produits:
+            if p.quota_minimum is not None:
+                if p.quantite <= p.quota_minimum:
+                    status = 'red'
+                elif p.quantite <= (p.quota_minimum + 10):
+                    status = 'yellow'
+                else:
+                    status = 'green'
+            else:
+                status = 'green'
+
+            if status == statut_filtre:
+                produits_filtres_ids.append(p.id)
+
+        tous_les_produits = tous_les_produits.filter(id__in=produits_filtres_ids)
+
+    tous_les_produits_complets = list(tous_les_produits)
+    paniers_actifs = ArticlePanier.objects.all()
+    produits_dans_panier = {p.produit_id: p for p in paniers_actifs}
+
+    paginator = Paginator(tous_les_produits, 15)
+    page_number = request.GET.get('page', '1')
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        'inventaire.html',
+        {
+            'profil_actif': profil_actif,
+            'is_admin': is_admin,
+            'panier_bloque': panier_bloque,
+            'page_obj': page_obj,
+            'tous_les_produits_complets': tous_les_produits_complets,
+            'produits_dans_panier': produits_dans_panier,
+            'recherche_term': recherche_term,
+            'statut_filtre': statut_filtre,
+            'tri_filtre': tri_filtre,
+        },
+    )
 
 # **FONCTION D'ALERTE E-MAIL CIBLÉE POUR LE PAPIER CLAIRFONTAINE**
 def verifier_et_envoyer_alerte_papier(produit):
