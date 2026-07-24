@@ -726,9 +726,11 @@ def page_gestion_stocks(request):
           or 0
       )
 
-      # RÉCUPÉRATION DU FOURNISSEUR (SELECTION OU CRÉATION DYNAMIQUE)
+      # RÉCUPÉRATION DU FOURNISSEUR
       fournisseur_select = request.POST.get('fournisseur_select')
-      fournisseur_nouveau = request.POST.get('fournisseur_nouveau', '').strip()
+      fournisseur_nouveau = request.POST.get(
+          'fournisseur_nouveau', ''
+      ).strip()
 
       if fournisseur_select == 'AUTRE' and fournisseur_nouveau:
         fournisseur_final = fournisseur_nouveau
@@ -737,25 +739,31 @@ def page_gestion_stocks(request):
             fournisseur_select if fournisseur_select else 'Divers'
         )
 
-      # RÉCUPÉRATION DU PRIX
+      # TRAITEMENT OPTIONNEL DU PRIX (SI NON RENSEIGNÉ = None)
       prix_recu = request.POST.get('prix')
       prix_valeur = None
-      if prix_recu:
+      if prix_recu and str(prix_recu).strip():
         try:
-          prix_valeur = float(prix_recu.replace(',', '.'))
+          prix_valeur = float(str(prix_recu).replace(',', '.').strip())
         except ValueError:
           prix_valeur = None
 
-      nouveau_produit = Produit.objects.create(
-          reference=reference_finale,
-          objet=objet_nom,
-          categorie=categorie_nom,
-          emplacement=request.POST.get('emplacement') or 'Réserve',
-          quantite=quantite_initiale,
-          quota_minimum=int(request.POST.get('quota_minimum', 10)),
-          fournisseur=fournisseur_final,
-          prix=prix_valeur,
-      )
+      # PRÉPARATION DES CHAMPS DE CRÉATION
+      donnees_creation = {
+          'reference': reference_finale,
+          'objet': objet_nom,
+          'categorie': categorie_nom,
+          'emplacement': request.POST.get('emplacement') or 'Réserve',
+          'quantite': quantite_initiale,
+          'quota_minimum': int(request.POST.get('quota_minimum', 10)),
+          'fournisseur': fournisseur_final,
+      }
+
+      # INCLUSION DU PRIX UNIQUEMENT S'IL EXISTE SUR LE MODÈLE PRODUIT
+      if hasattr(Produit, 'prix'):
+        donnees_creation['prix'] = prix_valeur
+
+      nouveau_produit = Produit.objects.create(**donnees_creation)
 
       if quantite_initiale > 0:
         MouvementStock.objects.create(
@@ -814,8 +822,8 @@ def page_gestion_stocks(request):
           produit.save(update_fields=['quantite'])
           produit.refresh_from_db()
 
-        # **VÉRIFICATION ET ENVOI DE L'ALERTE MAIL SI STOCK <= 2**
-        verifier_et_envoyer_alerte_papier(produit)
+        if 'verifier_et_envoyer_alerte_papier' in globals():
+          verifier_et_envoyer_alerte_papier(produit)
 
         MouvementStock.objects.create(
             type_mouvement='SORTIE',
@@ -840,7 +848,7 @@ def page_gestion_stocks(request):
         pass
       return redirect('/gestion-stocks/')
 
-  # EXTRACTION DE LA LISTE DES FOURNISSEURS POUR LA LISTE DÉROULANTE DYNAMIQUE
+  # EXTRACTION DES FOURNISSEURS POUR LA LISTE DÉROULANTE
   fournisseurs_existants = (
       Produit.objects.exclude(fournisseur__isnull=True)
       .exclude(fournisseur='')
@@ -862,7 +870,7 @@ def page_gestion_stocks(request):
           'date_du_jour': aujourd_hui,
       },
   )
-
+    
 def page_historique(request):
     profil_actif = get_profil_actif(request.user) 
     if not request.user.is_authenticated:
