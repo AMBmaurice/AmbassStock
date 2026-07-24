@@ -258,7 +258,7 @@ def page_inventaire(request):
       and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
   )
 
-  # **1. GESTION STRICTE DU CRÉNEAU DE BLOCAGE (MERCREDI 12H00 -> JEUDI 17H00) VIA HEURE LOCALE**
+  # 1. GESTION STRICTE DU CRÉNEAU DE BLOCAGE (MERCREDI 12H00 -> JEUDI 17H00) VIA HEURE LOCALE
   maintenant = timezone.localtime()
   jour_semaine = maintenant.weekday()  # 0=Lundi, 1=Mardi, 2=Mercredi, 3=Jeudi...
   heure_actuelle = maintenant.time()
@@ -277,8 +277,55 @@ def page_inventaire(request):
   if request.method == 'POST':
     action_type = request.POST.get('action_type')
 
-    # **2. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT)**
-    if action_type == 'ajouter_panier_groupe':
+    # **AJOUT EXPLICITE DU BLOC DE CRÉATION DE PRODUIT (CORRIGE L'ERREUR 500)**
+    if action_type in ['ajout', 'ajouter_produit', 'creation'] and is_admin:
+      try:
+        reference = request.POST.get('reference', '').strip()
+        objet = request.POST.get('objet', '').strip()
+        categorie = request.POST.get('categorie', '').strip()
+        emplacement = request.POST.get('emplacement', '').strip()
+        fournisseur = request.POST.get('fournisseur', 'Divers').strip()
+
+        # Conversion sécurisée des entiers
+        quantite_raw = request.POST.get('quantite')
+        quantite = (
+            int(quantite_raw)
+            if quantite_raw and str(quantite_raw).strip()
+            else 0
+        )
+
+        quota_raw = request.POST.get('quota_minimum')
+        quota_minimum = (
+            int(quota_raw) if quota_raw and str(quota_raw).strip() else 0
+        )
+
+        # Conversion sécurisée du prix float
+        prix_raw = request.POST.get('prix')
+        prix = None
+        if prix_raw and str(prix_raw).strip():
+          try:
+            prix = float(str(prix_raw).replace(',', '.').strip())
+          except ValueError:
+            prix = None
+
+        Produit.objects.create(
+            reference=reference,
+            objet=objet,
+            categorie=categorie,
+            emplacement=emplacement,
+            fournisseur=fournisseur,
+            quantite=quantite,
+            quota_minimum=quota_minimum,
+            prix=prix,
+        )
+        messages.success(request, f'Le produit "{objet}" a été créé avec succès !')
+      except Exception as e:
+        messages.error(request, f'Erreur lors de la création du produit : {e}')
+
+      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
+
+    # 2. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT OU TICKET URGENT)
+    elif action_type == 'ajouter_panier_groupe':
       service = request.POST.get('service')
       panier_raw = request.POST.get('panier_json')
 
@@ -286,13 +333,13 @@ def page_inventaire(request):
       est_urgente = request.POST.get('est_urgente') == 'true'
       motif_urgence = request.POST.get('motif_urgence', '').strip()
 
-      # **SÉCURITÉ : SI BLOQUÉ, SEULE UNE DEMANDE URGENTE (OU UN ADMIN) PEUT PASSER**
+      # SÉCURITÉ : SI BLOQUÉ, SEULE UNE DEMANDE URGENTE (OU UN ADMIN) PEUT PASSER
       if panier_bloque and not is_admin and not est_urgente:
         messages.error(
             request,
             'Les commandes standard sont fermées du mercredi 12h00 au jeudi'
-            ' 17h00. Veuillez cocher "Demande urgente" et préciser un motif'
-            ' pour valider votre demande.',
+            ' 17h00. Veuillez créer un ticket d\'urgence pour valider votre'
+            ' demande.',
         )
         return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
@@ -301,9 +348,7 @@ def page_inventaire(request):
           panier_dict = json.loads(panier_raw)
           for prod_id, item_data in panier_dict.items():
             produit = Produit.objects.get(id=prod_id)
-            quantite = int(
-                item_data.get('qty', item_data.get('quantite', 1))
-            )
+            quantite = int(item_data.get('qty', item_data.get('quantite', 1)))
 
             # CRÉATION OU MISE À JOUR AVEC PRISE EN COMPTE DU STATUT URGENT ET DU MOTIF
             article_panier, created = ArticlePanier.objects.get_or_create(
@@ -344,15 +389,14 @@ def page_inventaire(request):
 
       return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-    # **3. AJOUT D'UN PRODUIT UNIQUE AU PANIER (BOUTON EN LIGNE)**
+    # 3. AJOUT D'UN PRODUIT UNIQUE AU PANIER (BOUTON EN LIGNE)
     elif action_type == 'ajouter_panier':
       # SÉCURITÉ BLOCAGE HEBDOMADAIRE SANS URGENCE
       if panier_bloque and not is_admin:
         messages.error(
             request,
             'Les ajouts directs sont fermés du mercredi 12h00 au jeudi 17h00.'
-            ' Veuillez utiliser le panier flottant et cocher "Demande'
-            ' urgente".',
+            ' Veuillez créer un ticket d\'urgence.',
         )
         return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
@@ -378,7 +422,7 @@ def page_inventaire(request):
         pass
       return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-    # **4. RETRAIT D'UN PRODUIT DU PANIER**
+    # 4. RETRAIT D'UN PRODUIT DU PANIER
     elif action_type == 'retirer_panier':
       panier_id = request.POST.get('panier_id')
       try:
@@ -388,7 +432,7 @@ def page_inventaire(request):
         pass
       return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-    # **5. MODIFICATION PRODUIT (ADMIN) AVEC SAUVEGARDE DU FOURNISSEUR, DU PRIX ET ALERTE MAIL**
+    # 5. MODIFICATION PRODUIT (ADMIN) AVEC SAUVEGARDE DU FOURNISSEUR, DU PRIX ET ALERTE MAIL
     elif action_type == 'modification' and is_admin:
       produit_id = request.POST.get('produit_id')
       current_page = request.POST.get('page', '1')
@@ -402,8 +446,19 @@ def page_inventaire(request):
         produit.objet = request.POST.get('objet')
         produit.categorie = request.POST.get('categorie')
         produit.emplacement = request.POST.get('emplacement')
-        produit.quantite = int(request.POST.get('quantite', 0))
-        produit.quota_minimum = int(request.POST.get('quota_minimum', 0))
+
+        # Conversion sécurisée de la quantité et du quota
+        quantite_raw = request.POST.get('quantite')
+        produit.quantite = (
+            int(quantite_raw)
+            if quantite_raw and str(quantite_raw).strip()
+            else 0
+        )
+
+        quota_raw = request.POST.get('quota_minimum')
+        produit.quota_minimum = (
+            int(quota_raw) if quota_raw and str(quota_raw).strip() else 0
+        )
 
         # Enregistrement du fournisseur
         fournisseur_recu = request.POST.get('fournisseur')
@@ -412,17 +467,17 @@ def page_inventaire(request):
 
         # Enregistrement du prix
         prix_recu = request.POST.get('prix')
-        if prix_recu:
+        if prix_recu and str(prix_recu).strip():
           try:
-            produit.prix = float(prix_recu.replace(',', '.'))
+            produit.prix = float(str(prix_recu).replace(',', '.').strip())
           except ValueError:
-            pass
+            produit.prix = None
         else:
           produit.prix = None
 
         produit.save()
 
-        # **VÉRIFICATION ET ENVOI DE L'ALERTE MAIL SI LE PAPIER DEVIENT <= 2**
+        # VÉRIFICATION ET ENVOI DE L'ALERTE MAIL SI LE PAPIER DEVIENT <= 2
         verifier_et_envoyer_alerte_papier(produit)
 
         messages.success(
@@ -443,7 +498,7 @@ def page_inventaire(request):
 
       return redirect(redirect_url)
 
-    # **6. SUPPRESSION DÉFINITIVE (SUPERUSER)**
+    # 6. SUPPRESSION DÉFINITIVE (SUPERUSER)
     elif action_type == 'suppression_definitive' and request.user.is_superuser:
       produit_id = request.POST.get('produit_id')
       current_page = request.POST.get('page', '1')
@@ -474,7 +529,7 @@ def page_inventaire(request):
 
       return redirect(redirect_url)
 
-    # **7. GÉNÉRATION DU PDF D'INVENTAIRE**
+    # 7. GÉNÉRATION DU PDF D'INVENTAIRE
     elif action_type == 'generer_recapitulatif_pdf':
       produits_actifs = (
           Produit.objects.exclude(emplacement='Archivé')
@@ -590,7 +645,7 @@ def page_inventaire(request):
       )
       return response
 
-  # **8. FILTRAGE ET RECHERCHE POUR L'AFFICHAGE**
+  # 8. FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
   recherche_term = request.GET.get('q', '').strip()
   statut_filtre = request.GET.get('statut', 'all')
   tri_filtre = request.GET.get('tri', 'alpha')
