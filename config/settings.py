@@ -8,7 +8,8 @@ SECRET_KEY = os.environ.get(
     'django-insecure-_9r&5hdo!!k(*@-*0#nrg-qrg2vzt%smr-(#kuj(=_rwuhdm=j',
 )
 
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# ACTIVÉ TEMPORAIREMENT POUR AFFICHER LA PAGE DE DÉBOGAGE JAUNE AU LIEU DU SERVER ERROR 500
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'ambassstock.up.railway.app', '*']
 
@@ -101,7 +102,7 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = []
 if os.path.exists(os.path.join(BASE_DIR, 'static')):
-  STATICFILES_DIRS.append(os.path.join(BASE_DIR, 'static'))
+    STATICFILES_DIRS.append(os.path.join(BASE_DIR, 'static'))
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = (
@@ -110,7 +111,7 @@ STATICFILES_STORAGE = (
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# **CONFIGURATION DE L'ENVOI D'EMAILS (NECESSAIRE POUR LES ALERTES DU PAPIER CLAIRFONTAINE)**
+# CONFIGURATION DE L'ENVOI D'EMAILS
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
