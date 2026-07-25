@@ -150,8 +150,35 @@
         .btn-admin-validate { width: 100%; height: 38px; background-color: #BA3C2A; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s; }
         .btn-admin-validate:hover { background-color: #962F20; }
             
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 100; }
-        .modal-box { background: #F4F6F3; border-radius: 24px; width: 100%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.15); border: 1px solid #E2E6E1; animation: modalFadeIn 0.3s ease; }
+        /* **NOUVEAU CSS CORRIGÉ POUR LA MODALE DES SUGGESTIONS** */
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100vw; 
+            height: 100vh; 
+            background: rgba(44, 53, 28, 0.5); 
+            backdrop-filter: blur(6px); 
+            -webkit-backdrop-filter: blur(6px); 
+            z-index: 9999 !important; /* Force l'affichage au-dessus de la sidebar */
+            justify-content: center; 
+            align-items: center; 
+            padding: 20px;
+        }
+        .modal-box { 
+            background: #F4F6F3; 
+            border-radius: 24px; 
+            width: 100%; 
+            max-width: 850px; 
+            max-height: 85vh; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25); 
+            border: 1px solid #E2E6E1; 
+            animation: modalFadeIn 0.3s ease; 
+            position: relative;
+        }
         @keyframes modalFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .modal-header { padding: 30px 40px; border-bottom: 1px solid #E2E6E1; display: flex; justify-content: space-between; align-items: center; background: white; border-radius: 24px 24px 0 0; }
         .modal-title { font-size: 1.6rem; font-weight: 700; color: #2c351c; }
@@ -159,7 +186,7 @@
         .modal-close:hover { color: #2c351c; }
         .modal-body { padding: 40px; overflow-y: auto; flex-grow: 1; }
         
-        .demandes-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+        .demandes-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
         .demande-item-card { background: white; border: 1px solid #E2E6E1; border-radius: 18px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); display: flex; flex-direction: column; gap: 12px; }
         .demande-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #F1F3F0; padding-bottom: 12px; }
         .demande-card-meta { font-size: 0.9rem; color: #7A8278; line-height: 1.4; }
@@ -321,7 +348,7 @@ function toggleSidebar() {
                 
     <h3>Tableau de bord</h3>
 
-    <!-- **BLOC D'INFORMATION DES RETRAITS AVEC LISTE À PUCES** -->
+    <!-- BLOC D'INFORMATION DES RETRAITS AVEC LISTE À PUCES -->
     <div style="background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; padding: 20px 24px; border-radius: 16px; font-weight: 500; margin-bottom: 30px; font-size: 0.95rem; line-height: 1.6; display: flex; align-items: flex-start; gap: 14px;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
             <circle cx="12" cy="12" r="10"></circle>
