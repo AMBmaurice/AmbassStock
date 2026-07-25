@@ -1128,8 +1128,40 @@ def afficher_facture(request, facture_id):
 def page_gestion_demandes(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
+
     profil_actif = get_profil_actif(request.user)
-    return render(request, 'gestion_demandes.html', {'profil_actif': profil_actif})
+
+    # **1. GESTION DES ACTIONS DE L'ADMINISTRATEUR (REPONDRE OU CHANGER LE STATUT)**
+    if request.method == 'POST':
+        demande_id = request.POST.get('demande_id')
+        nouveau_statut = request.POST.get('statut')
+        reponse_text = request.POST.get('reponse_admin', '').strip()
+
+        if demande_id:
+            try:
+                demande = DemandeService.objects.get(id=demande_id)
+                if nouveau_statut:
+                    demande.statut = nouveau_statut
+                if reponse_text:
+                    demande.reponse_admin = reponse_text
+                demande.save()
+                messages.success(request, f"La demande du service {demande.service} a été mise à jour avec succès !")
+            except DemandeService.DoesNotExist:
+                messages.error(request, "Demande introuvable.")
+
+        return redirect('/gestion-demandes/')
+
+    # **2. RÉCUPÉRATION DE TOUTES LES DEMANDES DEPUIS LA BASE DE DONNÉES**
+    demandes = DemandeService.objects.all().order_by('-id')
+
+    return render(
+        request,
+        'gestion_demandes.html',
+        {
+            'profil_actif': profil_actif,
+            'demandes': demandes,  # **Transmet la liste complète des suggestions à la page HTML**
+        }
+    )
 
 
 def page_gestion_utilisateurs(request):
