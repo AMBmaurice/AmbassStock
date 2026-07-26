@@ -6,87 +6,102 @@
     <title>AmbassStock - Mouvements & Archivage</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
         .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 10px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
-        
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        h3 { font-size: 2rem; font-weight: 600; color: #2c351c; }
-        .section-title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        h4.section-title { font-size: 1.4rem; font-weight: 600; color: #495430; margin-bottom: 0; }
-        
-        .btn-primary-highlight { padding: 12px 24px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; }
-        .btn-primary-highlight:hover { background-color: #495430; transform: translateY(-1px); }
-        
-        .btn-danger-highlight { padding: 12px 24px; background-color: #8C4A32; color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; }
-        .btn-danger-highlight:hover { background-color: #703a26; transform: translateY(-1px); }
-        
-        .form-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px 45px; width: 100%; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); margin-bottom: 30px; }
-        
-        .form-separator-line { border: 0; height: 1px; background: #E6EAE4; margin: 35px 0; }
-        
-        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; position: relative; }
-        .form-label { font-size: 0.88rem; color: #7A8278; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-hint { font-size: 0.8rem; color: #A0A89C; font-weight: 400; margin-top: -4px; }
-                    
-        .form-input, .form-select { width: 100%; padding: 14px 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 1rem; color: #2c351c; background-color: #ffffff; outline: none; transition: all 0.2s; }
-        .form-input:focus, .form-select:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
 
-        .form-input-disabled { background-color: #F1F3F0; color: #8A9288; cursor: not-allowed; font-weight: 500; border-color: #E2E6E1; }
-        
+        /* EN-TÊTE DE PAGE */
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
+
+        /* PANNEAUX ET CONTENEURS GLASSMORPHIC */
+        .form-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 28px; padding: 36px 40px; width: 100%; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.2s, box-shadow 0.2s; }
+        .form-container-box:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
+
+        .section-title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #ECEFEA; padding-bottom: 18px; }
+        .section-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; display: flex; align-items: center; gap: 10px; }
+
+        .btn-primary-highlight { padding: 11px 22px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
+        .btn-primary-highlight:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(73, 84, 48, 0.28); }
+
+        .btn-danger-highlight { padding: 11px 22px; background-color: #BA3C2A; color: #ffffff; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(186, 60, 42, 0.2); }
+        .btn-danger-highlight:hover { background-color: #962F20; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(186, 60, 42, 0.28); }
+
+        /* FORMULAIRES & INPUTS */
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; position: relative; }
+        .form-label { font-size: 0.78rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; }
+        .form-hint { font-size: 0.8rem; color: #7A8278; font-weight: 500; margin-top: -2px; }
+
+        .form-input, .form-select { width: 100%; height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; color: #2C351C; background-color: #FAFBF9; outline: none; font-weight: 500; transition: all 0.2s ease; }
+        .form-input:focus, .form-select:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+
+        .form-input-disabled { background-color: #F1F3F0; color: #8A9288; cursor: not-allowed; font-weight: 600; border-color: #E2E6E1; }
+
+        /* MENUS DÉROULANTS AVEC RECHERCHE INTELLIGENTE */
         .custom-select-wrapper { position: relative; width: 100%; }
-        .search-select-input { width: 100%; padding: 14px 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 1rem; color: #2c351c; background-color: #ffffff; outline: none; cursor: pointer; }
-        
-        .select-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #D0D6CE; border-radius: 12px; margin-top: 5px; max-height: 220px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.06); }
-        .select-option { padding: 12px 14px; cursor: pointer; border-radius: 8px; font-size: 0.98rem; transition: background 0.15s; color: #333333; display: flex; justify-content: space-between; }
-        .select-option:hover { background-color: #FAFBF9; color: #2c351c; }
-        .option-ref { font-size: 0.82rem; color: #5E6D3E; font-weight: 600; background: #EBF2E9; padding: 2px 6px; border-radius: 4px; }
-        
-        .btn-submit { width: 100%; padding: 16px; background-color: #495430; color: #ffffff; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-        .btn-submit:hover { background-color: #3b4426; }        
-        .btn-submit-output { background-color: #8C4A32; }
-        .btn-submit-output:hover { background-color: #703a26; }
-        
-        .prediction-box { background-color: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 14px; padding: 20px 24px; margin-bottom: 24px; display: none; }
-        .prediction-box-output { background-color: #FDF8F6; border-color: #F5E6E1; }
-        .prediction-text { color: #5E6D3E; font-size: 1.05rem; font-weight: 500; display: flex; align-items: center; gap: 12px; }
-        .prediction-text-output { color: #8C4A32; }
-        .prediction-highlight { font-weight: 700; color: #2c351c; background-color: #EBF2E9; padding: 2px 8px; border-radius: 6px; }
-        .prediction-highlight-output { color: #5A2715; background-color: #F5E6E1; }
-        
-        .alert-success { background-color: #EBF9EE; border: 1px solid #C2EED0; color: #1E7E34; padding: 16px; border-radius: 12px; margin-bottom: 25px; font-weight: 500; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03); }
-                    
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.4); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
-        .modal-card { background-color: #ffffff; border-radius: 24px; width: 100%; max-width: 650px; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.12); animation: scaleUp 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
+        .search-select-input { width: 100%; height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; color: #2C351C; background-color: #FAFBF9; outline: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .search-select-input:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
 
-        .mini-modal-card { max-width: 420px; text-align: center; padding: 30px; border-radius: 20px; }
+        .select-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #ffffff; border: 1px solid #E2E6E1; border-radius: 16px; max-height: 230px; overflow-y: auto; z-index: 500; box-shadow: 0 15px 35px rgba(0,0,0,0.12); padding: 6px; }
+        .select-option { padding: 12px 16px; cursor: pointer; border-radius: 10px; font-size: 0.92rem; font-weight: 600; transition: all 0.15s; color: #2C351C; display: flex; justify-content: space-between; align-items: center; }
+        .select-option:hover { background-color: #EBF2E9; color: #5E6D3E; }
+        .option-ref { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.8rem; color: #5E6D3E; font-weight: 700; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(94, 109, 62, 0.15); }
+
+        /* BOUTONS DE SOUMISSION */
+        .btn-submit { width: 100%; height: 50px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 14px; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.22); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-submit:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
+
+        .btn-submit-output { background-color: #BA3C2A; box-shadow: 0 4px 15px rgba(186, 60, 42, 0.22); }
+        .btn-submit-output:hover { background-color: #962F20; box-shadow: 0 6px 20px rgba(186, 60, 42, 0.3); }
+
+        /* BOÎTES DE PRÉDICTION PRÉVISIONNELLE */
+        .prediction-box { background-color: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 16px; padding: 18px 22px; margin-bottom: 22px; display: none; }
+        .prediction-box-output { background-color: #FFFBFB; border-color: rgba(186, 60, 42, 0.25); }
+        .prediction-text { color: #5E6D3E; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .prediction-text-output { color: #BA3C2A; }
+        .prediction-highlight { font-weight: 800; color: #2C351C; background-color: #EBF2E9; padding: 2px 8px; border-radius: 6px; }
+        .prediction-highlight-output { color: #BA3C2A; background-color: #FCEAE8; }
+
+        .alert-success { background-color: #EBF9EE; border: 1px solid #C2EED0; color: #1E7E34; padding: 16px 20px; border-radius: 14px; margin-bottom: 25px; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03); }
+
+        /* MODALES UNIFIÉES GLASSMORPHISM */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(44, 53, 28, 0.5); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: 20px; }
+        .modal-card { background-color: #ffffff; border-radius: 28px; width: 100%; max-width: 680px; padding: 40px; box-shadow: 0 25px 60px rgba(0,0,0,0.22); border: 1px solid #E2E6E1; animation: scaleUp 0.25s ease-out; max-height: 88vh; overflow-y: auto; }
+
+        .mini-modal-card { max-width: 440px; text-align: center; padding: 35px; }
         .mini-modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
-        .btn-modal-cancel { flex: 1; padding: 12px; background: #F1F3F0; color: #555; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
-        .btn-modal-confirm-danger { flex: 1; padding: 12px; background: #8C4A32; color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
-        .btn-modal-confirm-danger:hover { background: #703a26; }
+        .btn-modal-cancel { flex: 1; height: 46px; background: #FAFBF9; color: #7A8278; border: 1px solid #D0D6CE; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-modal-cancel:hover { background: #EBF2E9; color: #2C351C; }
         
+        .btn-modal-confirm-danger { flex: 1; height: 46px; background: #BA3C2A; color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-modal-confirm-danger:hover { background: #962F20; }
+
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #ECEFEA; padding-bottom: 15px; }
-        .modal-title { font-size: 1.5rem; font-weight: 600; color: #2c351c; }
-        .modal-close { font-size: 1.8rem; color: #7A8278; cursor: pointer; background: none; border: none; }
-        
-        .reference-preview-box { background-color: #F7FAF6; border: 1px dashed #5E6D3E; padding: 16px; border-radius: 12px; font-size: 1rem; color: #2c351c; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-        .reference-tag { background-color: #5E6D3E; color: white; padding: 6px 14px; border-radius: 8px; font-family: monospace; font-size: 1.1rem; letter-spacing: 1px; }
-        
-        .location-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 5px; }
-        .location-tile { border: 1px solid #D0D6CE; padding: 12px; border-radius: 10px; text-align: center; font-weight: 600; color: #495430; cursor: pointer; transition: all 0.15s; background-color: #ffffff; }
-        .location-tile:hover { background-color: #FAFBF9; border-color: #5E6D3E; }  
-        .location-tile.selected { background-color: #5E6D3E; color: #ffffff; border-color: #5E6D3E; }
-        
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: #2C351C; }
+        .modal-close { font-size: 1.6rem; color: #7A8278; cursor: pointer; background: none; border: none; transition: color 0.2s; }
+        .modal-close:hover { color: #2C351C; }
+
+        .reference-preview-box { background-color: #FAFBF9; border: 1px dashed #5E6D3E; padding: 18px; border-radius: 14px; font-size: 0.95rem; color: #2C351C; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .reference-tag { background-color: #5E6D3E; color: white; padding: 6px 14px; border-radius: 8px; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; }
+
+        .location-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 6px; }
+        .location-tile { border: 1px solid #D0D6CE; padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; color: #495430; cursor: pointer; transition: all 0.2s; background-color: #FAFBF9; font-size: 0.9rem; }
+        .location-tile:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
+        .location-tile.selected { background-color: #5E6D3E; color: #ffffff; border-color: #5E6D3E; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.25); }
+
         @keyframes scaleUp { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
-</head> 
+</head>
 <body>
-                    
+
 <button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
@@ -99,54 +114,18 @@
         </button>
     </div>
         
-    <ul class="sidebar-menu" style="list-style: none; padding: 0 15px; flex-grow: 1; overflow-y: auto;">
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
-        </li>
-        {% if profil_actif.acces_inventaire %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
-        </li>
-        {% endif %}
-        {% if profil_actif.acces_stocks %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a>
-        </li>
-        {% endif %}
-        {% if profil_actif.acces_historique %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a>
-        </li>
-        {% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a>
-        </li>
-        {% endif %}
-        {% if profil_actif.acces_statistiques %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a>
-        </li>
-        {% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a>
-        </li>
-        {% endif %}
-        {% if profil_actif.acces_factures %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a>
-        </li>
-        {% endif %}
-        {% if profil_actif.acces_panier %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
-        </li>
-        {% endif %}
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        {% if profil_actif.acces_panier %}<li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>{% endif %}
         {% if is_admin or request.user.is_superuser %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-        </li>
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
         {% endif %}
     </ul>
             
@@ -171,8 +150,9 @@
 </div>
 
 <div class="main-content">
-    <div class="header-section">
-        <h3>Mouvements de Stocks</h3>
+    <div class="page-header">
+        <h1 class="page-title">Gestion des Mouvements de Stock</h1>
+        <p class="welcome-text">Enregistrez les approvisionnements récents, validez les prélèvements des services et gérez les articles du catalogue.</p>
     </div>
 
     {% if messages %}
@@ -187,10 +167,17 @@
     {% endif %}
 
     {% if request.user.is_superuser %}
+    <!-- 🟢 BLOC ENREGISTREMENT DES ENTRÉES -->
     <div class="form-container-box">
         <div class="section-title-container">
-            <h4 class="section-title">Enregistrement des entrées</h4>
-            <button class="btn-primary-highlight" onclick="openModal('productModal')">Ajouter un nouveau produit</button>
+            <h2 class="section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                Enregistrement des Réceptions / Entrées
+            </h2>
+            <button type="button" class="btn-primary-highlight" onclick="openModal('productModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Créer un nouveau produit
+            </button>
         </div>
 
         <form method="POST" action="" onsubmit="prepareSubmitInput(event)">
@@ -198,14 +185,14 @@
             <input type="hidden" name="action_type" value="mouvement_entree">
 
             <div class="form-group">
-                <label class="form-label">Type de mouvement</label>
-                <input type="text" class="form-input form-input-disabled" value="Entrée" readonly>
+                <label class="form-label">Type de Mouvement Logistique</label>
+                <input type="text" class="form-input form-input-disabled" value="ENTRÉE EN RÉSERVE" readonly>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Sélectionner le produit</label>
+                <label class="form-label">Sélectionner le Produit *</label>
                 <div class="custom-select-wrapper">
-                    <input type="text" id="searchSelectInput" class="search-select-input" placeholder="Rechercher un objet par nom ou référence..." autocomplete="off" onfocus="showDropdown('Input')" oninput="filterOptions('Input')">
+                    <input type="text" id="searchSelectInput" class="search-select-input" placeholder="Rechercher par désignation ou par référence..." autocomplete="off" onfocus="showDropdown('Input')" oninput="filterOptions('Input')">
                     <input type="hidden" name="produit" id="hiddenProductInput" required>
 
                     <div class="select-dropdown" id="selectDropdownInput">
@@ -220,38 +207,48 @@
             </div>
             
             <div class="form-group">
-                <label class="form-label">Quantité ajoutée</label>
-                <input type="number" name="quantite" id="quantiteInput" class="form-input" min="1" placeholder="Nombre d'unités reçues" required oninput="calculatePredictionInput()">
+                <label class="form-label">Quantité Ajoutée *</label>
+                <input type="number" name="quantite" id="quantiteInput" class="form-input" min="1" placeholder="Nombre d'unités reçues..." required oninput="calculatePredictionInput()">
             </div>
 
-            <!-- **NOUVEAU CHAMP NUMÉRO DE COMMANDE / ARRIVAGE** -->
             <div class="form-group">
-                <label class="form-label">Numéro de commande / Réf. Arrivage (Optionnel)</label>
-                <input type="text" name="numero_commande" class="form-input" placeholder="Ex: CMD-2026-07 ou Lot Arrivage Juillet">
-                <span class="form-hint">Permet de regrouper les articles de la même commande sur la page d'accueil.</span>
+                <label class="form-label">Numéro de Commande / Réf. Arrivage (Optionnel)</label>
+                <input type="text" name="numero_commande" class="form-input" placeholder="Ex: CMD-2026-07 ou Bon de livraison..." >
+                <span class="form-hint">Permet d'associer cet arrivage à une commande sur l'écran d'accueil.</span>
             </div>
             
             <div class="form-group">
-                <label class="form-label">Date de l'entrée</label>
+                <label class="form-label">Date de la Réception *</label>
                 <input type="date" name="date_entree" class="form-input" value="{{ date_du_jour }}" required>
             </div>
             
             <div class="prediction-box" id="predictionBoxInput">
                 <div class="prediction-text">
-                    <span id="predictionMessageInput">Votre stock sera de ...</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span id="predictionMessageInput">Stock prévisionnel en attente de calcul...</span>
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">Valider l'entrée en réserve</button>
+            <button type="submit" class="btn-submit">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Valider l'entrée en réserve
+            </button>
         </form>
     </div>
     {% endif %}
 
+    <!-- 🔴 BLOC ENREGISTREMENT DES SORTIES -->
     <div class="form-container-box">
         <div class="section-title-container">
-            <h4 class="section-title">Enregistrement des sorties</h4>
+            <h2 class="section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 18 10.5 8.5 15.5 13.5 23 6"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                Enregistrement des Prélèvements / Sorties
+            </h2>
             {% if request.user.is_superuser %}
-            <button class="btn-danger-highlight" onclick="openModal('deleteProductModal')">Supprimer un produit</button>
+            <button type="button" class="btn-danger-highlight" onclick="openModal('deleteProductModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Archiver un produit
+            </button>
             {% endif %}
         </div>
             
@@ -260,9 +257,9 @@
             <input type="hidden" name="action_type" value="sortie">
 
             <div class="form-group">
-                <label class="form-label">Sélectionner le produit à retirer</label>
+                <label class="form-label">Sélectionner le Produit à Retirer *</label>
                 <div class="custom-select-wrapper">
-                    <input type="text" id="searchSelectOutput" class="search-select-input" placeholder="Rechercher l'objet à déstocker..." autocomplete="off" onfocus="showDropdown('Output')" oninput="filterOptions('Output')">
+                    <input type="text" id="searchSelectOutput" class="search-select-input" placeholder="Rechercher par désignation ou référence..." autocomplete="off" onfocus="showDropdown('Output')" oninput="filterOptions('Output')">
                     <input type="hidden" name="produit" id="hiddenProductOutput" required>
                     
                     <div class="select-dropdown" id="selectDropdownOutput">
@@ -277,9 +274,9 @@
             </div>
 
             <div class="form-group">
-                <label for="id_service_sortie" class="form-label">Service demandeur</label>
+                <label for="id_service_sortie" class="form-label">Service Demandeur *</label>
                 <select name="service" id="id_service_sortie" class="form-select" required>
-                    <option value="" disabled selected>Choisir le service qui réalise la sortie</option>
+                    <option value="" disabled selected>Sélectionner le service bénéficiaire...</option>
                     <option value="Consulaire">Consulaire</option>
                     <option value="Ambassadeur">Ambassadeur</option>
                     <option value="Secrétaire">Secrétaire</option>
@@ -293,49 +290,53 @@
             </div>
         
             <div class="form-group">
-                <label class="form-label">Quantité retirée</label>
-                <input type="number" name="quantite" id="quantiteOutput" class="form-input" min="1" placeholder="Nombre d'unités à extraire" required oninput="calculatePredictionOutput()">
+                <label class="form-label">Quantité Retirée *</label>
+                <input type="number" name="quantite" id="quantiteOutput" class="form-input" min="1" placeholder="Nombre d'unités prélevées..." required oninput="calculatePredictionOutput()">
             </div>
                                                             
             <div class="form-group">
-                <label class="form-label">Date de la sortie</label>
+                <label class="form-label">Date du Prélèvement *</label>
                 <input type="date" name="date_sortie" class="form-input" value="{{ date_du_jour }}" required>
             </div>
             
             <div class="prediction-box prediction-box-output" id="predictionBoxOutput">
                 <div class="prediction-text prediction-text-output">
-                    <span id="predictionMessageOutput">Le stock restant sera de ...</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span id="predictionMessageOutput">Stock restant prévisionnel en attente...</span>
                 </div>
             </div>
                                                             
-            <button type="submit" class="btn-submit btn-submit-output">Valider la sortie de l'inventaire</button>
+            <button type="submit" class="btn-submit btn-submit-output">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Valider la sortie du stock
+            </button>
         </form>
     </div>
 </div>
 
-<!-- MODALE DE CRÉATION DE PRODUIT -->
+<!-- 📦 MODALE DE CRÉATION DE PRODUIT SUR-MESURE -->
 <div class="modal-overlay" id="productModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h4 class="modal-title">Ajouter un nouveau produit</h4>
-            <button class="modal-close" onclick="closeModal('productModal')">&times;</button>
+            <h3 class="modal-title">Créer un Nouveau Produit</h3>
+            <button type="button" class="modal-close" onclick="closeModal('productModal')">✕</button>
         </div>  
         <form method="POST" action="">
             {% csrf_token %}
             <input type="hidden" name="action_type" value="creation_produit">
             
             <div class="form-group">
-                <label class="form-label">Référence générée</label>
+                <label class="form-label">Aperçu de la Référence Générée</label>
                 <div class="reference-preview-box">
-                    <span>Attribuée automatiquement :</span>
+                    <span>Codification automatique :</span>
                     <span class="reference-tag" id="refPreview">XXX-XXX-XXX-XX</span>
                 </div>
             </div>
                 
             <div class="form-group">
-                <label for="id_categorie" class="form-label">Catégorie</label>
+                <label for="id_categorie" class="form-label">Catégorie de l'Article *</label>
                 <select name="categorie" id="id_categorie" class="form-select" required onchange="liveRefGen();">
-                    <option value="" disabled selected>-- Sélectionner la catégorie de l'article --</option>
+                    <option value="" disabled selected>Sélectionner une catégorie...</option>
                     <option value="Écriture">Écriture (ECR)</option>
                     <option value="Bureau">Bureau (BUR)</option>
                     <option value="Papeterie">Papeterie (PAP)</option>
@@ -348,22 +349,22 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Nom du produit / Objet</label>
-                <input type="text" id="inputNom" name="nom" class="form-input" placeholder="Ex: Stylo à bille..." required oninput="liveRefGen()">
+                <label class="form-label">Désignation / Nom de l'objet *</label>
+                <input type="text" id="inputNom" name="nom" class="form-input" placeholder="Ex: Ramette de papier A4 80g..." required oninput="liveRefGen()">
             </div>
                                                                                                                         
             <div class="form-group">
-                <label class="form-label">Marque</label>
-                <input type="text" id="inputMarque" name="marque_texte" class="form-input" placeholder="Ex: BIC..." required oninput="liveRefGen()">
+                <label class="form-label">Marque *</label>
+                <input type="text" id="inputMarque" name="marque_texte" class="form-input" placeholder="Ex: CLAIRFONTAINE..." required oninput="liveRefGen()">
             </div>
             
             <div class="form-group">
-                <label class="form-label">Spécificité</label>
+                <label class="form-label">Spécificité / Caractéristique *</label>
                 <input type="text" id="inputSpec" name="spec_texte" class="form-input" placeholder="Ex: ROUGE, BLEU, A4..." required oninput="liveRefGen()">
             </div>
             
             <div class="form-group">
-                <label class="form-label">Fournisseur</label>
+                <label class="form-label">Fournisseur Attribué *</label>
                 <select name="fournisseur_select" id="id_fournisseur_select" class="form-select" onchange="gererAffichageNouveauFournisseur(this.value)" required>
                     <option value="Le Voltigeur">Le Voltigeur</option>
                     <option value="All Office">All Office</option>
@@ -373,27 +374,27 @@
                             <option value="{{ f }}">{{ f }}</option>
                         {% endif %}
                     {% endfor %}
-                    <option value="AUTRE" style="font-weight: 700; color: #8C4A32;">+ Ajouter un nouveau fournisseur...</option>
+                    <option value="AUTRE" style="font-weight: 700; color: #BA3C2A;">+ Saisir un nouveau fournisseur...</option>
                 </select>
             </div>
 
             <div class="form-group" id="blocNouveauFournisseur" style="display: none;">
-                <label class="form-label" style="color: #8C4A32;">Nom du nouveau fournisseur</label>
-                <input type="text" name="fournisseur_nouveau" id="id_fournisseur_nouveau" class="form-input" placeholder="Ex: Lyreco, Kalamazoo..." style="border-color: #8C4A32;">
+                <label class="form-label" style="color: #BA3C2A;">Nom du Nouveau Fournisseur</label>
+                <input type="text" name="fournisseur_nouveau" id="id_fournisseur_nouveau" class="form-input" placeholder="Ex: Lyreco, Kalamazoo..." style="border-color: #BA3C2A;">
             </div>
 
             <div class="form-group">
-                <label class="form-label">Prix unitaire (€)</label>
+                <label class="form-label">Prix Unitaire Estimé (€)</label>
                 <input type="number" step="0.01" min="0" name="prix" class="form-input" placeholder="Ex: 12.50 (Optionnel)">
             </div>
 
             <div class="form-group">
-                <label class="form-label">Quantité initiale</label>
+                <label class="form-label">Quantité Initiale en Réserve *</label>
                 <input type="number" name="quantite_initiale" class="form-input" min="0" placeholder="Ex: 50" required>
             </div>
                     
             <div class="form-group">
-                <label class="form-label">Emplacement</label>
+                <label class="form-label">Emplacement Physique *</label>
                 <input type="hidden" name="emplacement" id="selectedLocation" required>
                 <div class="location-grid">
                     <div class="location-tile" data-value="Armoire A" onclick="selectLocationTile(this)">Armoire A</div>
@@ -406,22 +407,22 @@
                 </div>
             </div>
                 
-            <button type="submit" class="btn-submit">Enregistrer le produit</button>
+            <button type="submit" class="btn-submit" style="margin-top: 10px;">Enregistrer et ajouter au catalogue</button>
         </form>                  
     </div>
 </div>
 
-<!-- MODALE DE SUPPRESSION DE PRODUIT -->
+<!-- 🗑️ MODALE DE SUPPRESSION DE PRODUIT -->
 <div class="modal-overlay" id="deleteProductModal">
     <div class="modal-card">
         <div class="modal-header"> 
-            <h4 class="modal-title">Supprimer un produit</h4>
-            <button class="modal-close" onclick="closeModal('deleteProductModal')">&times;</button>
+            <h3 class="modal-title" style="color: #BA3C2A;">Archiver / Supprimer un Produit</h3>
+            <button type="button" class="modal-close" onclick="closeModal('deleteProductModal')">✕</button>
         </div>
         <div class="form-group">
-            <label class="form-label">Rechercher le produit à retirer de l'affichage</label>
+            <label class="form-label">Sélectionner l'article à retirer du catalogue</label>
             <div class="custom-select-wrapper">
-                <input type="text" id="searchSelectDelete" class="search-select-input" placeholder="Sélectionnez l'objet par son nom ou son code..." autocomplete="off" onfocus="showDropdown('Delete')" oninput="filterOptions('Delete')">
+                <input type="text" id="searchSelectDelete" class="search-select-input" placeholder="Rechercher par désignation ou code..." autocomplete="off" onfocus="showDropdown('Delete')" oninput="filterOptions('Delete')">
                 <input type="hidden" id="hiddenProductDelete">
                     
                 <div class="select-dropdown" id="selectDropdownDelete">
@@ -434,16 +435,19 @@
                 </div>
             </div>
         </div>
-        <button type="button" class="btn-submit btn-submit-output" onclick="triggerDoubleConfirmation()">Supprimer le produit</button>
+        <button type="button" class="btn-submit btn-submit-output" onclick="triggerDoubleConfirmation()" style="margin-top: 15px;">Poursuivre la suppression</button>
     </div>
 </div>
 
-<!-- DOUBLE CONFIRMATION MODALE -->
+<!-- ⚠️ DOUBLE CONFIRMATION MODALE -->
 <div class="modal-overlay" id="doubleConfirmModal" style="z-index: 1100;">
     <div class="modal-card mini-modal-card">
-        <h4 style="font-size: 1.25rem; margin-bottom: 12px; color: #5A2715;">Double Confirmation</h4>
-        <p style="color: #666; font-size: 0.95rem; line-height: 1.4;">
-            Êtes-vous absolument sûr de vouloir supprimer <b id="confirmProductName">ce produit</b> de l'affichage ? Il n'apparaîtra plus nulle part sauf dans l'historique complet.
+        <div style="width: 56px; height: 56px; background: rgba(186, 60, 42, 0.12); color: #BA3C2A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px auto;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <h3 style="font-size: 1.3rem; margin-bottom: 10px; color: #2C351C; font-weight: 800;">Confirmation Requise</h3>
+        <p style="color: #7A8278; font-size: 0.95rem; line-height: 1.5;">
+            Êtes-vous absolument sûr de vouloir supprimer <strong id="confirmProductName" style="color: #2C351C;">ce produit</strong> ? Il sera masqué du catalogue actif.
         </p>
         <form method="POST" action="">
             {% csrf_token %}
@@ -452,7 +456,7 @@
             
             <div class="mini-modal-buttons">
                 <button type="button" class="btn-modal-cancel" onclick="closeModal('doubleConfirmModal')">Annuler</button>
-                <button type="submit" class="btn-modal-confirm-danger">Oui, supprimer</button>
+                <button type="submit" class="btn-modal-confirm-danger">Confirmer la suppression</button>
             </div>
         </form>
     </div>
@@ -468,13 +472,12 @@
         const mainContent = document.querySelector('.main-content');
         
         if (sidebar.style.transform === 'translateX(-290px)') {
-            sidebar.style.transform = 'translateX(0)';
+            sidebar.style.transform = 'translateX(0px)';
             sidebar.style.opacity = '1';
             openBtn.style.display = 'none';
             if (mainContent) {
-                mainContent.style.marginLeft = '290px';
-                mainContent.style.paddingLeft = '0px';
-                mainContent.style.paddingTop = '0px';
+                mainContent.style.marginLeft = '260px';
+                mainContent.style.paddingLeft = '40px';
             }
         } else {
             sidebar.style.transform = 'translateX(-290px)';
@@ -483,7 +486,6 @@
             if (mainContent) {
                 mainContent.style.marginLeft = '15px';
                 mainContent.style.paddingLeft = '65px';
-                mainContent.style.paddingTop = '12px';
             }
         }
     }
@@ -574,7 +576,7 @@
         const name = element.getAttribute('data-name');
         const ref = element.getAttribute('data-value');
         const stock = parseInt(element.getAttribute('data-stock') || '0');
-     
+      
         document.getElementById('searchSelect' + type).value = `${name} [${ref}]`;
         if (document.getElementById('hiddenProduct' + type)) document.getElementById('hiddenProduct' + type).value = ref;
         document.getElementById('selectDropdown' + type).style.display = 'none';
@@ -598,7 +600,7 @@
             
         if (selectedStockInput !== null && qty > 0) {
             box.style.display = 'block';
-            message.innerHTML = `Stock actuel : ${selectedStockInput}. Stock prévisionnel après validation : <span class="prediction-highlight">${selectedStockInput + qty} unités</span>.`;
+            message.innerHTML = `Stock en réserve : <strong>${selectedStockInput}</strong> ➔ Stock prévisionnel après validation : <span class="prediction-highlight">${selectedStockInput + qty} unités</span>.`;
         } else { box.style.display = 'none'; }
     }
         
@@ -612,26 +614,26 @@
             box.style.display = 'block';
             const delta = selectedStockOutput - qty;
             if (delta < 0) {
-                message.innerHTML = `Quantité indisponible ! Le stock n'est que de ${selectedStockOutput} unités.`;
+                message.innerHTML = `Quantité insuffisante en réserve ! Le stock disponible n'est que de <strong>${selectedStockOutput}</strong> unités.`;
             } else {
-                message.innerHTML = `Stock actuel : ${selectedStockOutput}. Stock restant estimé : <span class="prediction-highlight prediction-highlight-output">${delta} unités</span>.`;
+                message.innerHTML = `Stock en réserve : <strong>${selectedStockOutput}</strong> ➔ Stock restant estimé : <span class="prediction-highlight prediction-highlight-output">${delta} unités</span>.`;
             }
         } else { box.style.display = 'none'; }
-    }   
+    }    
     
     function prepareSubmitInput(e) {
         if(!document.getElementById('hiddenProductInput').value) {
-            e.preventDefault(); alert("Veuillez choisir un produit.");
+            e.preventDefault(); alert("Veuillez choisir un produit dans la liste.");
         }
-    }       
+    }      
         
     function prepareSubmitOutput(e) {   
         const qty = parseInt(document.getElementById('quantiteOutput').value);
         if(!document.getElementById('hiddenProductOutput').value) {
-            e.preventDefault(); alert("Veuillez choisir un produit."); return;
+            e.preventDefault(); alert("Veuillez choisir un produit dans la liste."); return;
         }
         if (selectedStockOutput !== null && qty > selectedStockOutput) {
-            e.preventDefault(); alert("Action refusée : stock disponible insuffisant.");
+            e.preventDefault(); alert("Action refusée : le stock disponible est insuffisant.");
         }
     }
 
@@ -639,7 +641,7 @@
         const messageBoxes = document.querySelectorAll('.flash-message-box');
         messageBoxes.forEach(function(box) {
             setTimeout(function() {
-                box.style.transition = "opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s ease";
+                box.style.transition = "opacity 0.5s ease, transform 0.5s ease";
                 box.style.opacity = "0";
                 box.style.transform = "translateY(-8px)";
                 
