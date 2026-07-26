@@ -49,30 +49,28 @@ def get_profil_actif(user):
 
     return ProfilAdmin()
 
-  try:
-    profil = ProfilUtilisateur.objects.get(user=user)
+  # **GARANTIE DE CRÉATION AUTOMATIQUE D'UN PROFIL SI INEXISTANT EN BDD**
+  profil, created = ProfilUtilisateur.objects.get_or_create(
+      user=user,
+      defaults={
+          'nom_complet': user.username.capitalize(),
+          'acces_inventaire': True,
+          'acces_stocks': False,
+          'acces_historique': False,
+          'acces_statistiques': False,
+          'acces_gestion_utilisateurs': False,
+          'acces_factures': False,
+      },
+  )
 
-    if user.username.lower() == 'services' or getattr(
-        profil, 'type_profil', ''
-    ) in ['service', 'services']:
-      profil.acces_inventaire = True
-      profil.acces_panier = False
+  # **GESTION SPÉCIFIQUE POUR LE COMPTE 'SERVICES'**
+  if user.username.lower() == 'services' or getattr(
+      profil, 'type_profil', ''
+  ) in ['service', 'services']:
+    profil.acces_inventaire = True
+    profil.acces_panier = False
 
-    return profil
-  except ProfilUtilisateur.DoesNotExist:
-    if user.username.lower() == 'services':
-
-      class ProfilServiceDefault:
-        acces_inventaire = True
-        acces_stocks = False
-        acces_historique = False
-        acces_statistiques = False
-        acces_gestion_utilisateurs = False
-        acces_factures = False
-        acces_panier = False
-
-      return ProfilServiceDefault()
-    return None
+  return profil
 
 def page_connexion(request):
     if request.user.is_authenticated: 
@@ -372,7 +370,7 @@ def page_inventaire(request):
                             article_panier.save()
 
                     if est_urgente:
-                        messages.warning(request, f'🚨 Demande URGENTE transmise avec succès pour le service {service} !')
+                        messages.warning(request, f'Demande URGENTE transmise avec succès pour le service {service} !')
                     else:
                         messages.success(request, f'La demande de fournitures pour le service {service} a été enregistrée avec succès !')
                 except Exception as e:
@@ -1156,6 +1154,7 @@ def page_factures(request):
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
         fichier_facture = request.FILES.get('fichier_facture')
+        devise = request.POST.get('devise', 'EUR')
         
         if not date_commande:
             date_commande = date.today()
@@ -1164,7 +1163,8 @@ def page_factures(request):
             try:
                 nouvelle_facture = Facture(
                     date_commande=date_commande,
-                    montant_total=float(montant_total)
+                    montant_total=float(montant_total),
+                    devise=devise
                 )
                 nouvelle_facture.fichier_facture = fichier_facture
                 nouvelle_facture.save()
@@ -1267,17 +1267,44 @@ def page_gestion_demandes(request):
       },
   )
 
+# **VUE DE GESTION DES UTILISATEURS ENTIÈREMENT CORRIGÉE AVEC PROFIL COMPATIBLE TEMPLATE**
 def page_gestion_utilisateurs(request):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
-    profil_actif = get_profil_actif(request.user)
-    
-    tous_les_utilisateurs = ProfilUtilisateur.objects.all().order_by('nom_complet')
-    
-    return render(request, 'gestion_utilisateurs.html', {
-        'profil_actif': profil_actif,
-        'utilisateurs': tous_les_utilisateurs
-    })
+  if not request.user.is_authenticated:
+    return redirect('/connexion/')
+
+  profil_actif = get_profil_actif(request.user)
+
+  # Récupération de tous les objets User de Django
+  utilisateurs_qs = User.objects.all().order_by('username')
+  tous_les_utilisateurs = []
+
+  for u in utilisateurs_qs:
+    # S'assure que chaque compte possède un profil en BDD
+    profil, _ = ProfilUtilisateur.objects.get_or_create(
+        user=u,
+        defaults={
+            'nom_complet': u.username.capitalize(),
+            'clear_password': '••••••••',
+        },
+    )
+
+    # Injection des propriétés directement lues par le template HTML
+    profil.id = u.id
+    profil.name = getattr(profil, 'nom_complet', None) or u.get_full_name() or u.username
+    profil.username = u.username
+    profil.email = u.email
+    profil.clear_password = getattr(profil, 'clear_password', None) or '••••••••'
+
+    tous_les_utilisateurs.append(profil)
+
+  return render(
+      request,
+      'gestion_utilisateurs.html',
+      {
+          'profil_actif': profil_actif,
+          'tous_les_utilisateurs': tous_les_utilisateurs,
+      },
+  )
 
 def page_panier(request):
   if not request.user.is_authenticated:
@@ -1300,10 +1327,9 @@ def page_panier(request):
       )
       return redirect('/panier/')
 
-    # 1. FAIRE SORTIR UN ARTICLE INDIVIDUEL DU STOCK
+    # 1. FAIRE SORTIR UN ARTICLE INDIVIDUEL DU STOCK (AVEC QUANTITÉ MODIFIÉE DIRECTEMENT)
     if action_type == 'valider_item':
       item_id = request.POST.get('item_id')
-      # **LECTURE DE LA QUANTITÉ DIRECTEMENT TRANSMISE PAR LE CHAMP SAISI OU FALLBACK SUR CELLE EN BASE**
       quantite_saisie = request.POST.get('quantite_demandee')
 
       try:
@@ -1311,7 +1337,6 @@ def page_panier(request):
         prod = item.produit
         service_nom = item.service
 
-        # **UTILISATION DE LA QUANTITÉ SAISIE SI PRÉSENTE, SINON DEMAUNDÉE PAR DÉFAUT**
         if quantite_saisie and quantite_saisie.strip():
           nouvelle_quantite = int(quantite_saisie)
         else:
@@ -1321,7 +1346,7 @@ def page_panier(request):
         prod.quantite = max(0, prod.quantite - nouvelle_quantite)
         prod.save()
 
-        # ENREGISTREMENT DANS MOUVEMENTSTOCK AVEC LE TYPE EN MAJUSCULES ('SORTIE') POUR L'HISTORIQUE
+        # ENREGISTREMENT DANS MOUVEMENTSTOCK
         try:
           MouvementStock.objects.create(
               produit=prod,
@@ -1893,7 +1918,7 @@ def generer_pdf_statistiques(request):
 
         synthese_generale = f"L'analyse pluriannuelle objective une transformation des trajectoires de flux. L'écart net d'opérations s'établit à {total_operations - annee_b_data['ops']} fiches sur les cycles comparés."
         remarque_sectorielle = "Les glissements de consommation interannuels traduisent une rationalisation progressive des achats de fournitures de la délégation."
-        remarque_dormant = "La pérennité de certaines poches d'inactivity dans le stock sur 24 mois nécessite la mise en place d'un protocole d'apurement global."
+        remarque_dormant = "La pérennité de certaines poches d'inactivité dans le stock sur 24 mois nécessite la mise en place d'un protocole d'apurement global."
 
     return render(request, 'rapport_statistiques.html', {
         'profil_actif': profil_actif,
