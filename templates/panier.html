@@ -49,13 +49,11 @@
         .btn-action-refuse { background-color: #FAFBF9; color: #BA3C2A; border: 1px solid rgba(186, 60, 42, 0.4); padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-action-refuse:hover { background-color: #BA3C2A; color: #ffffff; border-color: #BA3C2A; }
 
-        .btn-action-adjust { background-color: #FAFBF9; color: #495430; border: 1px solid #D0D6CE; padding: 7px 12px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .btn-action-adjust:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
-
-        .qty-input-edit { width: 72px; height: 36px; padding: 0 6px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.95rem; font-weight: 800; color: #2C351C; text-align: center; background: #ffffff; outline: none; transition: border-color 0.2s; }
+        /* **CHAMP DE QUANTITÉ ÉPURÉ SANS BOUTON PARASITE** */
+        .qty-input-edit { width: 80px; height: 40px; padding: 0 10px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 1rem; font-weight: 800; color: #2C351C; text-align: center; background: #ffffff; outline: none; transition: all 0.2s; }
         .qty-input-edit:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.12); }
 
-        /* 🚨 BLOC D'URGENCE VIBRANT (VERRE TERRACOTTA) */
+        /* BLOC D'URGENCE VIBRANT */
         .urgent-card-panel {
             border: 1.5px solid rgba(186, 60, 42, 0.4) !important;
             background-color: #FFFBFB !important;
@@ -127,7 +125,7 @@
 <div class="main-content">
     <div class="page-header">
         <h1 class="page-title">Traitement des Commandes Interne</h1>
-        <p class="welcome-text">Validez les demandes de fournitures par service, ajustez les quantités accordées et enregistrez les sorties effectives de la réserve.</p>
+        <p class="welcome-text">Validez les demandes de fournitures par service, ajustez directement les quantités accordées et enregistrez les sorties effectives de la réserve.</p>
     </div>
 
     {% if messages %}
@@ -141,7 +139,7 @@
         </div>
     {% endif %}
 
-    <!-- 🚨 BLOC DÉDIÉ AUX DEMANDES URGENTES AVEC ANIMATION DE PULSATION TERRACOTTA -->
+    <!-- 🚨 BLOC DÉDIÉ AUX DEMANDES URGENTES -->
     {% if urgences_liste %}
     <div class="card-panel urgent-card-panel">
         <div class="card-header-flex" style="border-bottom-color: rgba(186, 60, 42, 0.3);">
@@ -173,37 +171,19 @@
                         </td>
                         <td><em style="color: #7A2417; font-weight: 600;">"{{ item.motif_urgence|default:"Non spécifié" }}"</em></td>
                         <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
+                        
+                        <!-- **SAISIE DE QUANTITÉ DIRECTEMENT RELIÉE AU FORMULAIRE SANS BOUTON PARASITE** -->
                         <td>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <input type="number" 
-                                       id="input-qty-urg-{{ item.id }}" 
-                                       name="quantite_demandee" 
-                                       value="{{ item.quantite_demandee }}" 
-                                       min="1" 
-                                       max="{{ item.produit.quantite }}"
-                                       class="qty-input-edit" 
-                                       form="form-validate-urg-{{ item.id }}">
-                                
-                                <button type="submit" 
-                                        form="form-adjust-urg-{{ item.id }}" 
-                                        class="btn-action-adjust" 
-                                        title="Enregistrer la nouvelle quantité">
-                                    Ajuster
-                                </button>
-                            </div>
-
-                            <form id="form-adjust-urg-{{ item.id }}" method="POST" action="" style="display:none;">
-                                {% csrf_token %}
-                                <input type="hidden" name="action_type" value="modifier_quantite">
-                                <input type="hidden" name="item_id" value="{{ item.id }}">
-                                <input type="hidden" name="quantite_demandee" id="hidden-adjust-qty-urg-{{ item.id }}">
-                            </form>
-                            <script>
-                                document.getElementById('input-qty-urg-{{ item.id }}').addEventListener('input', function() {
-                                    document.getElementById('hidden-adjust-qty-urg-{{ item.id }}').value = this.value;
-                                });
-                            </script>
+                            <input type="number" 
+                                   id="input-qty-urg-{{ item.id }}" 
+                                   name="quantite_demandee" 
+                                   value="{{ item.quantite_demandee }}" 
+                                   min="1" 
+                                   max="{{ item.produit.quantite }}"
+                                   class="qty-input-edit" 
+                                   form="form-validate-urg-{{ item.id }}">
                         </td>
+                        
                         <td style="text-align: right;">
                             <div style="display: inline-flex; gap: 8px;">
                                 <form id="form-validate-urg-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir valider la sortie URGENTE de cet article ?');" style="display: inline;">
@@ -272,40 +252,21 @@
                         <td>{{ item.produit.emplacement|default:"Réserve Principale" }}</td>
                         <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
                         
+                        <!-- **CHAMP INTUITIF DÉLIVRANT LA QUANTITÉ DIRECTEMENT AU FORMULAIRE** -->
                         <td>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <input type="number" 
-                                       id="input-qty-{{ item.id }}" 
-                                       name="quantite_demandee" 
-                                       value="{{ item.quantite_demandee }}" 
-                                       min="1" 
-                                       max="{{ item.produit.quantite }}"
-                                       class="qty-input-edit" 
-                                       form="form-validate-{{ item.id }}">
-                                
-                                <button type="submit" 
-                                        form="form-adjust-{{ item.id }}" 
-                                        class="btn-action-adjust" 
-                                        title="Enregistrer la nouvelle quantité sans valider la sortie">
-                                    Ajuster
-                                </button>
-                            </div>
-
-                            <form id="form-adjust-{{ item.id }}" method="POST" action="" style="display:none;">
-                                {% csrf_token %}
-                                <input type="hidden" name="action_type" value="modifier_quantite">
-                                <input type="hidden" name="item_id" value="{{ item.id }}">
-                                <input type="hidden" name="quantite_demandee" id="hidden-adjust-qty-{{ item.id }}">
-                            </form>
-                            <script>
-                                document.getElementById('input-qty-{{ item.id }}').addEventListener('input', function() {
-                                    document.getElementById('hidden-adjust-qty-{{ item.id }}').value = this.value;
-                                });
-                            </script>
+                            <input type="number" 
+                                   id="input-qty-{{ item.id }}" 
+                                   name="quantite_demandee" 
+                                   value="{{ item.quantite_demandee }}" 
+                                   min="1" 
+                                   max="{{ item.produit.quantite }}"
+                                   class="qty-input-edit" 
+                                   form="form-validate-{{ item.id }}">
                         </td>
 
                         <td style="text-align: right;">
                             <div style="display: inline-flex; gap: 8px;">
+                                <!-- **FORMULAIRE SOUROUMETANT DIRECTEMENT LA QUANTITÉ DU CHAMP SANS BOUTON AJUSTER** -->
                                 <form id="form-validate-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir faire sortir cet article du stock de l\'inventaire ?');" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="valider_item">
