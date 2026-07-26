@@ -6,85 +6,103 @@
     <title>AmbassStock - Liste de courses</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
         .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 10px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .main-content { 
-            margin-left: 260px; 
-            flex-grow: 1; 
-            padding: 40px; 
-            width: calc(100% - 260px); 
-            transition: margin-left 0.4s cubic-bezier(0.25, 1, 0.5, 1), padding 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-        }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
 
-        .page-title { font-size: 2.2rem; font-weight: 700; color: #2c351c; margin-bottom: 12px; margin-top: 10px; }
-        .welcome-text { font-size: 1.1rem; line-height: 1.65; color: #495430; max-width: 1000px; margin-bottom: 30px; }
+        /* EN-TÊTE DE PAGE */
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 800px; }
 
-        .top-action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #ffffff; padding: 20px 28px; border-radius: 20px; border: 1px solid #E2E6E1; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); flex-wrap: wrap; gap: 15px; }
-        .grand-total-box { display: flex; flex-direction: column; }
-        .grand-total-label { font-size: 0.85rem; font-weight: 700; color: #7A8278; text-transform: uppercase; }
-        .grand-total-amount { font-size: 2.2rem; font-weight: 800; color: #2c351c; }
+        /* BARRE D'ACTIONS & TABLEAU DE BORD SUPÉRIEUR */
+        .top-action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; background: #ffffff; padding: 24px 30px; border-radius: 24px; border: 1px solid #E2E6E1; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); flex-wrap: wrap; gap: 20px; }
+        .grand-total-box { display: flex; flex-direction: column; gap: 2px; }
+        .grand-total-label { font-size: 0.78rem; font-weight: 700; color: #7A8278; text-transform: uppercase; letter-spacing: 0.5px; }
+        .grand-total-amount { font-size: 2.3rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; }
 
-        .btn-action-main { padding: 12px 22px; background-color: #BA3C2A; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-action-main:hover { background-color: #962F20; }
+        .action-buttons-wrapper { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
-        .btn-add-item { padding: 12px 22px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: background 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-add-item:hover { background-color: #495430; }
+        .btn-action-urgent { padding: 12px 22px; background-color: #BA3C2A; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(186, 60, 42, 0.2); }
+        .btn-action-urgent:hover { background-color: #962F20; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(186, 60, 42, 0.3); }
 
-        .btn-secondary-action { padding: 12px 22px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-secondary-action:hover { background-color: #F1F3F0; border-color: #A3AFA0; }
+        .btn-add-item { padding: 12px 22px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
+        .btn-add-item:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(73, 84, 48, 0.28); }
 
-        .supplier-card { background: #ffffff; border-radius: 20px; border: 1px solid #E2E6E1; padding: 25px 30px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
-        .supplier-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #F1F3F0; padding-bottom: 16px; margin-bottom: 20px; }
-        .supplier-title { font-size: 1.4rem; font-weight: 700; color: #2c351c; display: flex; align-items: center; gap: 10px; }
-        .supplier-subtotal { font-size: 1.1rem; font-weight: 700; color: #5E6D3E; }
+        .btn-secondary-action { padding: 12px 20px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-secondary-action:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
 
-        .items-table { width: 100%; border-collapse: collapse; }
-        .items-table th { text-align: left; font-size: 0.82rem; text-transform: uppercase; color: #7A8278; padding: 12px 10px; border-bottom: 1px solid #E2E6E1; }
-        .items-table td { padding: 14px 10px; border-bottom: 1px solid #F7F9F6; font-size: 0.95rem; vertical-align: middle; }
+        /* CARTES DE FOURNISSEURS DYNAMIQUES */
+        .supplier-card { background: #ffffff; border-radius: 24px; border: 1px solid #E2E6E1; padding: 28px 32px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); transition: transform 0.2s, box-shadow 0.2s; }
+        .supplier-card:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
+        .supplier-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ECEFEA; padding-bottom: 18px; margin-bottom: 22px; flex-wrap: wrap; gap: 15px; }
+        .supplier-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; display: flex; align-items: center; gap: 10px; }
+        .supplier-title svg { stroke: #5E6D3E; }
+        .supplier-subtotal { font-size: 1.15rem; font-weight: 800; color: #5E6D3E; background: #EBF2E9; padding: 6px 14px; border-radius: 10px; border: 1px solid rgba(94, 109, 62, 0.18); }
 
-        .qty-controls { display: flex; align-items: center; gap: 6px; }
-        .btn-qty-mini { width: 30px; height: 30px; border-radius: 8px; border: 1px solid #D0D6CE; background: #FAFBF9; font-weight: 700; cursor: pointer; }
+        /* TABLEAUX HIGH-END DES COMMANDES */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 14px; }
+        .items-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .items-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.6px; color: #7A8278; padding: 14px 16px; border-bottom: 1px solid #E2E6E1; background: #FAFBF9; font-weight: 700; }
+        .items-table td { padding: 16px; border-bottom: 1px solid #F1F3F0; font-size: 0.95rem; vertical-align: middle; color: #333333; }
+        .items-table tbody tr { transition: background-color 0.15s ease; }
+        .items-table tbody tr:hover { background-color: #F7FAF6; }
+
+        .ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.85rem; font-weight: 700; color: #5E6D3E; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(94, 109, 62, 0.15); }
+
+        .qty-controls { display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 4px 8px; border-radius: 10px; border: 1px solid #D0D6CE; width: fit-content; }
+        .btn-qty-mini { width: 30px; height: 30px; border-radius: 8px; border: none; background: #FAFBF9; font-weight: 700; cursor: pointer; color: #2C351C; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .btn-qty-mini:hover { background: #EBF2E9; color: #5E6D3E; }
 
-        .btn-print-supplier { padding: 8px 16px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-print-supplier:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
+        .btn-print-supplier { padding: 9px 18px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 10px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-print-supplier:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
 
-        /* **PASTILLES DE COULEUR / STATUS DOTS** */
+        /* PASTILLES DE STATUT */
         .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-        .status-green { background-color: #2bd14e; }
-        .status-yellow { background-color: #ffcc00; }
-        .status-red { background-color: #ff3b30; animation: elegantPulse 2s infinite ease-in-out; }
+        .status-green { background-color: #2BD14E; box-shadow: 0 0 0 3px rgba(43, 209, 78, 0.2); }
+        .status-yellow { background-color: #FFCC00; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2); }
+        .status-red { background-color: #FF3B30; animation: elegantPulse 2s infinite ease-in-out; }
         @keyframes elegantPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
 
-        /* MODALES */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.4); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-box { background: #ffffff; border-radius: 24px; width: 100%; max-width: 800px; padding: 35px; position: relative; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.15); border: 1px solid #E2E6E1; }
-        .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7A8278; }
-        .catalog-search { width: 100%; height: 46px; border: 1px solid #D0D6CE; border-radius: 12px; padding: 0 16px; font-size: 1rem; margin-bottom: 20px; outline: none; background: #FAFBF9; }
-        .catalog-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #F1F3F0; gap: 15px; }
-        .catalog-item:hover { background-color: #FAFBF9; }
+        /* MODALES UNIFIÉES HAUT DE GAMME */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-box { background: #ffffff; border-radius: 28px; width: 100%; max-width: 820px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 25px 60px rgba(0,0,0,0.22); animation: modalFadeIn 0.25s ease-out; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-close { position: absolute; top: 25px; right: 25px; background: #FAFBF9; border: 1px solid #E2E6E1; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7A8278; transition: all 0.2s; }
+        .modal-close:hover { color: #2C351C; background: #EBF2E9; border-color: #5E6D3E; }
+        .modal-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; margin-bottom: 22px; display: flex; align-items: center; gap: 10px; } 
 
-        /* DEMANDES SERVICE CARDS */
-        .demandes-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 15px; }
-        .demande-item-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .demande-card-meta { font-size: 0.88rem; color: #7A8278; }
-        .demande-card-meta strong { color: #2c351c; }
-        .demande-card-body { font-size: 0.95rem; color: #333; line-height: 1.4; }
+        .catalog-search { width: 100%; height: 48px; border: 1px solid #D0D6CE; border-radius: 12px; padding: 0 18px; font-size: 0.95rem; font-weight: 500; margin-bottom: 20px; outline: none; background: #FAFBF9; transition: all 0.2s; }
+        .catalog-search:focus { border-color: #5E6D3E; background: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+        
+        .catalog-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border: 1px solid #E2E6E1; border-radius: 16px; margin-bottom: 10px; background-color: #ffffff; transition: all 0.2s; gap: 15px; }
+        .catalog-item:hover { border-color: #5E6D3E; background-color: #FAFBF9; transform: translateY(-1px); }
+
+        /* CARTE DE DEMANDES ET SUGGESTIONS */
+        .demandes-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+        .demande-item-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+        .demande-card-meta { font-size: 0.88rem; color: #7A8278; line-height: 1.4; }
+        .demande-card-meta strong { color: #2C351C; }
+        .demande-card-body { font-size: 0.95rem; color: #333333; line-height: 1.5; white-space: pre-line; }
+
+        .empty-state-box { text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: #ffffff; border-radius: 24px; border: 1px dashed #D0D6CE; font-size: 0.98rem; }
     </style>
 </head>
 <body>
 
-<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
         
 <div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
-        
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
         <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
         <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
@@ -92,63 +110,18 @@
         </button>
     </div>
         
-    <ul class="sidebar-menu" style="list-style: none; padding: 0 15px; flex-grow: 1; overflow-y: auto;">
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
-        </li>
-        
-        {% if profil_actif.acces_inventaire %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_stocks %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_historique %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_statistiques %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_factures %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a>
-        </li>
-        {% endif %}
-
-        {% if profil_actif.acces_panier %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
-        </li>
-        {% endif %}
-
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        {% if profil_actif.acces_panier %}<li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>{% endif %}
         {% if is_admin or request.user.is_superuser %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-        </li>
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
         {% endif %}
     </ul>
             
@@ -172,94 +145,75 @@
     </div>
 </div>
 
-<script>
-function toggleSidebar() {
-    const sidebar = document.getElementById('appSidebar');
-    const openBtn = document.getElementById('sidebarToggleOpen');
-    const mainContent = document.querySelector('.main-content');
-        
-    if (sidebar.style.transform === 'translateX(-290px)') {
-        sidebar.style.transform = 'translateX(0)';
-        sidebar.style.opacity = '1';
-        openBtn.style.display = 'none';
-        if (mainContent) {
-            mainContent.style.marginLeft = '290px';
-            mainContent.style.paddingLeft = '0px';
-            mainContent.style.paddingTop = '0px';
-        }
-    } else {
-        sidebar.style.transform = 'translateX(-290px)';
-        sidebar.style.opacity = '0';
-        openBtn.style.display = 'flex';
-        if (mainContent) {
-            mainContent.style.marginLeft = '15px';
-            mainContent.style.paddingLeft = '65px';
-            mainContent.style.paddingTop = '12px';
-        }
-    }
-}
-</script>
-
 <div class="main-content">
-    <h2 class="page-title">Liste de courses (Administration)</h2>
-    <p class="welcome-text">Préparez vos commandes fournisseurs, gérez vos réapprovisionnements et éditez vos bons de commande.</p>
+    <div class="page-header">
+        <h1 class="page-title">Liste de courses (Administration)</h1>
+        <p class="welcome-text">Préparez vos commandes fournisseurs, gérez vos réapprovisionnements et géférez directement vos bons de commande.</p>
+    </div>
 
-    <!-- BARRE D'ACTIONS SUPÉRIEURE -->
+    <!-- BARRE DE PILOTAGE SUPÉRIEURE -->
     <div class="top-action-bar">
         <div class="grand-total-box">
             <span class="grand-total-label">Total Estimé Global</span>
             <span class="grand-total-amount" id="lblGrandTotal">0,00 €</span>
         </div>
 
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <!-- **NOUVEAU BOUTON : VOIR LES DEMANDES DES SERVICES** -->
+        <div class="action-buttons-wrapper">
             <button type="button" class="btn-secondary-action" onclick="openModal('demandesModal')">
-                💬 Voir demandes & suggestions ({{ demandes|length }})
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Voir demandes & suggestions ({{ demandes|length }})
             </button>
 
-            <button type="button" class="btn-action-main" onclick="importerAlertesStock()">
-                🚨 Importer les alertes de stock ({{ produits_alertes|length }})
+            <button type="button" class="btn-action-urgent" onclick="importerAlertesStock()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Importer les alertes ({{ produits_alertes|length }})
             </button>
 
             <button type="button" class="btn-add-item" onclick="openModal('catalogModal')">
-                ➕ Ajouter un produit du catalogue
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Ajouter un produit du catalogue
             </button>
         </div>
     </div>
 
     <!-- CONTENEUR DES LISTES PAR FOURNISSEUR -->
     <div id="supplierSectionsContainer">
-        <div id="emptyCourseMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: white; border-radius: 20px; border: 1px solid #E2E6E1;">
-            Votre liste de courses est vide. Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
+        <div class="empty-state-box" id="emptyCourseMsg">
+            Votre liste de courses est actuellement vide.<br>
+            Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
         </div>
     </div>
 </div>
 
-<!-- **MODALE 1 : CATALOGUE PRODUITS AVEC PASTILLES DE COULEUR** -->
+<!-- MODALE 1 : CATALOGUE PRODUITS AVEC PASTILLES DE STATUT -->
 <div class="modal-overlay" id="catalogModal" onclick="if(event.target === this) closeModal('catalogModal');">
     <div class="modal-box">
         <button class="modal-close" onclick="closeModal('catalogModal')">✕</button>
-        <h3 style="font-size: 1.5rem; color: #2c351c; margin-bottom: 20px;">Catalogue Produits</h3>
-        <input type="text" id="txtCatalogSearch" class="catalog-search" placeholder="Rechercher un produit par nom, ref ou fournisseur..." oninput="filtrerCatalogue()">
+        <h3 class="modal-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            Catalogue Produits
+        </h3>
+        <input type="text" id="txtCatalogSearch" class="catalog-search" placeholder="Rechercher par désignation, référence ou fournisseur..." oninput="filtrerCatalogue()">
 
-        <div id="catalogList" style="max-height: 450px; overflow-y: auto;">
+        <div id="catalogList" style="max-height: 460px; overflow-y: auto;">
             {% for p in produits_actifs %}
             <div class="catalog-item" data-search="{{ p.objet|lower }} {{ p.reference|lower }} {{ p.fournisseur|lower }}">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <!-- **PASTILLE DE STATUT PAREIL QUE L'INVENTAIRE** -->
+                <div style="display: flex; align-items: center; gap: 14px;">
                     <span class="status-dot status-{% if p.quota_minimum is not None and p.quantite <= p.quota_minimum %}red{% elif p.quota_minimum is not None and p.quantite <= p.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" title="Stock : {{ p.quantite }}"></span>
 
                     <div>
-                        <strong>{{ p.objet }}</strong> <code style="font-size:0.8rem; color:#7A8278;">[{{ p.reference }}]</code>
-                        <div style="font-size: 0.82rem; color: #5E6D3E; font-weight: 600;">
+                        <strong style="font-size: 1.05rem; color: #2C351C;">{{ p.objet }}</strong> 
+                        <span class="ref-code" style="margin-left: 6px;">{{ p.reference }}</span>
+                        <div style="font-size: 0.82rem; color: #5E6D3E; font-weight: 600; margin-top: 4px;">
                             Stock : {{ p.quantite }} | Fournisseur : {{ p.fournisseur|default:'Divers' }} | Prix : {% if p.prix %}{{ p.prix }} €{% else %}Non renseigné{% endif %}
                         </div>
                     </div>
                 </div>
 
-                <button type="button" class="btn-add-item" style="padding: 6px 14px; font-size: 0.85rem;" 
+                <button type="button" class="btn-add-item" style="padding: 8px 16px; font-size: 0.85rem;" 
                         onclick="ajouterProduitListe('{{ p.id }}', '{{ p.reference|escapejs }}', '{{ p.objet|escapejs }}', '{{ p.fournisseur|default:'Divers'|escapejs }}', '{{ p.prix|default_if_none:'0' }}')">
-                    + Ajouter
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Ajouter
                 </button>
             </div>
             {% endfor %}
@@ -267,21 +221,24 @@ function toggleSidebar() {
     </div>
 </div>
 
-<!-- **MODALE 2 : DEMANDES ET SUGGESTIONS DES SERVICES** -->
+<!-- MODALE 2 : DEMANDES ET SUGGESTIONS DES SERVICES -->
 <div class="modal-overlay" id="demandesModal" onclick="if(event.target === this) closeModal('demandesModal');">
     <div class="modal-box">
         <button class="modal-close" onclick="closeModal('demandesModal')">✕</button>
-        <h3 style="font-size: 1.5rem; color: #2c351c; margin-bottom: 20px;">Demandes & Suggestions transmises</h3>
+        <h3 class="modal-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Demandes & Suggestions transmises
+        </h3>
 
-        <div class="demandes-cards-grid" style="max-height: 450px; overflow-y: auto;">
+        <div class="demandes-cards-grid" style="max-height: 480px; overflow-y: auto;">
             {% for req in demandes %}
             <div class="demande-item-card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #E2E6E1; padding-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #E2E6E1; padding-bottom: 10px;">
                     <div class="demande-card-meta">
                         Service : <strong>{{ req.service }}</strong><br>
                         Date : {{ req.date_demande|date:"d/m/Y" }}
                     </div>
-                    <span style="font-size: 0.78rem; font-weight: 700; background-color: #EBF2E9; color: #5E6D3E; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">
+                    <span style="font-size: 0.75rem; font-weight: 700; background-color: #EBF2E9; color: #5E6D3E; padding: 4px 10px; border-radius: 8px; text-transform: uppercase;">
                         {% if req.type_demande == 'suggestion' %}Suggestion{% elif req.type_demande == 'reapprovisionnement' %}Réappro{% else %}Autre{% endif %}
                     </span>
                 </div>
@@ -290,7 +247,7 @@ function toggleSidebar() {
                 </div>
             </div>
             {% empty %}
-            <p style="text-align: center; color: #7A8278; font-style: italic; width: 100%; grid-column: 1 / -1; padding: 30px;">Aucune suggestion ou demande enregistrée pour le moment.</p>
+            <div class="empty-state-box" style="grid-column: 1 / -1;">Aucune suggestion ou demande enregistrée pour le moment.</div>
             {% endfor %}
         </div>
     </div>
@@ -305,7 +262,31 @@ function toggleSidebar() {
 </form>
 
 <script>
-    // Base des alertes
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const openBtn = document.getElementById('sidebarToggleOpen');
+        const mainContent = document.querySelector('.main-content');
+            
+        if (sidebar.style.transform === 'translateX(-290px)') {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.opacity = '1';
+            openBtn.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.marginLeft = '260px';
+                mainContent.style.paddingLeft = '40px';
+            }
+        } else {
+            sidebar.style.transform = 'translateX(-290px)';
+            sidebar.style.opacity = '0';
+            openBtn.style.display = 'flex';
+            if (mainContent) {
+                mainContent.style.marginLeft = '15px';
+                mainContent.style.paddingLeft = '65px';
+            }
+        }
+    }
+
+    // Base des alertes de stock
     const alertesStock = [
         {% for p in produits_alertes %}
         {
@@ -384,8 +365,9 @@ function toggleSidebar() {
 
         if (keys.length === 0) {
             container.innerHTML = `
-                <div id="emptyCourseMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: white; border-radius: 20px; border: 1px solid #E2E6E1;">
-                    Votre liste de courses est vide. Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
+                <div class="empty-state-box" id="emptyCourseMsg">
+                    Votre liste de courses est actuellement vide.<br>
+                    Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
                 </div>`;
             document.getElementById('lblGrandTotal').textContent = '0,00 €';
             return;
@@ -413,19 +395,22 @@ function toggleSidebar() {
 
                 rowsHtml += `
                     <tr>
-                        <td><code>${item.ref}</code></td>
+                        <td><span class="ref-code">${item.ref}</span></td>
                         <td><strong>${item.nom}</strong></td>
-                        <td>${item.prix > 0 ? item.prix.toFixed(2) + ' €' : '<span style="color:#999;">N/C</span>'}</td>
+                        <td>${item.prix > 0 ? item.prix.toFixed(2) + ' €' : '<span style="color:#7A8278;">N/C</span>'}</td>
                         <td>
                             <div class="qty-controls">
                                 <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', -1)">-</button>
-                                <span style="padding: 0 8px; font-weight: 700;">${item.qty}</span>
+                                <span style="padding: 0 8px; font-weight: 700; font-size: 0.95rem;">${item.qty}</span>
                                 <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', 1)">+</button>
                             </div>
                         </td>
                         <td><strong>${totalLigne > 0 ? totalLigne.toFixed(2) + ' €' : '-'}</strong></td>
                         <td style="text-align: right;">
-                            <button type="button" style="background:none; border:none; color:#BA3C2A; font-weight:600; cursor:pointer;" onclick="delete listeCourse['${item.id}']; sauvegarderCourse();">Retirer</button>
+                            <button type="button" style="background:none; border:none; color:#BA3C2A; font-weight:700; cursor:pointer; font-size:0.88rem; display:inline-flex; align-items:center; gap:4px;" onclick="delete listeCourse['${item.id}']; sauvegarderCourse();">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                Retirer
+                            </button>
                         </td>
                     </tr>`;
             });
@@ -435,32 +420,38 @@ function toggleSidebar() {
             html += `
                 <div class="supplier-card">
                     <div class="supplier-header">
-                        <div class="supplier-title">🏢 ${fournisseur}</div>
-                        <div style="display: flex; align-items: center; gap: 20px;">
+                        <div class="supplier-title">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                            ${fournisseur}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px;">
                             <span class="supplier-subtotal">Sous-total : ${sousTotal.toFixed(2)} €</span>
                             <button type="button" class="btn-print-supplier" onclick="imprimerBonCommande('${fournisseur.replace(/'/g, "\\'")}')">
-                                📄 Bon de commande PDF
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                                Bon de commande PDF
                             </button>
                         </div>
                     </div>
-                    <table class="items-table">
-                        <thead>
-                            <tr>
-                                <th>Référence</th>
-                                <th>Désignation</th>
-                                <th>Prix Unit. Est.</th>
-                                <th>Quantité</th>
-                                <th>Total Est.</th>
-                                <th style="text-align: right;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rowsHtml}</tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Référence</th>
+                                    <th>Désignation</th>
+                                    <th>Prix Unit. Est.</th>
+                                    <th>Quantité</th>
+                                    <th>Total Est.</th>
+                                    <th style="text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
                 </div>`;
         });
 
         container.innerHTML = html;
-        document.getElementById('lblGrandTotal').textContent = grandTotal.toFixed(2) + ' €';
+        document.getElementById('lblGrandTotal').textContent = grandTotal.toFixed(2).replace('.', ',') + ' €';
     }
 
     document.addEventListener("DOMContentLoaded", function() {
