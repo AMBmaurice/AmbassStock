@@ -6,46 +6,123 @@
     <title>AmbassStock - Factures</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
         .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 10px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.15); color: #495430; padding: 18px 24px; border-radius: 16px; font-weight: 600; margin-bottom: 30px; font-size: 0.98rem; line-height: 1.5; }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
+
+        /* EN-TÊTE DE PAGE & BANNIÈRES */
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
+
+        .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; padding: 20px 24px; border-radius: 18px; font-weight: 600; margin-bottom: 35px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .info-green-banner svg { stroke: #5E6D3E; flex-shrink: 0; }
+
+        /* CONTENEURS GLASSMORPHIC */
+        .card-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 28px; padding: 36px 40px; width: 100%; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.2s, box-shadow 0.2s; }
+        .card-box:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
+        .card-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+
+        /* FORMULAIRES & INPUTS */
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; width: 100%; max-width: 650px; }
+        .form-label { font-size: 0.78rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; }
         
-        .card-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); margin-bottom: 30px; }
-        .card-title { font-size: 1.4rem; font-weight: 700; color: #2c351c; margin-bottom: 25px; }
-
-        .form-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; width: 100%; max-width: 650px; }
-        .form-label { font-size: 0.82rem; color: #495430; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-custom { height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 14px; font-size: 0.95rem; background-color: #FAFBF9; outline: none; width: 100%; color: #2C351C; font-weight: 500; transition: all 0.2s; }
+        .input-custom:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
         
-        .input-custom, .select-custom { height: 50px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 1rem; background-color: #FAFBF9; outline: none; width: 100%; color: #2c351c; font-weight: 500; transition: border-color 0.2s, background-color 0.2s; }
-        .input-custom:focus, .select-custom:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.06); }
-        
-        .input-file-custom { padding-top: 12px; cursor: pointer; }
+        .input-file-custom { padding: 10px 16px; height: 52px; background: #FAFBF9; cursor: pointer; }
+        .input-file-custom::file-selector-button { background: #5E6D3E; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-right: 12px; transition: background 0.2s; }
+        .input-file-custom::file-selector-button:hover { background: #495430; }
 
-        .btn-submit { height: 50px; padding: 0 35px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s, transform 0.1s; width: fit-content; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.15); }
-        .btn-submit:hover { background-color: #495430; }
-        .btn-submit:active { transform: scale(0.98); }
+        /* 👑 MENUS DÉROULANTS SUR-MESURE EN VERRE DÉPOLI */
+        select.select-custom { display: none !important; }
 
-        .fine-divider { border: 0; height: 1px; background: rgba(73, 84, 48, 0.08); margin: 10px 0 40px 0; }
+        .custom-select-wrapper { position: relative; width: 100%; max-width: 650px; user-select: none; }
+        .custom-select-trigger {
+            height: 48px;
+            padding: 0 18px;
+            border: 1px solid #D0D6CE;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            color: #2C351C;
+            background-color: #FAFBF9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .custom-select-trigger:hover { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.12); }
+        .custom-select-wrapper.open .custom-select-trigger { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.12); }
 
-        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
+        .custom-select-arrow { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); stroke: #5E6D3E; flex-shrink: 0; }
+        .custom-select-wrapper.open .custom-select-arrow { transform: rotate(180deg); }
+
+        .custom-select-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #E2E6E1;
+            border-radius: 18px;
+            padding: 8px;
+            z-index: 500;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(94, 109, 62, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            max-height: 280px;
+            overflow-y: auto;
+            animation: dropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes dropdownFade { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .custom-select-option {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #2C351C;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.15s ease;
+        }
+        .custom-select-option:hover { background-color: #EBF2E9; color: #5E6D3E; }
+        .custom-select-option.selected { background-color: #5E6D3E; color: #ffffff; }
+
+        /* BOUTON DE SOUMISSION */
+        .btn-submit { height: 50px; padding: 0 32px; background-color: #5E6D3E; color: white; border: none; border-radius: 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.22); margin-top: 10px; }
+        .btn-submit:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
+
+        .fine-divider { border: 0; height: 1px; background: #ECEFEA; margin: 35px 0; }
+
+        /* TABLEAUX HAUT DE GAMME */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 16px; }
         .factures-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .factures-table th { font-size: 0.82rem; color: #495430; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 20px; border-bottom: 2px solid #E2E6E1; background-color: #FAFBF9; }
-        .factures-table td { padding: 18px 20px; border-bottom: 1px solid #F1F3F0; font-size: 1rem; color: #333333; }
-        .factures-table tr:hover td { background-color: #FAFBF9; }
+        .factures-table th { font-size: 0.78rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; padding: 16px 20px; border-bottom: 1px solid #E2E6E1; background-color: #FAFBF9; }
+        .factures-table td { padding: 18px 20px; border-bottom: 1px solid #F1F3F0; font-size: 0.98rem; color: #333333; vertical-align: middle; }
+        .factures-table tr:hover td { background-color: #F7FAF6; }
         
-        .btn-download { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; background-color: #FAFBF9; color: #495430; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
-        .btn-download:hover { background-color: #F1F3F0; border-color: #A3AFA0; }
+        .btn-download { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px; background-color: #FAFBF9; color: #495430; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.88rem; font-weight: 700; text-decoration: none; transition: all 0.2s; }
+        .btn-download:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
     </style>
 </head>
 <body>
 
-<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
         
@@ -58,63 +135,18 @@
         </button>
     </div>
         
-    <ul class="sidebar-menu" style="list-style: none; padding: 0 15px; flex-grow: 1; overflow-y: auto;">
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
-        </li>
-        
-        {% if profil_actif.acces_inventaire %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_stocks %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_historique %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_statistiques %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_factures %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a>
-        </li>
-        {% endif %}
-
-        {% if profil_actif.acces_panier %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
-        </li>
-        {% endif %}
-
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        {% if profil_actif.acces_panier %}<li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>{% endif %}
         {% if is_admin or request.user.is_superuser %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-        </li>
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
         {% endif %}
     </ul>
             
@@ -149,9 +181,8 @@ function toggleSidebar() {
         sidebar.style.opacity = '1';
         openBtn.style.display = 'none';
         if (mainContent) {
-            mainContent.style.marginLeft = '290px';
-            mainContent.style.paddingLeft = '0px';
-            mainContent.style.paddingTop = '0px';
+            mainContent.style.marginLeft = '260px';
+            mainContent.style.paddingLeft = '40px';
         }
     } else {
         sidebar.style.transform = 'translateX(-290px)';
@@ -160,77 +191,93 @@ function toggleSidebar() {
         if (mainContent) {
             mainContent.style.marginLeft = '15px';
             mainContent.style.paddingLeft = '65px';
-            mainContent.style.paddingTop = '12px';
         }
     }
 }
 </script>
 
-    <div class="main-content">
-        <div class="info-green-banner">
-            Dans cet espace, vous pouvez ajouter les factures issues de vos commandes. Vous pouvez retrouver ces factures dans l'historique qui l'accompagne.
-        </div>
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">Gestion Financière & Factures</h1>
+        <p class="welcome-text">Téléversez, archivez et consultez l'historique des justificatifs d'achat rattachés aux commandes de la réserve.</p>
+    </div>
 
-        <div class="card-box">
-            <h4 class="card-title">Ajouter une facture</h4>
+    <div class="info-green-banner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        <span>Dans cet espace, vous pouvez ajouter les factures issues de vos commandes. Retrouvez ensuite l'ensemble des pièces jointes sécurisées dans le registre ci-dessous.</span>
+    </div>
+
+    <div class="card-box">
+        <h2 class="card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            <strong>Ajouter une nouvelle facture</strong>
+        </h2>
+        
+        <form method="POST" action="" enctype="multipart/form-data">
+            {% csrf_token %}
             
-            <form method="POST" action="" enctype="multipart/form-data">
-                {% csrf_token %}
-                
-                <div class="form-group">
-                    <label class="form-label">Date d'émission</label>
-                    <input type="date" name="date_facture" class="input-custom" required>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Date d'émission *</label>
+                <input type="date" name="date_facture" class="input-custom" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">Montant de la facture</label>
-                    <input type="number" step="0.01" name="montant" class="input-custom" placeholder="0.00" required>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Montant de la facture *</label>
+                <input type="number" step="0.01" name="montant" class="input-custom" placeholder="0.00" required>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">Devise</label>
-                    <select name="devise" class="select-custom">
-                        <option value="EUR" selected>Euro (€)</option>
-                        <option value="MUR">Roupie Mauricienne (₨)</option>
-                        <option value="USD">Dollar ($)</option>
-                        <option value="GBP">Livre Sterling (£)</option>
-                        <option value="CHF">Franc Suisse (CHF)</option>
-                        <option value="CAD">Dollar Canadien ($)</option>
-                        <option value="AUD">Dollar Australien ($)</option>
-                        <option value="JPY">Yen Japonais (¥)</option>
-                        <option value="CNY">Yuan Chinois (¥)</option>
-                        <option value="INR">Roupie Indienne (₹)</option>
-                        <option value="ZAR">Rand Sud-Africain (R)</option>
-                    </select>
-                </div>
+            <!-- 👑 MENU DÉROULANT DES DEVISES EN VERRE DÉPOLI -->
+            <div class="form-group">
+                <label class="form-label">Devise monétaire *</label>
+                <select name="devise" class="select-custom">
+                    <option value="EUR" selected>Euro (€)</option>
+                    <option value="MUR">Roupie Mauricienne (₨)</option>
+                    <option value="USD">Dollar Américain ($)</option>
+                    <option value="GBP">Livre Sterling (£)</option>
+                    <option value="CHF">Franc Suisse (CHF)</option>
+                    <option value="CAD">Dollar Canadien ($)</option>
+                    <option value="AUD">Dollar Australien ($)</option>
+                    <option value="JPY">Yen Japonais (¥)</option>
+                    <option value="CNY">Yuan Chinois (¥)</option>
+                    <option value="INR">Roupie Indienne (₹)</option>
+                    <option value="ZAR">Rand Sud-Africain (R)</option>
+                </select>
+            </div>
 
-                <div class="form-group">
-                    <label class="form-label">Téléverser la facture numérisée</label>
-                    <input type="file" name="fichier_facture" class="input-custom input-file-custom" required>
-                </div>
+            <div class="form-group">
+                <label class="form-label">Téléverser le justificatif numérisé *</label>
+                <input type="file" name="fichier_facture" class="input-custom input-file-custom" required>
+                <span class="form-hint" style="font-size: 0.8rem; color: #7A8278; font-weight: 500;">Formats acceptés : PDF, PNG, JPG (Stockage sécurisé cloud)</span>
+            </div>
 
-                <button type="submit" class="btn-submit">Ajouter la facture</button>
-            </form>
-        </div>
+            <button type="submit" class="btn-submit">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Ajouter la facture</strong>
+            </button>
+        </form>
+    </div>
 
-        <hr class="fine-divider">
-
-        <div class="card-box">
-            <h4 class="card-title">Historique des factures</h4>
-            <div class="table-container">
-                <table class="factures-table">
-                    <thead>
-                        <tr>
-                            <th>Date d'émission</th>
-                            <th>Montant total de la commande</th>
-                            <th>Facture format digitalisé</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for f in factures %}
-                        <tr>
-                            <td style="color: #7A8278;">{{ f.date_commande|date:"d/m/Y" }}</td>
-                            <td style="font-weight: 700; color: #2c351c;">
+    <div class="card-box">
+        <h2 class="card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <strong>Registre Historique des Factures</strong>
+        </h2>
+        
+        <div class="table-responsive">
+            <table class="factures-table">
+                <thead>
+                    <tr>
+                        <th>Date d'émission</th>
+                        <th>Montant total de la commande</th>
+                        <th style="text-align: right;">Pièce justificative (Cloud)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in factures %}
+                    <tr>
+                        <td style="color: #7A8278; font-weight: 600;">{{ f.date_commande|date:"d/m/Y" }}</td>
+                        <td>
+                            <strong style="font-size: 1.05rem; color: #2C351C;">
                                 {{ f.montant_total }} 
                                 {% if f.devise == 'EUR' %}€
                                 {% elif f.devise == 'MUR' %}₨
@@ -245,25 +292,120 @@ function toggleSidebar() {
                                 {% elif f.devise == 'ZAR' %}R
                                 {% else %}€
                                 {% endif %}
-                            </td>
-                            <td>
-                                {% if f.fichier_facture %}
-    <strong><a href="{% url 'afficher_facture' f.id %}" class="btn-download" target="_blank">Voir le document</a></strong>
-{% else %}
-    <span style="color: #7A8278; font-style: italic;">Aucun fichier</span>
-{% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" style="color: #7A8278; font-style: italic; text-align: center; padding: 30px;">Aucune facture enregistrée dans la base cloud pour le moment.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            </strong>
+                        </td>
+                        <td style="text-align: right;">
+                            {% if f.fichier_facture %}
+                                <a href="{% url 'afficher_facture' f.id %}" class="btn-download" target="_blank">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    <strong>Voir le document</strong>
+                                </a>
+                            {% else %}
+                                <span style="color: #7A8278; font-style: italic;">Aucun fichier</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="empty-state">Aucune facture enregistrée dans la base cloud pour le moment.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-                
+</div>
+
+<script>
+    /* ------------------------------------------------------------- */
+    /* 👑 MOTEUR DE MENUS DÉROULANTS SUR-MESURE GLASSMORPHISM JS     */
+    /* ------------------------------------------------------------- */
+    function buildCustomDropdowns() {
+        document.querySelectorAll('select.select-custom').forEach(selectEl => {
+            if (selectEl.parentElement.classList.contains('custom-select-wrapper')) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
+
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select-trigger';
+
+            const selectedOption = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+            const selectedText = document.createElement('span');
+            selectedText.innerHTML = selectedOption ? `<strong>${selectedOption.text}</strong>` : '';
+
+            const arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            arrowSvg.setAttribute("class", "custom-select-arrow");
+            arrowSvg.setAttribute("width", "16");
+            arrowSvg.setAttribute("height", "16");
+            arrowSvg.setAttribute("viewBox", "0 0 24 24");
+            arrowSvg.setAttribute("fill", "none");
+            arrowSvg.setAttribute("stroke-width", "2.5");
+            arrowSvg.setAttribute("stroke-linecap", "round");
+            arrowSvg.setAttribute("stroke-linejoin", "round");
+            arrowSvg.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+
+            trigger.appendChild(selectedText);
+            trigger.appendChild(arrowSvg);
+
+            const menu = document.createElement('div');
+            menu.className = 'custom-select-menu';
+
+            Array.from(selectEl.options).forEach((opt, index) => {
+                if (opt.style.display === 'none') return;
+                const item = document.createElement('div');
+                item.className = `custom-select-option ${selectEl.selectedIndex === index ? 'selected' : ''}`;
+                item.textContent = opt.text;
+
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectEl.selectedIndex = index;
+                    selectedText.innerHTML = `<strong>${opt.text}</strong>`;
+
+                    menu.querySelectorAll('.custom-select-option').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+
+                    wrapper.classList.remove('open');
+                    menu.style.display = 'none';
+
+                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+
+                menu.appendChild(item);
+            });
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                    if (w !== wrapper) {
+                        w.classList.remove('open');
+                        const m = w.querySelector('.custom-select-menu');
+                        if (m) m.style.display = 'none';
+                    }
+                });
+
+                const isOpen = wrapper.classList.toggle('open');
+                menu.style.display = isOpen ? 'block' : 'none';
+            });
+
+            selectEl.parentNode.insertBefore(wrapper, selectEl);
+            wrapper.appendChild(selectEl);
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(menu);
+        });
+    }
+
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+            w.classList.remove('open');
+            const m = w.querySelector('.custom-select-menu');
+            if (m) m.style.display = 'none';
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        buildCustomDropdowns();
+    });
+</script>
 </body>
 </html>
