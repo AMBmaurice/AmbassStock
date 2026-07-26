@@ -37,7 +37,6 @@ def get_profil_actif(user):
   if not user.is_authenticated:
     return None
 
-  # 1. SI C'EST UN SUPERUTILISATEUR OU UN ADMIN
   if user.is_superuser:
     class ProfilAdmin:
       acces_inventaire = True
@@ -46,24 +45,21 @@ def get_profil_actif(user):
       acces_statistiques = True
       acces_gestion_utilisateurs = True
       acces_factures = True
-      acces_panier = True  # Réservé aux admins
+      acces_panier = True
 
     return ProfilAdmin()
 
-  # 2. PROFIL CLASSIQUE (Utilisateur 'services', etc.)
   try:
     profil = ProfilUtilisateur.objects.get(user=user)
 
-    # Forcer la visibilité de l'inventaire pour le compte 'services'
     if user.username.lower() == 'services' or getattr(
         profil, 'type_profil', ''
     ) in ['service', 'services']:
       profil.acces_inventaire = True
-      profil.acces_panier = False  # Masqué pour les services
+      profil.acces_panier = False
 
     return profil
   except ProfilUtilisateur.DoesNotExist:
-    # Si le profil n'existe pas en base mais que c'est le compte 'services'
     if user.username.lower() == 'services':
 
       class ProfilServiceDefault:
@@ -133,9 +129,6 @@ def page_accueil(request):
   for nom_service in liste_des_services:
     DeclarationHebdomadaire.objects.get_or_create(service=nom_service)
 
-  # -------------------------------------------------------------
-  # RÉINITIALISATION HEBDOMADAIRE CHAQUE JEUDI À 20H
-  # -------------------------------------------------------------
   if jour > 3 or (jour == 3 and heure >= 20):
     dernier_jeudi_20h = maintenant.replace(
         hour=20, minute=0, second=0, microsecond=0
@@ -165,9 +158,6 @@ def page_accueil(request):
         statut='a_relancer'
     )
 
-  # -------------------------------------------------------------
-  # GESTION DES SOUMISSIONS POST
-  # -------------------------------------------------------------
   if request.method == 'POST':
     if 'soumettre_declaration' in request.POST:
       service_choisi = request.POST.get('service')
@@ -230,9 +220,6 @@ def page_accueil(request):
       else []
   )
 
-  # -------------------------------------------------------------
-  # RECUPERATION DES ARRIVAGES (SÉCURISÉE CONTRE LES ERREURS DE MIGRATION)
-  # -------------------------------------------------------------
   nouveaux_arrivages = []
   try:
     mouvements_entrees = MouvementStock.objects.filter(
@@ -246,12 +233,8 @@ def page_accueil(request):
       mvt.est_nouveau = not autres_entrees
       nouveaux_arrivages.append(mvt)
   except (ProgrammingError, OperationalError):
-    # Si la migration n'a pas encore été jouée en base, on évite le crash de la page
     nouveaux_arrivages = []
 
-  # -------------------------------------------------------------
-  # DEMANDES SERVICES ET ALERTES STOCK
-  # -------------------------------------------------------------
   limite_48h = timezone.now() - timedelta(hours=48)
 
   if est_role_admin:
@@ -293,32 +276,26 @@ def page_inventaire(request):
 
     profil_actif = get_profil_actif(request.user)
 
-    # Vérification du rôle Administrateur
     is_admin = request.user.is_superuser or (
         profil_actif
         and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
     )
 
-    # 1. GESTION STRICTE DU CRÉNEAU DE BLOCAGE (MERCREDI 12H00 -> JEUDI 17H00) VIA HEURE LOCALE
     maintenant = timezone.localtime()
-    jour_semaine = maintenant.weekday()  # 0=Lundi, 1=Mardi, 2=Mercredi, 3=Jeudi...
+    jour_semaine = maintenant.weekday()
     heure_actuelle = maintenant.time()
 
     heure_12h = datetime.strptime('12:00', '%H:%M').time()
     heure_17h = datetime.strptime('17:00', '%H:%M').time()
 
-    # Mercredi après 12h00
     est_mercredi_apres_midi = jour_semaine == 2 and heure_actuelle >= heure_12h
-    # Jeudi toute la journée avant 17h00
     est_jeudi_avant_17h = jour_semaine == 3 and heure_actuelle < heure_17h
 
-    # Blocage actif du mercredi 12h00 au jeudi 17h00
     panier_bloque = est_mercredi_apres_midi or est_jeudi_avant_17h
 
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
 
-        # 2. CRÉATION D'UN NOUVEAU PRODUIT (VIA LA POP-UP PAR UN ADMIN)
         if action_type in ['ajout', 'ajouter_produit', 'creation'] and is_admin:
             try:
                 reference = request.POST.get('reference', '').strip()
@@ -357,7 +334,6 @@ def page_inventaire(request):
 
             return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-        # 3. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT OU TICKET URGENT)
         elif action_type == 'ajouter_panier_groupe':
             service = request.POST.get('service')
             panier_raw = request.POST.get('panier_json')
@@ -404,7 +380,6 @@ def page_inventaire(request):
 
             return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-        # 4. AJOUT D'UN PRODUIT UNIQUE AU PANIER (BOUTON EN LIGNE)
         elif action_type == 'ajouter_panier':
             if panier_bloque and not is_admin:
                 messages.error(
@@ -432,7 +407,6 @@ def page_inventaire(request):
                 pass
             return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-        # 5. RETRAIT D'UN PRODUIT DU PANIER
         elif action_type == 'retirer_panier':
             panier_id = request.POST.get('panier_id')
             try:
@@ -442,7 +416,6 @@ def page_inventaire(request):
                 pass
             return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
 
-        # 6. MODIFICATION PRODUIT (ADMIN)
         elif action_type == 'modification' and is_admin:
             produit_id = request.POST.get('produit_id')
             current_page = request.POST.get('page', '1')
@@ -495,7 +468,6 @@ def page_inventaire(request):
 
             return redirect(redirect_url)
 
-        # 7. SUPPRESSION DÉFINITIVE (SUPERUSER)
         elif action_type == 'suppression_definitive' and request.user.is_superuser:
             produit_id = request.POST.get('produit_id')
             current_page = request.POST.get('page', '1')
@@ -522,92 +494,126 @@ def page_inventaire(request):
 
             return redirect(redirect_url)
 
-        # 8. GÉNÉRATION DU PDF D'INVENTAIRE
         elif action_type == 'generer_recapitulatif_pdf':
-            produits_actifs = (
-                Produit.objects.exclude(emplacement='Archivé')
-                .filter(quantite__gt=0)
-                .order_by('emplacement', 'objet')
-            )
+            tous_les_produits_pdf = Produit.objects.all().order_by('objet')
 
             buffer = io.BytesIO()
             doc = SimpleDocTemplate(
                 buffer,
                 pagesize=letter,
-                rightMargin=40,
-                leftMargin=40,
-                topMargin=40,
-                bottomMargin=40,
+                rightMargin=30,
+                leftMargin=30,
+                topMargin=30,
+                bottomMargin=30,
             )
             story = []
+
+            inc_ref = 'col_reference' in request.POST
+            inc_cat = 'col_categorie' in request.POST
+            inc_fournisseur = 'col_fournisseur' in request.POST
+            inc_prix = 'col_prix' in request.POST
+            inc_stock = 'col_stock' in request.POST
+            inc_quota = 'col_quota' in request.POST
+            inc_emp = 'col_emplacement' in request.POST
 
             styles = getSampleStyleSheet()
             style_titre = ParagraphStyle(
                 'TitrePDF',
                 parent=styles['Heading1'],
                 fontName='Helvetica-Bold',
-                fontSize=24,
-                leading=28,
+                fontSize=18,
+                leading=22,
                 textColor=colors.HexColor('#2C351C'),
-                spaceAfter=10,
+                spaceAfter=6,
             )
             style_meta = ParagraphStyle(
                 'MetaPDF',
                 parent=styles['Normal'],
                 fontName='Helvetica',
-                fontSize=10,
+                fontSize=9,
+                leading=12,
                 textColor=colors.HexColor('#7A8278'),
-                spaceAfter=25,
+                spaceAfter=20,
             )
             style_cellule = ParagraphStyle(
                 'CellPDF',
                 parent=styles['Normal'],
                 fontName='Helvetica',
-                fontSize=10,
-                leading=13,
+                fontSize=9,
+                leading=11,
+                textColor=colors.HexColor('#333333'),
             )
             style_entete = ParagraphStyle(
                 'HeaderPDF',
                 parent=styles['Normal'],
                 fontName='Helvetica-Bold',
-                fontSize=10,
-                leading=13,
+                fontSize=9,
+                leading=11,
                 textColor=colors.white,
             )
 
             date_generation = timezone.now().strftime('%d/%m/%Y à %H:%M')
             story.append(Paragraph("Récapitulatif officiel de l'inventaire", style_titre))
-            story.append(Paragraph(f'Document généré le {date_generation} — Uniquement les articles disponibles en réserve', style_meta))
+            story.append(Paragraph(f'Document généré le {date_generation}', style_meta))
 
-            donnees_table = [[
-                Paragraph('Référence', style_entete),
-                Paragraph("Désignation de l'objet", style_entete),
-                Paragraph('Catégorie', style_entete),
-                Paragraph('Emplacement', style_entete),
-                Paragraph('Stock', style_entete),
-            ]]
+            headers = [Paragraph("Désignation de l'objet", style_entete)]
+            if inc_ref:
+                headers.append(Paragraph('Référence', style_entete))
+            if inc_cat:
+                headers.append(Paragraph('Catégorie', style_entete))
+            if inc_fournisseur:
+                headers.append(Paragraph('Fournisseur', style_entete))
+            if inc_prix:
+                headers.append(Paragraph('Prix Unit.', style_entete))
+            if inc_stock:
+                headers.append(Paragraph('Quantité en stock', style_entete))
+            if inc_quota:
+                headers.append(Paragraph('Quota', style_entete))
+            if inc_emp:
+                headers.append(Paragraph('Emplacement', style_entete))
 
-            for prod in produits_actifs:
-                donnees_table.append([
-                    Paragraph(prod.reference, style_cellule),
-                    Paragraph(prod.objet, style_cellule),
-                    Paragraph(prod.categorie, style_cellule),
-                    Paragraph(prod.emplacement or '-', style_cellule),
-                    Paragraph(str(prod.quantite), style_cellule),
-                ])
+            donnees_table = [headers]
 
-            tableau_inventaire = Table(donnees_table, colWidths=[80, 160, 110, 120, 50])
+            for prod in tous_les_produits_pdf:
+                row = [Paragraph(prod.objet, style_cellule)]
+                if inc_ref:
+                    row.append(Paragraph(prod.reference, style_cellule))
+                if inc_cat:
+                    row.append(Paragraph(prod.categorie or '-', style_cellule))
+                if inc_fournisseur:
+                    row.append(Paragraph(prod.fournisseur or 'Divers', style_cellule))
+                if inc_prix:
+                    prix_str = f'{prod.prix:.2f} €' if prod.prix else '-'
+                    row.append(Paragraph(prix_str, style_cellule))
+                if inc_stock:
+                    row.append(Paragraph(str(prod.quantite), style_cellule))
+                if inc_quota:
+                    quota_str = (
+                        str(prod.quota_minimum)
+                        if prod.quota_minimum is not None
+                        else '-'
+                    )
+                    row.append(Paragraph(quota_str, style_cellule))
+                if inc_emp:
+                    row.append(Paragraph(prod.emplacement or '-', style_cellule))
+                donnees_table.append(row)
+
+            tableau_inventaire = Table(donnees_table)
             tableau_inventaire.setStyle(
                 TableStyle([
                     ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-                    ('TOPPADDING', (0, 0), (-1, 0), 10),
-                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.HexColor('#FAFBF9'), colors.white]),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                    ('TOPPADDING', (0, 0), (-1, 0), 8),
+                    (
+                        'ROWBACKGROUNDS',
+                        (0, 1),
+                        (-1, -1),
+                        [colors.HexColor('#FAFBF9'), colors.white],
+                    ),
                     ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E6E1')),
-                    ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
-                    ('TOPPADDING', (0, 1), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+                    ('TOPPADDING', (0, 1), (-1, -1), 6),
                 ])
             )
 
@@ -620,7 +626,6 @@ def page_inventaire(request):
             response['Content-Disposition'] = f'attachment; filename="Recapitulatif_Inventaire_{date_fichier}.pdf"'
             return response
 
-    # 8. FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
     recherche_term = request.GET.get('q', '').strip()
     statut_filtre = request.GET.get('statut', 'all')
     tri_filtre = request.GET.get('tri', 'alpha')
@@ -677,7 +682,6 @@ def page_inventaire(request):
         },
     )
 
-# **FONCTION D'ALERTE E-MAIL CIBLÉE POUR LE PAPIER CLAIRFONTAINE**
 def verifier_et_envoyer_alerte_papier(produit):
   if produit.reference == 'GEN-CLA-RAM-03' and produit.quantite <= 2:
     sujet = '🚨 ALERTE RUPTURE : Stock critique de papier blanc CLAIRFONTAINE'
@@ -692,9 +696,9 @@ def verifier_et_envoyer_alerte_papier(produit):
       send_mail(
           subject=sujet,
           message=message,
-          from_email=None,  # Utilise DEFAULT_FROM_EMAIL configuré dans settings.py
+          from_email=None,
           recipient_list=['admin@amb-maurice.fr'],
-          fail_silently=True,  # Évite de bloquer l'application si l'envoi réseau échoue
+          fail_silently=True,
       )
     except Exception as e:
       print(f"Erreur lors de l'envoi du mail d'alerte : {e}")
@@ -802,7 +806,6 @@ def page_gestion_stocks(request):
 
       nouveau_produit = Produit.objects.create(**donnees_creation)
 
-      # Numéro de commande optionnel transmis
       num_cmd = request.POST.get('numero_commande', '').strip() or None
 
       if quantite_initiale > 0:
@@ -838,7 +841,7 @@ def page_gestion_stocks(request):
             produit=produit,
             quantite=quantite_ajoutee,
             service='Administration',
-            numero_commande=num_cmd,  # SOURCING DU NUMÉRO DE COMMANDE POUR L'ACCUEIL
+            numero_commande=num_cmd,
             date_mouvement=request.POST.get('date_entree') or date.today(),
         )
         messages.success(request, 'Quantité ajoutée avec succès')
@@ -891,7 +894,6 @@ def page_gestion_stocks(request):
         pass
       return redirect('/gestion-stocks/')
 
-  # EXTRACTION DES FOURNISSEURS POUR LA LISTE DÉROULANTE
   fournisseurs_existants = (
       Produit.objects.exclude(fournisseur__isnull=True)
       .exclude(fournisseur='')
@@ -920,16 +922,12 @@ def page_historique(request):
 
   profil_actif = get_profil_actif(request.user)
 
-  # Récupération des filtres GET
   entree_debut = request.GET.get('entree_debut')
   entree_fin = request.GET.get('entree_fin')
   sortie_debut = request.GET.get('sortie_debut')
   sortie_fin = request.GET.get('sortie_fin')
   sortie_service = request.GET.get('sortie_service', '').strip()
 
-  # -------------------------------------------------------------
-  # REQUÊTE ET FILTRAGE DES SORTIES
-  # -------------------------------------------------------------
   try:
     flux_entrees = MouvementStock.objects.filter(
         type_mouvement='ENTREE'
@@ -947,7 +945,6 @@ def page_historique(request):
     if sortie_fin:
       flux_sorties = flux_sorties.filter(date_mouvement__lte=sortie_fin)
 
-    # Si un service spécifique est sélectionné dans le filtre
     if sortie_service:
       flux_sorties = flux_sorties.filter(service=sortie_service)
 
@@ -980,7 +977,6 @@ def page_historique(request):
     liste_entrees = list(flux_entrees)
     liste_sorties = list(flux_sorties)
 
-  # Enrichissement des références et noms de produits
   for movimiento in liste_entrees:
     if movimiento.produit:
       movimiento.objet = movimiento.produit.objet
@@ -991,9 +987,6 @@ def page_historique(request):
       movimiento.objet = movimiento.produit.objet
       movimiento.reference = movimiento.produit.reference
 
-  # -------------------------------------------------------------
-  # PAGINATION : 15 ÉLÉMENTS PAR PAGE (POUR UNE LECTURE FLUIDE)
-  # -------------------------------------------------------------
   paginator_entrees = Paginator(liste_entrees, 15)
   page_entrees = request.GET.get('page_entrees', 1)
   page_obj_entrees = paginator_entrees.get_page(page_entrees)
@@ -1002,7 +995,6 @@ def page_historique(request):
   page_sorties = request.GET.get('page_sorties', 1)
   page_obj_sorties = paginator_sorties.get_page(page_sorties)
 
-  # Liste des services pour alimenter les onglets / filtres
   liste_services_disponibles = [
       'Consulaire',
       'Secrétaire',
@@ -1199,13 +1191,9 @@ def afficher_facture(request, facture_id):
     return redirect('/factures/')
 
   try:
-    # **Lecture directe du flux de fichier depuis Supabase S3**
     fichier = facture.fichier_facture.open('rb')
-
-    # **Renvoie le document directement au navigateur**
     response = FileResponse(fichier)
 
-    # Détection du type de fichier (PDF ou Image)
     nom_fichier = facture.fichier_facture.name.lower()
     if nom_fichier.endswith('.pdf'):
       response['Content-Type'] = 'application/pdf'
@@ -1214,7 +1202,6 @@ def afficher_facture(request, facture_id):
     elif nom_fichier.endswith(('.jpg', '.jpeg')):
       response['Content-Type'] = 'image/jpeg'
 
-    # 'inline' force l'affichage direct dans le navigateur au lieu du téléchargement
     response['Content-Disposition'] = (
         f'inline; filename="{facture.fichier_facture.name.split("/")[-1]}"'
     )
@@ -1232,7 +1219,6 @@ def page_gestion_demandes(request):
 
   profil_actif = get_profil_actif(request.user)
 
-  # Traitement des actions Administrateur (Valider, Refuser, Répondre)
   if request.method == 'POST':
     action = request.POST.get('action')
     demande_id = request.POST.get('demande_id')
@@ -1258,7 +1244,6 @@ def page_gestion_demandes(request):
 
   search_query = request.GET.get('q', '').strip()
 
-  # Récupération globale des demandes
   demandes_liste = DemandeService.objects.all().order_by('-id')
 
   if search_query:
@@ -1268,10 +1253,7 @@ def page_gestion_demandes(request):
         | Q(type_demande__icontains=search_query)
     )
 
-  # TOUTES LES DEMANDES NON CLÔTURÉES RESTE DANS "DEMANDES ACTUELLES"
   demandes_en_cours = demandes_liste.exclude(statut__in=['valide', 'refuse'])
-
-  # UNICUEMENT LES DEMANDES DÉFINITIVEMENT TRAITÉES VONT DANS HISTORIQUE
   demandes_passees = demandes_liste.filter(statut__in=['valide', 'refuse'])
 
   return render(
@@ -1284,6 +1266,7 @@ def page_gestion_demandes(request):
           'search_query': search_query,
       },
   )
+
 def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -1296,427 +1279,6 @@ def page_gestion_utilisateurs(request):
         'utilisateurs': tous_les_utilisateurs
     })
 
-def page_inventaire(request):
-  # 1. VÉRIFICATION D'AUTHENTIFICATION EN PREMIER
-  if not request.user.is_authenticated:
-    return redirect('/connexion/')
-
-  profil_actif = get_profil_actif(request.user)
-
-  # 2. VÉRIFICATION DU RÔLE ADMINISTRATEUR
-  is_admin = request.user.is_superuser or (
-      profil_actif
-      and getattr(profil_actif, 'type_profil', '') in ['administrateur', 'admin']
-  )
-
-  # 3. GESTION STRICTE DU CRÉNEAU DE BLOCAGE DES COMMANDES (Heure de Paris)
-  maintenant_paris = timezone.now().astimezone(
-      zoneinfo.ZoneInfo('Europe/Paris')
-  )
-  jour_semaine = maintenant_paris.weekday()  # 0=Lundi, 2=Mercredi, 3=Jeudi...
-  heure_actuelle = maintenant_paris.time()
-
-  heure_12h = datetime.strptime('12:00', '%H:%M').time()
-  heure_17h = datetime.strptime('17:00', '%H:%M').time()
-
-  est_mercredi_apres_midi = jour_semaine == 2 and heure_actuelle >= heure_12h
-  est_jeudi_avant_17h = jour_semaine == 3 and heure_actuelle < heure_17h
-
-  # Blocage actif du mercredi 12h00 au jeudi 17h00 (inclut le jeudi matin)
-  panier_bloque = est_mercredi_apres_midi or est_jeudi_avant_17h
-
-  if request.method == 'POST':
-    action_type = request.POST.get('action_type')
-
-    # 4. SOUMISSION GROUPÉE DE LA LISTE DE COURSES (PANIER FLOTTANT)
-    if action_type == 'ajouter_panier_groupe':
-      service = request.POST.get('service')
-      panier_raw = request.POST.get('panier_json')
-
-      # Récupération des paramètres de demande urgente
-      est_urgente = request.POST.get('est_urgente') == 'true'
-      motif_urgence = request.POST.get('motif_urgence', '').strip()
-
-      # SÉCURITÉ : Bloqué du mercredi 12h au jeudi 17h SAUF si c'est un admin OU une demande urgente
-      if panier_bloque and not is_admin and not est_urgente:
-        messages.error(
-            request,
-            'Les commandes standard sont fermées du mercredi 12h00 au jeudi'
-            ' 17h00. Veuillez cocher "Demande urgente" et préciser un motif'
-            ' pour valider votre demande.',
-        )
-        return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-      if service and panier_raw:
-        try:
-          panier_dict = json.loads(panier_raw)
-          for prod_id, item_data in panier_dict.items():
-            produit = Produit.objects.get(id=prod_id)
-            quantite = int(
-                item_data.get('qty', item_data.get('quantite', 1))
-            )
-
-            article_panier, created = ArticlePanier.objects.get_or_create(
-                produit=produit,
-                service=service,
-                defaults={
-                    'quantite_demandee': quantite,
-                    'est_urgente': est_urgente,
-                    'motif_urgence': motif_urgence if est_urgente else None,
-                },
-            )
-            if not created:
-              article_panier.quantite_demandee += quantite
-              if est_urgente:
-                article_panier.est_urgente = True
-                article_panier.motif_urgence = motif_urgence
-              article_panier.save()
-
-          if est_urgente:
-            messages.warning(
-                request,
-                f' Demande URGENTE transmise avec succès pour le service'
-                f' {service} !',
-            )
-          else:
-            messages.success(
-                request,
-                f'La demande de fournitures pour le service {service} a été'
-                ' enregistrée avec succès !',
-            )
-        except Exception:
-          messages.error(
-              request,
-              "Une erreur est survenue lors de l'enregistrement de votre"
-              ' panier.',
-          )
-
-      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-    # 5. GESTION AJOUT AU PANIER UNIQUE (BOUTON DIRECT EN LIGNE)
-    elif action_type == 'ajouter_panier':
-      if panier_bloque and not is_admin:
-        messages.error(
-            request,
-            'Les ajouts directs sont fermés du mercredi 12h00 au jeudi 17h00.'
-            ' Veuillez utiliser le panier flottant et cocher "Demande'
-            ' urgente".',
-        )
-        return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-      produit_id = request.POST.get('produit_id')
-      service = request.POST.get('service')
-      quantite = int(request.POST.get('quantite', 1))
-
-      try:
-        produit = Produit.objects.get(id=produit_id)
-        item, created = ArticlePanier.objects.get_or_create(
-            produit=produit,
-            service=service,
-            defaults={'quantite_demandee': quantite},
-        )
-        if not created:
-          item.quantite_demandee = quantite
-          item.save()
-        messages.success(
-            request,
-            f'"{produit.objet}" ajouté au panier du service {service}.',
-        )
-      except Produit.DoesNotExist:
-        pass
-      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-    # 6. GESTION RETRAIT DU PANIER
-    elif action_type == 'retirer_panier':
-      panier_id = request.POST.get('panier_id')
-      try:
-        ArticlePanier.objects.filter(id=panier_id).delete()
-        messages.success(request, 'Article retiré de la liste de courses.')
-      except Exception:
-        pass
-      return redirect(request.META.get('HTTP_REFERER', '/inventaire/'))
-
-    # 7. MODIFICATION PRODUIT (ADMIN)
-    elif action_type == 'modification' and is_admin:
-      produit_id = request.POST.get('produit_id')
-      current_page = request.POST.get('page', '1')
-      recherche_term = request.POST.get('q', '')
-      statut_filtre = request.POST.get('statut', 'all')
-      tri_filtre = request.POST.get('tri', 'alpha')
-
-      try:
-        produit = Produit.objects.get(id=produit_id)
-        produit.reference = request.POST.get('reference')
-        produit.objet = request.POST.get('objet')
-        produit.categorie = request.POST.get('categorie')
-        produit.emplacement = request.POST.get('emplacement')
-        produit.quantite = int(request.POST.get('quantite', 0))
-        produit.quota_minimum = int(request.POST.get('quota_minimum', 0))
-
-        fournisseur_recu = request.POST.get('fournisseur')
-        if fournisseur_recu:
-          produit.fournisseur = fournisseur_recu
-
-        prix_recu = request.POST.get('prix')
-        if prix_recu:
-          try:
-            produit.prix = float(prix_recu.replace(',', '.'))
-          except ValueError:
-            pass
-        else:
-          produit.prix = None
-
-        produit.save()
-        messages.success(
-            request,
-            f'Modification du produit "{produit.objet}" enregistrée avec'
-            ' succès !',
-        )
-      except Produit.DoesNotExist:
-        pass
-
-      redirect_url = f'/inventaire/?page={current_page}'
-      if recherche_term:
-        redirect_url += f'&q={recherche_term}'
-      if statut_filtre and statut_filtre != 'all':
-        redirect_url += f'&statut={statut_filtre}'
-      if tri_filtre and tri_filtre != 'alpha':
-        redirect_url += f'&tri={tri_filtre}'
-
-      return redirect(redirect_url)
-
-    # 8. SUPPRESSION DÉFINITIVE (SUPERUSER)
-    elif action_type == 'suppression_definitive' and request.user.is_superuser:
-      produit_id = request.POST.get('produit_id')
-      current_page = request.POST.get('page', '1')
-      recherche_term = request.POST.get('q', '')
-      statut_filtre = request.POST.get('statut', 'all')
-      tri_filtre = request.POST.get('tri', 'alpha')
-
-      try:
-        produit = Produit.objects.get(id=produit_id)
-        nom_produit_supprime = produit.objet
-        produit.delete()
-        messages.success(
-            request,
-            f'Le produit "{nom_produit_supprime}" a été supprimé'
-            ' définitivement.',
-        )
-      except Produit.DoesNotExist:
-        pass
-
-      redirect_url = f'/inventaire/?page={current_page}'
-      if recherche_term:
-        redirect_url += f'&q={recherche_term}'
-      if statut_filtre and statut_filtre != 'all':
-        redirect_url += f'&statut={statut_filtre}'
-      if tri_filtre and tri_filtre != 'alpha':
-        redirect_url += f'&tri={tri_filtre}'
-
-      return redirect(redirect_url)
-
-    # 9. GÉNÉRATION DU PDF D'INVENTAIRE SUR-MESURE (COLONNES COCHÉES)
-    elif action_type == 'generer_recapitulatif_pdf':
-      tous_les_produits_pdf = Produit.objects.all().order_by('objet')
-
-      buffer = io.BytesIO()
-      doc = SimpleDocTemplate(
-          buffer,
-          pagesize=letter,
-          rightMargin=30,
-          leftMargin=30,
-          topMargin=30,
-          bottomMargin=30,
-      )
-      story = []
-
-      # Récupération des options de colonnes cochées dans la modale
-      inc_ref = 'col_reference' in request.POST
-      inc_cat = 'col_categorie' in request.POST
-      inc_fournisseur = 'col_fournisseur' in request.POST
-      inc_prix = 'col_prix' in request.POST
-      inc_stock = 'col_stock' in request.POST
-      inc_quota = 'col_quota' in request.POST
-      inc_emp = 'col_emplacement' in request.POST
-
-      styles = getSampleStyleSheet()
-      style_titre = ParagraphStyle(
-          'TitrePDF',
-          parent=styles['Heading1'],
-          fontName='Helvetica-Bold',
-          fontSize=18,
-          leading=22,
-          textColor=colors.HexColor('#2C351C'),
-          spaceAfter=6,
-      )
-      style_meta = ParagraphStyle(
-          'MetaPDF',
-          parent=styles['Normal'],
-          fontName='Helvetica',
-          fontSize=9,
-          leading=12,
-          textColor=colors.HexColor('#7A8278'),
-          spaceAfter=20,
-      )
-      style_cellule = ParagraphStyle(
-          'CellPDF',
-          parent=styles['Normal'],
-          fontName='Helvetica',
-          fontSize=9,
-          leading=11,
-          textColor=colors.HexColor('#333333'),
-      )
-      style_entete = ParagraphStyle(
-          'HeaderPDF',
-          parent=styles['Normal'],
-          fontName='Helvetica-Bold',
-          fontSize=9,
-          leading=11,
-          textColor=colors.white,
-      )
-
-      date_generation = timezone.now().strftime('%d/%m/%Y à %H:%M')
-      story.append(
-          Paragraph("Récapitulatif officiel de l'inventaire", style_titre)
-      )
-      story.append(
-          Paragraph(f'Document généré le {date_generation}', style_meta)
-      )
-
-      # Construction dynamique des en-têtes
-      headers = [Paragraph("Désignation de l'objet", style_entete)]
-      if inc_ref:
-        headers.append(Paragraph('Référence', style_entete))
-      if inc_cat:
-        headers.append(Paragraph('Catégorie', style_entete))
-      if inc_fournisseur:
-        headers.append(Paragraph('Fournisseur', style_entete))
-      if inc_prix:
-        headers.append(Paragraph('Prix Unit.', style_entete))
-      if inc_stock:
-        headers.append(Paragraph('Stock', style_entete))
-      if inc_quota:
-        headers.append(Paragraph('Quota', style_entete))
-      if inc_emp:
-        headers.append(Paragraph('Emplacement', style_entete))
-
-      donnees_table = [headers]
-
-      for prod in tous_les_produits_pdf:
-        row = [Paragraph(prod.objet, style_cellule)]
-        if inc_ref:
-          row.append(Paragraph(prod.reference, style_cellule))
-        if inc_cat:
-          row.append(Paragraph(prod.categorie or '-', style_cellule))
-        if inc_fournisseur:
-          row.append(
-              Paragraph(prod.fournisseur or 'Divers', style_cellule)
-          )
-        if inc_prix:
-          prix_str = f'{prod.prix:.2f} €' if prod.prix else '-'
-          row.append(Paragraph(prix_str, style_cellule))
-        if inc_stock:
-          row.append(Paragraph(str(prod.quantite), style_cellule))
-        if inc_quota:
-          quota_str = (
-              str(prod.quota_minimum)
-              if prod.quota_minimum is not None
-              else '-'
-          )
-          row.append(Paragraph(quota_str, style_cellule))
-        if inc_emp:
-          row.append(Paragraph(prod.emplacement or '-', style_cellule))
-        donnees_table.append(row)
-
-      tableau_inventaire = Table(donnees_table)
-      tableau_inventaire.setStyle(
-          TableStyle([
-              ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
-              ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-              ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-              ('TOPPADDING', (0, 0), (-1, 0), 8),
-              (
-                  'ROWBACKGROUNDS',
-                  (0, 1),
-                  (-1, -1),
-                  [colors.HexColor('#FAFBF9'), colors.white],
-              ),
-              ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E6E1')),
-              ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
-              ('TOPPADDING', (0, 1), (-1, -1), 6),
-          ])
-      )
-
-      story.append(tableau_inventaire)
-      doc.build(story)
-
-      buffer.seek(0)
-      date_fichier = timezone.now().strftime('%Y_%m_%d')
-      response = HttpResponse(buffer.read(), content_type='application/pdf')
-      response['Content-Disposition'] = (
-          f'attachment; filename="Inventaire_Complet_{date_fichier}.pdf"'
-      )
-      return response
-
-  # 10. FILTRAGE ET RECHERCHE POUR L'AFFICHAGE
-  recherche_term = request.GET.get('q', '').strip()
-  statut_filtre = request.GET.get('statut', 'all')
-  tri_filtre = request.GET.get('tri', 'alpha')
-
-  if tri_filtre == 'emplacement':
-    tous_les_produits = Produit.objects.all().order_by('emplacement', 'objet')
-  else:
-    tous_les_produits = Produit.objects.all().order_by('objet')
-
-  if recherche_term:
-    tous_les_produits = tous_les_produits.filter(
-        Q(objet__icontains=recherche_term)
-        | Q(reference__icontains=recherche_term)
-    )
-
-  if statut_filtre and statut_filtre != 'all':
-    produits_filtres_ids = []
-    for p in tous_les_produits:
-      if p.quota_minimum is not None:
-        if p.quantite <= p.quota_minimum:
-          status = 'red'
-        elif p.quantite <= (p.quota_minimum + 10):
-          status = 'yellow'
-        else:
-          status = 'green'
-      else:
-        status = 'green'
-
-      if status == statut_filtre:
-        produits_filtres_ids.append(p.id)
-
-    tous_les_produits = tous_les_produits.filter(id__in=produits_filtres_ids)
-
-  tous_les_produits_complets = list(tous_les_produits)
-
-  paniers_actifs = ArticlePanier.objects.all()
-  produits_dans_panier = {p.produit_id: p for p in paniers_actifs}
-
-  paginator = Paginator(tous_les_produits, 15)
-  page_number = request.GET.get('page', '1')
-  page_obj = paginator.get_page(page_number)
-
-  return render(
-      request,
-      'inventaire.html',
-      {
-          'profil_actif': profil_actif,
-          'is_admin': is_admin,
-          'panier_bloque': panier_bloque,
-          'page_obj': page_obj,
-          'tous_les_produits_complets': tous_les_produits_complets,
-          'produits_dans_panier': produits_dans_panier,
-          'recherche_term': recherche_term,
-          'statut_filtre': statut_filtre,
-          'tri_filtre': tri_filtre,
-      },
-  )
-    
 def page_panier(request):
   if not request.user.is_authenticated:
     return redirect('/connexion/')
@@ -1741,23 +1303,31 @@ def page_panier(request):
     # 1. FAIRE SORTIR UN ARTICLE INDIVIDUEL DU STOCK
     if action_type == 'valider_item':
       item_id = request.POST.get('item_id')
-      nouvelle_quantite = int(request.POST.get('quantite_demandee', 1))
+      # **LECTURE DE LA QUANTITÉ DIRECTEMENT TRANSMISE PAR LE CHAMP SAISI OU FALLBACK SUR CELLE EN BASE**
+      quantite_saisie = request.POST.get('quantite_demandee')
 
       try:
         item = ArticlePanier.objects.select_related('produit').get(id=item_id)
         prod = item.produit
         service_nom = item.service
 
+        # **UTILISATION DE LA QUANTITÉ SAISIE SI PRÉSENTE, SINON DEMAUNDÉE PAR DÉFAUT**
+        if quantite_saisie and quantite_saisie.strip():
+          nouvelle_quantite = int(quantite_saisie)
+        else:
+          nouvelle_quantite = item.quantite_demandee
+
         # DÉDUCTION DU STOCK PHYSIQUE
         prod.quantite = max(0, prod.quantite - nouvelle_quantite)
         prod.save()
 
-        # ENREGISTREMENT DANS MOUVEMENTSTOCK
+        # ENREGISTREMENT DANS MOUVEMENTSTOCK AVEC LE TYPE EN MAJUSCULES ('SORTIE') POUR L'HISTORIQUE
         try:
           MouvementStock.objects.create(
               produit=prod,
+              objet=prod.objet,
               quantite=nouvelle_quantite,
-              type_mouvement='Sortie',
+              type_mouvement='SORTIE',
               service=service_nom,
               utilisateur=request.user,
           )
@@ -1832,8 +1402,9 @@ def page_panier(request):
           try:
             MouvementStock.objects.create(
                 produit=prod,
+                objet=prod.objet,
                 quantite=qty,
-                type_mouvement='Sortie',
+                type_mouvement='SORTIE',
                 service=service_nom,
                 utilisateur=request.user,
             )
@@ -1854,7 +1425,6 @@ def page_panier(request):
 
       return redirect('/panier/')
 
-  # RÉCUPÉRATION ET SÉPARATION DES ARTICLES
   articles = ArticlePanier.objects.select_related('produit').order_by(
       '-est_urgente', 'service', 'produit__objet'
   )
@@ -1880,7 +1450,7 @@ def page_panier(request):
           'urgences_liste': urgences_liste,
       },
   )
-    
+
 def page_deconnexion(request):
     logout(request)
     messages.success(request, "Vous avez été déconnecté avec succès.")
@@ -1918,7 +1488,6 @@ def page_liste_courses(request):
   if request.method == 'POST':
     action_type = request.POST.get('action_type')
 
-    # **1. VALIDATION / RÉCEPTION PARTIELLE OU TOTALE D'UN ARTICLE COMMANDÉ**
     if action_type == 'valider_reception_commande':
       demande_id = request.POST.get('demande_id')
       quantite_recue = int(request.POST.get('quantite_recue', 0))
@@ -1929,21 +1498,19 @@ def page_liste_courses(request):
         prod = item.produit
 
         if quantite_recue > 0:
-          # A. AJOUT PHYSIQUE AU STOCK DE L'INVENTAIRE
           prod.quantite = F('quantite') + quantite_recue
           prod.save()
           prod.refresh_from_db()
 
-          # B. ENREGISTREMENT DU MOUVEMENT DE STOCK (ENTRÉE)
           MouvementStock.objects.create(
               produit=prod,
+              objet=prod.objet,
               quantite=quantite_recue,
-              type_mouvement='Entrée',
+              type_mouvement='ENTREE',
               service='Administration (Réception commande)',
               utilisateur=request.user,
           )
 
-          # C. COMPARATIF DE PRIX ET MISE À JOUR ÉVENTUELLE
           prix_attendu_total = float(item.produit.prix or 0.0) * float(
               item.quantite_demandee
           )
@@ -1966,7 +1533,6 @@ def page_liste_courses(request):
 
       return redirect('/liste-courses/')
 
-    # **2. REFUS DE LA COMMANDE**
     elif action_type == 'refuser_commande':
       demande_id = request.POST.get('demande_id')
       try:
@@ -1982,7 +1548,6 @@ def page_liste_courses(request):
 
       return redirect('/liste-courses/')
 
-    # **3. GÉNÉRATION DU BON DE COMMANDE PDF**
     elif action_type == 'imprimer_bon_commande':
       fournisseur_nom = request.POST.get('fournisseur', 'Fournisseur')
       items_json = request.POST.get('items_json', '[]')
@@ -2117,12 +1682,10 @@ def page_liste_courses(request):
       )
       return response
 
-  # Récupération de tous les produits actifs
   produits_actifs = Produit.objects.exclude(emplacement='Archivé').order_by(
       'fournisseur', 'objet'
   )
 
-  # Récupération des produits en alerte (pour l'import automatique)
   produits_alertes = []
   for p in produits_actifs:
     if p.quota_minimum is not None and p.quantite <= p.quota_minimum:
@@ -2136,10 +1699,8 @@ def page_liste_courses(request):
       .order_by('fournisseur')
   )
 
-  # Récupération des demandes et suggestions des services
   demandes = DemandeService.objects.all().order_by('-date_demande')
 
-  # **RÉCUPÉRATION DES COMMANDES EN COURS (ISSUE DU PANIER GLOBAL)**
   commandes_en_cours = ArticlePanier.objects.select_related('produit').order_by(
       '-est_urgente', 'service', 'produit__objet'
   )
@@ -2171,7 +1732,7 @@ def page_mon_profil(request):
           'profil_actif': profil_actif,
       },
   )
-    
+
 def generer_pdf_statistiques(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -2224,9 +1785,6 @@ def generer_pdf_statistiques(request):
     remarque_sectorielle = "Les données de consommation sectorielles sont équilibrées."
     remarque_dormant = "Le volume de stockage passif ne présente pas d'anomalie critique."
 
-    # ==========================================
-    # STRUCTURE 1 : AUDIT MENSUEL SPÉCIFIQUE
-    # ==========================================
     if type_analyse == 'mensuel':
         score_intensite = round(total_sorties / total_operations, 1) if total_operations > 0 else 0
         kpis_avances = [
@@ -2234,7 +1792,6 @@ def generer_pdf_statistiques(request):
             {"nom": "Indice de Flux Tendus (Entrées vs Sorties)", "valeur": f"{total_entrees} entrées / {total_sorties} sorties", "seuil": "Équilibre requis", "diag": "Flux Ajustés"}
         ]
         
-        # Sélection de TOUS les produits dont le stock est <= quota minimum (statut rouge)
         produits_en_rupture = Produit.objects.filter(quantite__lte=F('quota_minimum')).order_by('objet')
         
         alertes_approvisionnement = []
@@ -2256,9 +1813,6 @@ def generer_pdf_statistiques(request):
             remarque_sectorielle = f"Le pôle majeur de consommation de ce mois est représenté par la catégorie {category_labels[0] if category_labels else 'non définie'}."
             remarque_dormant = f"Il est recommandé d'apurer les {produits_dormants.count()} références inactives pour libérer de l'espace pour les consommables à forte rotation."
 
-    # ==========================================
-    # STRUCTURE 2 : BILAN ANNUEL SPÉCIFIQUE
-    # ==========================================
     elif type_analyse == 'annuel':
         estimation_encombrement = produits_dormants.aggregate(t=Sum('quantite'))['t'] or 0
         kpis_avances = [
@@ -2276,9 +1830,6 @@ def generer_pdf_statistiques(request):
         remarque_sectorielle = "L'analyse macroscopique sur 12 mois démontre une dépendance structurelle aux consommables de bureau et d'administration."
         remarque_dormant = f"L'immobilisation prolongée de {produits_dormants.count()} références représente un coût d'opportunité spatial pour la réserve de la délégation."
 
-    # ==========================================
-    # STRUCTURE 3 : COMPARAISON ÉVOLUTION (MOIS A VS MOIS B)
-    # ==========================================
     elif type_analyse == 'comparaison_mois':
         mois_b_data = {"entrees": 0, "sorties": 0, "ops": 0}
         if periode_b:
@@ -2314,9 +1865,6 @@ def generer_pdf_statistiques(request):
         remarque_sectorielle = "L'analyse met en relief des oscillations de consommation sectorielles dictées par l'agenda des événements diplomatiques."
         remarque_dormant = "Les stocks passifs sont restés rigoureusement inchangés entre les deux mois audités."
 
-    # ==========================================
-    # STRUCTURE 4 : COMPARAISON INTERANNUELLE (ANNÉE A VS ANNÉE B)
-    # ==========================================
     elif type_analyse == 'comparaison_ans':
         annee_b_data = {"entrees": 0, "sorties": 0, "ops": 0}
         annee_b_target = target_year - 1
@@ -2345,7 +1893,7 @@ def generer_pdf_statistiques(request):
 
         synthese_generale = f"L'analyse pluriannuelle objective une transformation des trajectoires de flux. L'écart net d'opérations s'établit à {total_operations - annee_b_data['ops']} fiches sur les cycles comparés."
         remarque_sectorielle = "Les glissements de consommation interannuels traduisent une rationalisation progressive des achats de fournitures de la délégation."
-        remarque_dormant = "La pérennité de certaines poches d'inactivité dans le stock sur 24 mois nécessite la mise en place d'un protocole d'apurement global."
+        remarque_dormant = "La pérennité de certaines poches d'inactivity dans le stock sur 24 mois nécessite la mise en place d'un protocole d'apurement global."
 
     return render(request, 'rapport_statistiques.html', {
         'profil_actif': profil_actif,
