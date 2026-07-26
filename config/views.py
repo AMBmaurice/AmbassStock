@@ -117,9 +117,7 @@ def page_accueil(request):
   )
 
   maintenant = timezone.now()
-  jour = (
-      maintenant.weekday()
-  )  # 0 = Lundi, 1 = Mardi, 2 = Mercredi, 3 = Jeudi, 4 = Vendredi, 5 = Samedi, 6 = Dimanche
+  jour = maintenant.weekday()
   heure = maintenant.hour
 
   liste_des_services = [
@@ -232,22 +230,23 @@ def page_accueil(request):
   )
 
   # -------------------------------------------------------------
-  # RECUPERATION DES NOUVEAUX ARRIVAGES ET REASSORTS
+  # RECUPERATION DES ARRIVAGES (SÉCURISÉE CONTRE LES ERREURS DE MIGRATION)
   # -------------------------------------------------------------
-  mouvements_entrees = MouvementStock.objects.filter(
-      type_mouvement='ENTREE'
-  ).order_by('-id')[:10]
-
   nouveaux_arrivages = []
-  for mvt in mouvements_entrees:
-    # Déterminer si le produit a d'autres entrées antérieures
-    autres_entrees = MouvementStock.objects.filter(
-        produit=mvt.produit, type_mouvement='ENTREE', id__lt=mvt.id
-    ).exists()
+  try:
+    mouvements_entrees = MouvementStock.objects.filter(
+        type_mouvement='ENTREE'
+    ).order_by('-id')[:10]
 
-    # Attribut dynamique lu directement par le template
-    mvt.est_nouveau = not autres_entrees
-    nouveaux_arrivages.append(mvt)
+    for mvt in mouvements_entrees:
+      autres_entrees = MouvementStock.objects.filter(
+          produit=mvt.produit, type_mouvement='ENTREE', id__lt=mvt.id
+      ).exists()
+      mvt.est_nouveau = not autres_entrees
+      nouveaux_arrivages.append(mvt)
+  except (ProgrammingError, OperationalError):
+    # Si la migration n'a pas encore été jouée en base, on évite le crash de la page
+    nouveaux_arrivages = []
 
   # -------------------------------------------------------------
   # DEMANDES SERVICES ET ALERTES STOCK
@@ -278,7 +277,7 @@ def page_accueil(request):
           'declarations': declarations_reelles,
           'is_admin': est_role_admin,
           'demandes': demandes_affichees,
-          'nouveaux_arrivages': nouveaux_arrivages,  # Transmet les 10 derniers arrivages
+          'nouveaux_arrivages': nouveaux_arrivages,
           'produits_alerte': page_obj_alerte,
           'services_retardataires': services_retardataires,
           'afficher_barre_relance': afficher_barre_relance,
