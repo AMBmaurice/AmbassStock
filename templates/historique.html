@@ -6,79 +6,93 @@
     <title>AmbassStock - Historique des Flux</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
         .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 10px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; }
 
-        /* Cadres épurés */
-        .form-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px 45px; width: 100%; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); margin-bottom: 35px; }
+        /* EN-TÊTE PRINCIPALE */
+        .page-header { margin-bottom: 35px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 8px; }
+        .page-subtitle { color: #7A8278; font-size: 1rem; font-weight: 500; }
 
-        /* En-tête de section avec recherche intégrée */
-        .section-header-glide { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px; }
-        .section-title { font-size: 1.5rem; font-weight: 600; color: #2c351c; }
+        /* CARTE CONTENEUR DE SECTION */
+        .card-panel { background: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 35px; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 40px; transition: transform 0.2s, box-shadow 0.2s; }
+        .card-panel:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
 
-        .glide-controls { display: flex; align-items: center; }
-        .glide-search { padding: 12px 16px; border: 1px solid #E2E6E1; border-radius: 12px; font-size: 0.95rem; outline: none; width: 260px; background-color: #FAFBF9; transition: all 0.2s; }
-        .glide-search:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 20px; flex-wrap: wrap; }
+        .section-title { font-size: 1.4rem; font-weight: 700; color: #2C351C; display: flex; align-items: center; gap: 10px; }
+        .section-title svg { stroke: #5E6D3E; }
 
-        /* Nouvelle barre de filtrage moderne sans menu déroulant brut */
-        .filter-panel { background-color: #FAFBF9; padding: 24px; border-radius: 16px; border: 1px solid #ECEFEA; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
-        .filter-panel .filter-group { display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .filter-label { font-size: 0.8rem; color: #7A8278; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        /* RECHERCHE ET BARRE D'ACTION */
+        .search-wrapper { position: relative; width: 300px; }
+        .search-wrapper svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); stroke: #7A8278; }
+        .search-input { width: 100%; height: 46px; padding: 0 16px 0 42px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; background-color: #FAFBF9; outline: none; transition: all 0.2s ease; }
+        .search-input:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
 
-        /* Bouton sélecteur de filtre personnalisé haut de gamme */
-        .custom-dropdown-btn { height: 44px; min-width: 220px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.95rem; color: #2c351c; background: #ffffff; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .custom-dropdown-btn:hover { border-color: #5E6D3E; }
-        .custom-dropdown-btn::after { content: ""; width: 8px; height: 8px; border-right: 2px solid #5E6D3E; border-bottom: 2px solid #5E6D3E; transform: rotate(45deg); margin-left: 10px; margin-top: -4px; }
-        .custom-dropdown-btn.open::after { transform: rotate(-135deg); margin-top: 2px; }
+        /* ONGLETS / PILULES DE FILTRAGE PAR SERVICE */
+        .service-tabs-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #ECEFEA; }
+        .tab-btn { padding: 9px 18px; border-radius: 20px; font-size: 0.88rem; font-weight: 600; text-decoration: none; transition: all 0.2s; border: 1px solid #D0D6CE; background-color: #FAFBF9; color: #495430; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .tab-btn:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
+        .tab-btn.active { background-color: #5E6D3E; color: #ffffff; border-color: #5E6D3E; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.25); }
 
-        .custom-dropdown-menu { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #D0D6CE; border-radius: 10px; margin-top: 5px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .custom-dropdown-item { padding: 10px 14px; cursor: pointer; border-radius: 6px; font-size: 0.95rem; color: #333333; }
-        .custom-dropdown-item:hover { background-color: #FAFBF9; color: #2c351c; font-weight: 500; }
+        /* BARRE DE FILTRAGE DES DATES */
+        .filter-box-inline { background: #FAFBF9; border: 1px solid #ECEFEA; border-radius: 16px; padding: 18px 22px; margin-bottom: 25px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .filter-label-text { font-size: 0.8rem; font-weight: 700; color: #7A8278; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-date-input { height: 40px; padding: 0 12px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.9rem; color: #2C351C; background: #ffffff; outline: none; transition: border-color 0.2s; }
+        .filter-date-input:focus { border-color: #5E6D3E; }
 
-        .filter-input { height: 44px; padding: 0 14px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.95rem; color: #2c351c; background: #ffffff; outline: none; min-width: 180px; }
-        .filter-input:focus { border-color: #5E6D3E; }
+        .btn-filter-apply { height: 40px; padding: 0 20px; background-color: #5E6D3E; color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: background-color 0.2s; }
+        .btn-filter-apply:hover { background-color: #495430; }
+        .btn-filter-reset { height: 40px; padding: 0 16px; background-color: transparent; color: #7A8278; border: 1px solid #D0D6CE; border-radius: 10px; font-weight: 600; font-size: 0.9rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-filter-reset:hover { background-color: #ECEFEA; color: #2C351C; }
 
-        /* Boutons d'action symétriques */
-        .btn-action-group { display: flex; gap: 12px; }
-        .btn-glide-filter, .btn-glide-reset { height: 44px; min-width: 120px; display: inline-flex; align-items: center; justify-content: center; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
-        .btn-glide-filter { background-color: #5E6D3E; color: #ffffff; }
-        .btn-glide-filter:hover { background-color: #495430; }
-        .btn-glide-reset { background-color: #ECEFEA; color: #5E6D3E; }
-        .btn-glide-reset:hover { background-color: #E2E6E1; }
+        /* SECTEURS GROUPÉS PAR UTILISATEURS / SERVICES */
+        .service-group-card { background: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 16px; padding: 22px; margin-bottom: 20px; }
+        .service-group-header { font-size: 1.15rem; font-weight: 700; color: #2C351C; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .service-group-badge { width: 10px; height: 10px; border-radius: 50%; background-color: #5E6D3E; display: inline-block; }
 
-        /* Titres de regroupement fluibles */
-        .group-header-title { font-size: 1.25rem; font-weight: 600; color: #2c351c; margin: 30px 0 12px 0; padding-left: 4px; }
+        /* TABLEAUX HIGH-END */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; }
+        .custom-table { width: 100%; border-collapse: collapse; text-align: left; background-color: #ffffff; }
+        .custom-table th { background-color: #FAFBF9; padding: 14px 18px; font-size: 0.78rem; font-weight: 700; color: #7A8278; text-transform: uppercase; border-bottom: 1px solid #E2E6E1; letter-spacing: 0.6px; }
+        .custom-table td { padding: 15px 18px; font-size: 0.95rem; color: #333333; border-bottom: 1px solid #F1F3F0; vertical-align: middle; }
+        .custom-table tbody tr { transition: background-color 0.15s ease; }
+        .custom-table tbody tr:hover { background-color: #F7FAF6; }
+
+        /* BADGES & TAGS */
+        .badge-type { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .badge-entree { background-color: #EBF2E9; color: #5E6D3E; }
+        .badge-sortie { background-color: #FDF8F6; color: #8C4A32; }
+
+        .qty-tag { font-weight: 700; font-size: 1rem; }
+        .qty-entree { color: #5E6D3E; }
+        .qty-sortie { color: #8C4A32; }
+
+        .ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-weight: 600; color: #495430; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; font-size: 0.85rem; border: 1px solid rgba(94, 109, 62, 0.15); }
+
+        /* ÉTATS VIDES & PAGINATION */
+        .empty-box { text-align: center; padding: 45px 20px; color: #7A8278; font-style: italic; font-size: 0.95rem; background-color: #FAFBF9; border-radius: 16px; border: 1px dashed #D0D6CE; }
         
-        /* Tableaux strictly identiques */
-        .history-table { width: 100%; border-collapse: collapse; text-align: left; margin-bottom: 20px; }
-        .history-table th { background-color: #FAFBF9; padding: 14px 16px; font-size: 0.82rem; color: #7A8278; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #E2E6E1; letter-spacing: 0.5px; }
-        .history-table td { padding: 14px 16px; font-size: 0.95rem; color: #333333; border-bottom: 1px solid #ECEFEA; }
-        .history-table tr:hover { background-color: #FAFBF9; }
-        
-        .ref-tag { font-family: monospace; font-weight: 600; color: #5E6D3E; background: #EBF2E9; padding: 4px 8px; border-radius: 6px; }
-        
-        /* Message d'absence de données noir grisé homogène pour les deux sections */
-        .empty-state { text-align: center; padding: 40px; color: #9A9F98; font-style: italic; font-size: 0.95rem; }
-
-        .pagination-box { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-        .pagination-box a, .pagination-box span { padding: 8px 14px; border: 1px solid #E0E4DE; border-radius: 8px; text-decoration: none; color: #495430; background: white; font-size: 0.9rem; }
-        .pagination-box .current { background: #495430; color: white; }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 25px; }
+        .page-link { padding: 8px 14px; border: 1px solid #D0D6CE; border-radius: 10px; text-decoration: none; color: #495430; background: #ffffff; font-size: 0.88rem; font-weight: 600; transition: all 0.2s; }
+        .page-link:hover { background: #EBF2E9; border-color: #5E6D3E; }
+        .page-current { padding: 8px 16px; border-radius: 10px; background: #5E6D3E; color: white; font-weight: 700; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.2); }
     </style>
 </head>
 <body>
 
-<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
         
-<div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
-        
+<div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
         <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
         <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
@@ -86,64 +100,17 @@
         </button>
     </div>
         
-    <ul class="sidebar-menu" style="list-style: none; padding: 0 15px; flex-grow: 1; overflow-y: auto;">
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
-        </li>
-        
-        {% if profil_actif.acces_inventaire %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_stocks %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_historique %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_statistiques %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_factures %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a>
-        </li>
-        {% endif %}
-
-        {% if profil_actif.acces_panier %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
-        </li>
-        {% endif %}
-
-        {% if is_admin or request.user.is_superuser %}
-<li class="sidebar-item" style="margin-bottom: 4px;">
-    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-</li>
-{% endif %}
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        {% if profil_actif.acces_panier %}<li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>{% endif %}
+        {% if is_admin or request.user.is_superuser %}<li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>{% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -166,311 +133,228 @@
     </div>
 </div>
 
-<script>
-function toggleSidebar() {
-    const sidebar = document.getElementById('appSidebar');
-    const openBtn = document.getElementById('sidebarToggleOpen');
-    const mainContent = document.querySelector('.main-content');
-        
-    if (sidebar.style.transform === 'translateX(-290px)') {
-        sidebar.style.transform = 'translateX(0px)';
-        sidebar.style.opacity = '1';
-        openBtn.style.display = 'none';
-        if (mainContent) {
-            mainContent.style.marginLeft = '290px';
-            mainContent.style.paddingLeft = '0px';
-            mainContent.style.paddingTop = '0px';
-        }
-    } else {
-        sidebar.style.transform = 'translateX(-290px)';
-        sidebar.style.opacity = '0';
-        openBtn.style.display = 'flex';
-        if (mainContent) {
-            mainContent.style.marginLeft = '15px';
-            mainContent.style.paddingLeft = '65px';
-            mainContent.style.paddingTop = '12px';
-        }
-    }
-}
-</script>
-    
-    <div class="main-content">
-   
-        <div class="form-container-box">
-            <div class="section-header-glide">
-                <h4 class="section-title">Historique des entrées</h4>
-                <div class="glide-controls">
-                    <input type="text" id="searchEntrees" class="glide-search" placeholder="Recherche..." onkeyup="liveSearch('Entrees')">
-                </div>
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">Historique des Flux</h1>
+        <p class="page-subtitle">Suivi exhaustif des approvisionnements et des prélèvements par service</p>
+    </div>
+
+    <!-- SECTION 1 : HISTORIQUE DES ENTRÉES DE STOCK -->
+    <div class="card-panel">
+        <div class="section-header">
+            <h2 class="section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                Réapprovisionnements & Entrées
+            </h2>
+            <div class="search-wrapper">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="searchEntrees" class="search-input" placeholder="Filtrer un produit..." onkeyup="filterEntrees()">
             </div>
-    
-            <form method="GET" action="" class="filter-panel">
-                <div class="filter-group">
-                    <label class="filter-label">Type de filtre</label>
-                    <div class="custom-dropdown-btn" id="btnFiltreEntree" onclick="toggleDropdownMenu('MenuEntree')">
-                        {% if request.GET.entree_debut or request.GET.entree_fin %}Par Date{% else %}<span style="color: rgba(0, 0, 0, 0.45);">Aucun filtre</span>{% endif %}
-                    </div>
-                    <input type="hidden" name="type_filtre_entree" id="inputFiltreEntree" value="{% if request.GET.entree_debut or request.GET.entree_fin %}date{% else %}aucun{% endif %}">
-                    <div class="custom-dropdown-menu" id="MenuEntree">
-                        <div class="custom-dropdown-item" onclick="selectFilterOption('Entree', 'aucun', 'Aucun filtre')"><span style="color: rgba(0, 0, 0, 0.45);">Aucun filtre</span></div>
-                        <div class="custom-dropdown-item" onclick="selectFilterOption('Entree', 'date', 'Par Date')">Par Date</div>
-                    </div>
-                </div>
-            
-                <div id="wrapperDateEntree" style="display: {% if request.GET.entree_debut or request.GET.entree_fin %}flex{% else %}none{% endif %}; gap: 15px;">
-                    <div class="filter-group">
-                        <label class="filter-label">Du</label>
-                        <input type="date" name="entree_debut" class="filter-input" value="{{ request.GET.entree_debut }}">
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Au</label>
-                        <input type="date" name="entree_fin" class="filter-input" value="{{ request.GET.entree_fin }}">
-                    </div>
-                </div>
-                <div class="btn-action-group">
-                    <button type="submit" class="btn-glide-filter">Appliquer</button>
-                    <a href="/historique/" class="btn-glide-reset">Effacer</a>
-                </div>
-            </form>
-            
-            <table class="history-table" id="tableEntrees">
+        </div>
+
+        <form method="GET" action="" class="filter-box-inline">
+            <span class="filter-label-text">Période du réassort :</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.85rem; color: #7A8278;">Du</span>
+                <input type="date" name="entree_debut" class="filter-date-input" value="{{ request.GET.entree_debut }}">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.85rem; color: #7A8278;">Au</span>
+                <input type="date" name="entree_fin" class="filter-date-input" value="{{ request.GET.entree_fin }}">
+            </div>
+            <button type="submit" class="btn-filter-apply">Filtrer par date</button>
+            <a href="/historique/" class="btn-filter-reset">Effacer</a>
+        </form>
+
+        <div class="table-responsive">
+            <table class="custom-table" id="tableEntrees">
                 <thead>
                     <tr>
-                        <th>Type Mouvement</th>
-                        <th>Nom Produit</th>
+                        <th>Mouvement</th>
+                        <th>Nom du produit</th>
                         <th>Référence</th>
-                        <th>Quantité Ajoutée</th>
-                        <th>Date</th>
+                        <th>Quantité</th>
+                        <th>Date de réception</th>
                     </tr>
-                </thead>  
+                </thead>
                 <tbody>
                     {% for entry in entrees %}
-                    <tr class="item-row">
-                        <td>ENTRÉE</td>
-                        <td class="search-name"><strong>{{ entry.objet }}</strong></td>
-                        <td>
-                            <span class="ref-tag">
-                                {% if entry.produit %}
-                                    {{ entry.produit.reference }}
-                                {% else %}
-                                    {{ entry.reference }}
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td style="font-weight: 600; color: #5E6D3E;">+{{ entry.quantite }}</td>
-                        <td>{{ entry.date_mouvement }}</td>
+                    <tr class="item-row-entree">
+                        <td><span class="badge-type badge-entree">ENTRÉE</span></td>
+                        <td class="product-name"><strong>{{ entry.objet }}</strong></td>
+                        <td><span class="ref-code">{% if entry.produit %}{{ entry.produit.reference }}{% else %}{{ entry.reference }}{% endif %}</span></td>
+                        <td><span class="qty-tag qty-entree">+{{ entry.quantite }}</span></td>
+                        <td>{{ entry.date_mouvement|date:"d/m/Y" }}</td>
                     </tr>
                     {% empty %}
-                    <tr>  
-                        <td colspan="5" class="empty-state">Aucune entrée enregistrée.</td>
+                    <tr>
+                        <td colspan="5" class="empty-box">Aucun réapprovisionnement enregistré sur cette période.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
-            </table>  
+            </table>
+        </div>
 
-            <!-- Bloc de navigation pour la pagination des entrées -->
-            {% if page_obj_entrees.paginator.num_pages > 1 %}
-            <div class="pagination-box">
-                {% if page_obj_entrees.has_previous %}
-                    <a href="?page_entrees=1{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">&laquo; Début</a>
-                    <a href="?page_entrees={{ page_obj_entrees.previous_page_number }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">Précédent</a>
-                {% endif %}
-                <span class="current">Page {{ page_obj_entrees.number }} sur {{ page_obj_entrees.paginator.num_pages }}</span>
-                {% if page_obj_entrees.has_next %}
-                    <a href="?page_entrees={{ page_obj_entrees.next_page_number }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">Suivant</a>
-                    <a href="?page_entrees={{ page_obj_entrees.paginator.num_pages }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}{% if request.GET.page_sorties %}&page_sorties={{ request.GET.page_sorties }}{% endif %}">Fin &raquo;</a>
-                {% endif %}
-            </div>
+        {% if page_obj_entrees.paginator.num_pages > 1 %}
+        <div class="pagination-container">
+            {% if page_obj_entrees.has_previous %}
+                <a href="?page_entrees={{ page_obj_entrees.previous_page_number }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}" class="page-link">‹ Précédent</a>
+            {% endif %}
+            <span class="page-current">Page {{ page_obj_entrees.number }} / {{ page_obj_entrees.paginator.num_pages }}</span>
+            {% if page_obj_entrees.has_next %}
+                <a href="?page_entrees={{ page_obj_entrees.next_page_number }}{% if request.GET.entree_debut %}&entree_debut={{ request.GET.entree_debut }}{% endif %}{% if request.GET.entree_fin %}&entree_fin={{ request.GET.entree_fin }}{% endif %}" class="page-link">Suivant ›</a>
             {% endif %}
         </div>
-            
-        <div class="form-container-box">
-            <div class="section-header-glide">
-                <h4 class="section-title">Historique des sorties</h4>
-                <div class="glide-controls">
-                    <input type="text" id="searchSorties" class="glide-search" placeholder="Recherche..." onkeyup="liveSearch('Sorties')">
-                </div>
+        {% endif %}
+    </div>
+
+    <!-- SECTION 2 : HISTORIQUE DES SORTIES REGROUPÉES ET PAGINÉES PAR SERVICE -->
+    <div class="card-panel">
+        <div class="section-header">
+            <h2 class="section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 18 10.5 8.5 15.5 13.5 23 6"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                Retraits & Sorties par Service
+            </h2>
+            <div class="search-wrapper">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="searchSorties" class="search-input" placeholder="Rechercher dans les retraits..." onkeyup="filterSorties()">
             </div>
-                    
-            <form method="GET" action="" class="filter-panel">
-                <div class="filter-group">
-                    <label class="filter-label">Type de filtre</label>
-                    <div class="custom-dropdown-btn" id="btnFiltreSortie" onclick="toggleDropdownMenu('MenuSortie')">
-                        {% if request.GET.sortie_service %}Par Utilisateur
-                        {% elif request.GET.sortie_debut or request.GET.sortie_fin %}Par Date
-                        {% else %}<span style="color: rgba(0, 0, 0, 0.45);">Aucun filtre</span>{% endif %}
-                    </div>
-                    <input type="hidden" name="type_filtre_sortie" id="inputFiltreSortie" value="{% if request.GET.sortie_service %}service{% elif request.GET.sortie_debut or request.GET.sortie_fin %}date{% else %}aucun{% endif %}">
-                    <div class="custom-dropdown-menu" id="MenuSortie">
-                        <div class="custom-dropdown-item" onclick="selectFilterOption('Sortie', 'aucun', 'Aucun filtre')"><span style="color: rgba(0, 0, 0, 0.45);">Aucun filtre</span></div>
-                        <div class="custom-dropdown-item" onclick="selectFilterOption('Sortie', 'service', 'Par Utilisateur')">Par Utilisateur</div>
-                        <div class="custom-dropdown-item" onclick="selectFilterOption('Sortie', 'date', 'Par Date')">Par Date</div>
-                    </div>
+        </div>
+
+        <!-- PILULES DE SELECTION DIRECTE DE SERVICE -->
+        <div class="service-tabs-bar">
+            <a href="?sortie_service=" class="tab-btn {% if not service_selectionne %}active{% endif %}">
+                Tous les services
+            </a>
+            {% for s in liste_services %}
+            <a href="?sortie_service={{ s }}" class="tab-btn {% if service_selectionne == s %}active{% endif %}">
+                {{ s }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- FILTRE DATE ET BOUTON APPLIQUER -->
+        <form method="GET" action="" class="filter-box-inline">
+            <input type="hidden" name="sortie_service" value="{{ service_selectionne }}">
+            <span class="filter-label-text">Période de retrait :</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.85rem; color: #7A8278;">Du</span>
+                <input type="date" name="sortie_debut" class="filter-date-input" value="{{ request.GET.sortie_debut }}">
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.85rem; color: #7A8278;">Au</span>
+                <input type="date" name="sortie_fin" class="filter-date-input" value="{{ request.GET.sortie_fin }}">
+            </div>
+            <button type="submit" class="btn-filter-apply">Appliquer le filtre</button>
+            <a href="/historique/" class="btn-filter-reset">Réinitialiser</a>
+        </form>
+
+        <div id="containerSorties">
+            {% regroup sorties by service as service_list %}
+
+            {% for service_group in service_list %}
+            <div class="service-group-card" data-service="{{ service_group.grouper }}">
+                <div class="service-group-header">
+                    <span class="service-group-badge"></span>
+                    {{ service_group.grouper }}
                 </div>
                 
-                <div id="wrapperServiceSortie" style="display: {% if request.GET.sortie_service %}block{% else %}none{% endif %};" class="filter-group">
-                    <label class="filter-label">Sélectionner l'utilisateur</label>
-                    <div class="custom-dropdown-btn" id="btnServiceList" onclick="toggleDropdownMenu('MenuServiceList')">
-                        {% if request.GET.sortie_service %}{{ request.GET.sortie_service }}{% else %}Tous les utilisateurs{% endif %}
-                    </div>
-                    <input type="hidden" name="sortie_service" id="inputServiceSortie" value="{{ request.GET.sortie_service }}">
-                    <div class="custom-dropdown-menu" id="MenuServiceList" style="max-height: 200px; overflow-y: auto;">
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('', 'Tous les utilisateurs')">Tous les utilisateurs</div>
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('Consulaire', 'Consulaire')">Consulaire</div>
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('1ere secrétaire', '1ere secrétaire')">1ere secrétaire</div>
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('2eme secrétaire', '2eme secrétaire')">2eme secrétaire</div>
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('Secrétaire', 'Secrétaire')">Secrétaire</div>
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('Secrétaire AMB', 'Secrétaire AMB')">Secrétaire AMB</div>
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('diplomate', 'Diplomate')">Diplomate</div>
-                        <div class="custom-dropdown-item" onclick="selectServiceOption('Administration', 'Administration')">Administration</div>
-                    </div>
-                </div>
-                        
-                <div id="wrapperDateSortie" style="display: {% if request.GET.sortie_debut or request.GET.sortie_fin %}flex{% else %}none{% endif %}; gap: 15px;">
-                    <div class="filter-group">
-                        <label class="filter-label">Du</label>
-                        <input type="date" name="sortie_debut" class="filter-input" value="{{ request.GET.sortie_debut }}">
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Au</label>
-                        <input type="date" name="sortie_fin" class="filter-input" value="{{ request.GET.sortie_fin }}">
-                    </div>
-                </div>
-                
-                <div class="btn-action-group">
-                    <button type="submit" class="btn-glide-filter">Appliquer</button>
-                    <a href="/historique/" class="btn-glide-reset">Effacer</a>
-                </div>
-            </form>
-                    
-            <div id="containerSorties">
-                {% regroup sorties by service as service_list %}
-                        
-                {% for service_group in service_list %}
-                <div class="glide-service-block" data-service="{{ service_group.grouper }}">
-                    <div class="group-header-title"><strong>{{ service_group.grouper }}</strong></div>
-                    <table class="history-table">
+                <div class="table-responsive">
+                    <table class="custom-table">
                         <thead>
                             <tr>
-                                <th>Type Mouvement</th>
-                                <th>Nom du produit</th>
+                                <th>Mouvement</th>
+                                <th>Produit</th>
                                 <th>Référence</th>
-                                <th>Quantité Retirée</th>
-                                <th>Date</th>
+                                <th>Quantité</th>
+                                <th>Date du retrait</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for out in service_group.list %}
-                            <tr class="item-row">
-                                <td>SORTIE</td>
-                                <td class="search-name"><strong>{{ out.objet }}</strong></td>
-                                <td>
-                                    <span class="ref-tag">
-                                        {% if out.produit %}
-                                            {{ out.produit.reference }}
-                                        {% else %}
-                                            {{ out.reference }}
-                                        {% endif %}
-                                    </span>
-                                </td>
-                                <td style="color: #8C4A32; font-weight: 600;">-{{ out.quantite }}</td>
-                                <td>{{ out.date_mouvement }}</td>
+                            <tr class="item-row-sortie">
+                                <td><span class="badge-type badge-sortie">SORTIE</span></td>
+                                <td class="product-name"><strong>{{ out.objet }}</strong></td>
+                                <td><span class="ref-code">{% if out.produit %}{{ out.produit.reference }}{% else %}{{ out.reference }}{% endif %}</span></td>
+                                <td><span class="qty-tag qty-sortie">-{{ out.quantite }}</span></td>
+                                <td>{{ out.date_mouvement|date:"d/m/Y" }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                {% empty %}
-                <div class="empty-state">Aucune sortie enregistrée.</div>
-                {% endfor %}
             </div>
+            {% empty %}
+            <div class="empty-box">Aucun retrait trouvé pour le service sélectionné.</div>
+            {% endfor %}
+        </div>
 
-            <!-- Bloc de navigation pour la pagination des sorties -->
-            {% if page_obj_sorties.paginator.num_pages > 1 %}
-            <div class="pagination-box">
-                {% if page_obj_sorties.has_previous %}
-                    <a href="?page_sorties=1{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">&laquo; Début</a>
-                    <a href="?page_sorties={{ page_obj_sorties.previous_page_number }}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">Précédent</a>
-                {% endif %}
-                <span class="current">Page {{ page_obj_sorties.number }} sur {{ page_obj_sorties.paginator.num_pages }}</span>
-                {% if page_obj_sorties.has_next %}
-                    <a href="?page_sorties={{ page_obj_sorties.next_page_number }}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">Suivant</a>
-                    <a href="?page_sorties={{ page_obj_sorties.paginator.num_pages }}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}{% if request.GET.sortie_service %}&sortie_service={{ request.GET.sortie_service }}{% endif %}{% if request.GET.page_entrees %}&page_entrees={{ request.GET.page_entrees }}{% endif %}">Fin &raquo;</a>
-                {% endif %}
-            </div>
+        {% if page_obj_sorties.paginator.num_pages > 1 %}
+        <div class="pagination-container">
+            {% if page_obj_sorties.has_previous %}
+                <a href="?page_sorties={{ page_obj_sorties.previous_page_number }}{% if service_selectionne %}&sortie_service={{ service_selectionne }}{% endif %}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}" class="page-link">‹ Précédent</a>
+            {% endif %}
+            <span class="page-current">Page {{ page_obj_sorties.number }} / {{ page_obj_sorties.paginator.num_pages }}</span>
+            {% if page_obj_sorties.has_next %}
+                <a href="?page_sorties={{ page_obj_sorties.next_page_number }}{% if service_selectionne %}&sortie_service={{ service_selectionne }}{% endif %}{% if request.GET.sortie_debut %}&sortie_debut={{ request.GET.sortie_debut }}{% endif %}{% if request.GET.sortie_fin %}&sortie_fin={{ request.GET.sortie_fin }}{% endif %}" class="page-link">Suivant ›</a>
             {% endif %}
         </div>
+        {% endif %}
     </div>
-                        
-    <script>
-        function toggleDropdownMenu(id) {
-            event.stopPropagation();
-            const menu = document.getElementById(id);
-            const btn = menu.parentElement.querySelector('.custom-dropdown-btn');
-            const isOpen = menu.style.display === 'block';
-                                                    
-            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.style.display = 'none');
-            document.querySelectorAll('.custom-dropdown-btn').forEach(b => b.classList.remove('open'));
-                                                    
-            if (!isOpen) {
-                menu.style.display = 'block';
-                btn.classList.add('open');
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const openBtn = document.getElementById('sidebarToggleOpen');
+        const mainContent = document.querySelector('.main-content');
+            
+        if (sidebar.style.transform === 'translateX(-290px)') {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.opacity = '1';
+            openBtn.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.marginLeft = '260px';
+                mainContent.style.paddingLeft = '40px';
+            }
+        } else {
+            sidebar.style.transform = 'translateX(-290px)';
+            sidebar.style.opacity = '0';
+            openBtn.style.display = 'flex';
+            if (mainContent) {
+                mainContent.style.marginLeft = '15px';
+                mainContent.style.paddingLeft = '65px';
             }
         }
-                                            
-        function selectFilterOption(panel, value, label) {
-            document.getElementById('inputFiltre' + panel).value = value;
-            
-            if (value === 'aucun') {
-                document.getElementById('btnFiltre' + panel).innerHTML = '<span style="color: rgba(0, 0, 0, 0.45);">' + label + '</span>';
-            } else {
-                document.getElementById('btnFiltre' + panel).innerText = label;
-            }
-                
-            if (panel === 'Entree') {
-                document.getElementById('wrapperDateEntree').style.display = (value === 'date') ? 'flex' : 'none';
-            } else {
-                document.getElementById('wrapperServiceSortie').style.display = (value === 'service') ? 'block' : 'none';
-                document.getElementById('wrapperDateSortie').style.display = (value === 'date') ? 'flex' : 'none';
-            }
-        }               
-    
-        function selectServiceOption(value, label) {
-            document.getElementById('inputServiceSortie').value = value;
-            document.getElementById('btnServiceList').innerText = label;
-        }
-            
-        document.addEventListener('click', function() {
-            document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.style.display = 'none');
-            document.querySelectorAll('.custom-dropdown-btn').forEach(b => b.classList.remove('open'));
-        });                 
-            
-        function liveSearch(panel) {
-            const text = document.getElementById('search' + panel).value.toLowerCase();
-            if (panel === 'Entrees') {
-                const rows = document.getElementById('tableEntrees').getElementsByClassName('item-row');
-                for (let r of rows) {
-                    const name = r.querySelector('.search-name').textContent.toLowerCase();
-                    r.style.display = name.includes(text) ? '' : 'none'; 
+    }
+
+    function filterEntrees() {
+        const text = document.getElementById('searchEntrees').value.toLowerCase();
+        const rows = document.querySelectorAll('#tableEntrees .item-row-entree');
+        rows.forEach(r => {
+            const name = r.querySelector('.product-name').textContent.toLowerCase();
+            r.style.display = name.includes(text) ? '' : 'none';
+        });
+    }
+
+    function filterSorties() {
+        const text = document.getElementById('searchSorties').value.toLowerCase();
+        const blocks = document.querySelectorAll('.service-group-card');
+        blocks.forEach(b => {
+            let hasVisible = false;
+            const rows = b.querySelectorAll('.item-row-sortie');
+            rows.forEach(r => {
+                const name = r.querySelector('.product-name').textContent.toLowerCase();
+                if (name.includes(text)) {
+                    r.style.display = '';
+                    hasVisible = true;
+                } else {
+                    r.style.display = 'none';
                 }
-            } else {
-                const blocks = document.getElementsByClassName('glide-service-block');
-                for (let b of blocks) {
-                    let hasVisibleRow = false;
-                    const rows = b.getElementsByClassName('item-row');
-                    for (let r of rows) {
-                        const name = r.querySelector('.search-name').textContent.toLowerCase();
-                        if (name.includes(text)) {
-                            r.style.display = '';
-                            hasVisibleRow = true;   
-                        } else {
-                            r.style.display = 'none';
-                        }
-                    }
-                    b.style.display = hasVisibleRow ? '' : 'none';
-                }
-            }
-        }
-    </script>                     
-</body>     
+            });
+            b.style.display = hasVisible ? '' : 'none';
+        });
+    }
+</script>
+</body>
 </html>
