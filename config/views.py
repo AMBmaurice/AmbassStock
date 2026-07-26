@@ -926,14 +926,18 @@ def page_historique(request):
   sortie_fin = request.GET.get('sortie_fin')
   sortie_service = request.GET.get('sortie_service')
 
-  # **TENTATIVE 1 : LECTURE NORMALE DE TOUT L'HISTORIQUE**
+  # -------------------------------------------------------------
+  # TENTATIVE 1 : REQUÊTE NORMALE AVEC REGROUPEMENT PAR SERVICE
+  # -------------------------------------------------------------
   try:
     flux_entrees = MouvementStock.objects.filter(
         type_mouvement='ENTREE'
-    ).order_by('-id')
+    ).order_by('-date_mouvement', '-id')
+
+    # **TRI REGROUPÉ PAR SERVICE POUR LES SORTIES**
     flux_sorties = MouvementStock.objects.filter(
         type_mouvement='SORTIE'
-    ).order_by('-id')
+    ).order_by('service', '-date_mouvement', '-id')
 
     if entree_debut:
       flux_entrees = flux_entrees.filter(date_mouvement__gte=entree_debut)
@@ -949,17 +953,21 @@ def page_historique(request):
     liste_entrees = list(flux_entrees)
     liste_sorties = list(flux_sorties)
 
-  # **TENTATIVE 2 : SI LA MIGRATION N'EST PAS ENCORE FAITE, ON IGNORE NUMERO_COMMANDE POUR RECHARGER TOUT L'HISTORIQUE EXISTANT**
+  # -------------------------------------------------------------
+  # TENTATIVE 2 : SECOURS DE MIGRATION (DEFER DE NUMERO_COMMANDE)
+  # -------------------------------------------------------------
   except Exception:
     flux_entrees = (
         MouvementStock.objects.defer('numero_commande')
         .filter(type_mouvement='ENTREE')
-        .order_by('-id')
+        .order_by('-date_mouvement', '-id')
     )
+
+    # **TRI REGROUPÉ PAR SERVICE POUR LES SORTIES (SECOURS)**
     flux_sorties = (
         MouvementStock.objects.defer('numero_commande')
         .filter(type_mouvement='SORTIE')
-        .order_by('-id')
+        .order_by('service', '-date_mouvement', '-id')
     )
 
     if entree_debut:
@@ -976,7 +984,9 @@ def page_historique(request):
     liste_entrees = list(flux_entrees)
     liste_sorties = list(flux_sorties)
 
-  # **ASSOCIATION DES DONNÉES DE PRODUITS SUR L'HISTORIQUE RÉCUPÉRÉ**
+  # -------------------------------------------------------------
+  # ENRICHISSEMENT DES OBJETS & REFERENCES PRODUITS
+  # -------------------------------------------------------------
   for movimiento in liste_entrees:
     if movimiento.produit:
       movimiento.objet = movimiento.produit.objet
@@ -987,12 +997,14 @@ def page_historique(request):
       movimiento.objet = movimiento.produit.objet
       movimiento.reference = movimiento.produit.reference
 
-  # **PAGINATION**
-  paginator_entrees = Paginator(liste_entrees, 20)
+  # -------------------------------------------------------------
+  # PAGINATION (50 ÉLÉMENTS PAR PAGE POUR ÉVITER DE COUPER UN SERVICE)
+  # -------------------------------------------------------------
+  paginator_entrees = Paginator(liste_entrees, 25)
   page_entrees = request.GET.get('page_entrees', 1)
   page_obj_entrees = paginator_entrees.get_page(page_entrees)
 
-  paginator_sorties = Paginator(liste_sorties, 20)
+  paginator_sorties = Paginator(liste_sorties, 50)
   page_sorties = request.GET.get('page_sorties', 1)
   page_obj_sorties = paginator_sorties.get_page(page_sorties)
 
@@ -1007,8 +1019,7 @@ def page_historique(request):
           'sorties': page_obj_sorties.object_list,
       },
   )
-
-    
+ 
 @require_POST
 def supprimer_mouvement(request, mouvement_id):
     if not request.user.is_authenticated:
