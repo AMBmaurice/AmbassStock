@@ -88,6 +88,41 @@
         .btn-pdf-export { height: 44px; padding: 0 20px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
         .btn-pdf-export:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
 
+        /* 🔔 NOTIFICATIONS TOAST DYNAMIQUES */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-message {
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s ease;
+        }
+        .toast-success { background: rgba(235, 242, 233, 0.95); color: #5E6D3E; border: 1px solid #5E6D3E; }
+        .toast-danger { background: rgba(252, 234, 232, 0.95); color: #BA3C2A; border: 1px solid #BA3C2A; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         /* BANNIÈRES DE STATUT ET AVERTISSEMENTS */
         .info-banner { padding: 18px 24px; border-radius: 16px; font-weight: 600; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; }
@@ -141,6 +176,11 @@
         .modal-close:hover { color: #2C351C; background: #EBF2E9; border-color: #5E6D3E; }
         .modal-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; } 
 
+        /* GRILLE DES OPTIONS D'EXPORTATION PDF */
+        .pdf-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 22px; margin-bottom: 25px; }
+        .checkbox-custom-label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; color: #2C351C; cursor: pointer; user-select: none; }
+        .checkbox-custom-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer; }
+
         /* 🎴 FICHE DÉTAIL PRODUIT ÉPURÉE (SERVICES & PUBLIC) */
         .product-hero-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 30px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 16px; text-align: center; align-items: center; }
         .hero-ref-tag { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; font-weight: 800; color: #5E6D3E; background: #EBF2E9; padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(94, 109, 62, 0.2); }
@@ -173,6 +213,9 @@
     </style>
 </head>
 <body>
+
+<!-- 🔔 CONTENEUR DE TOASTS FLOTTANTS -->
+<div class="toast-container" id="toastContainer"></div>
 
 <button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
@@ -245,14 +288,11 @@
                 </div>
             </div>
 
-            <form method="POST" action="" style="margin: 0; padding: 0;">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="generer_recapitulatif_pdf">
-                <button type="submit" class="btn-pdf-export">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                    PDF
-                </button>
-            </form>
+            <!-- 📄 BOUTON EXPORT PDF QUI OUVRE LA MODALE DE CONFIGURATION SUR-MESURE -->
+            <button type="button" class="btn-pdf-export" onclick="ouvrirModalConfigPDF()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                PDF
+            </button>
         </div>
     </div>
 
@@ -275,7 +315,7 @@
     {% else %}
     <div class="info-banner info-green-banner">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        <span><strong>Rappel d'usage :</strong> Une fois votre sélection terminée, ouvrez le panier situé en haut à droite pour valider définitivement votre commande. Dans le cas contraire, votre demande ne sera pas transmise.</span>
+        <span><strong>Rappel d'usage :</strong> Une fois votre sélection terminée, ouvrez le panier situé en haut à droite pour valider définitivement votre commande. Dans le cas contraire, votre demande ne sera pas transmitted.</span>
     </div>
     {% endif %}
 
@@ -353,9 +393,41 @@
     {% endif %}
 </div>
 
-<!-- ------------------------------------------------------------- -->
+<!-- 📄 MODALE DE CONFIGURATION DE L'EXPORT PDF -->
+<div class="modal-overlay" id="pdfConfigModal" onclick="if(event.target === this) fermerModal('pdfConfigModal');">
+    <div class="modal-box">
+        <button class="modal-close" onclick="fermerModal('pdfConfigModal')">✕</button>
+        <h3 class="modal-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            Personnaliser l'export PDF
+        </h3>
+
+        <p style="font-size: 0.95rem; color: #7A8278; margin-bottom: 20px;">
+            Sélectionnez les colonnes d'informations à inclure dans votre rapport PDF :
+        </p>
+
+        <form id="pdfExportForm" method="POST" action="" onsubmit="soumettreExportPDF(event)">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="generer_recapitulatif_pdf">
+
+            <div class="pdf-options-grid">
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_reference" checked> Référence produit</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_categorie" checked> Catégorie</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_fournisseur" checked> Fournisseur</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_prix" checked> Prix unitaire (€)</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_stock" checked> Quantité en stock</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_quota" checked> Quota alerte</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_emplacement" checked> Emplacement</label>
+            </div>
+
+            <button type="submit" class="btn-submit-cart" style="width: 100%;">
+                Télécharger le rapport PDF
+            </button>
+        </form>
+    </div>
+</div>
+
 <!-- 🎴 MODALE FICHE DÉTAIL PRODUIT ÉPURÉE (SERVICES : NOM, REF, PRIX) -->
-<!-- ------------------------------------------------------------- -->
 <div class="modal-overlay" id="productModal" onclick="if(event.target === this) fermerModal('productModal');">
     <div class="modal-box">
         <button class="modal-close" onclick="fermerModal('productModal')">✕</button>
@@ -540,6 +612,26 @@
     let panierLocal = {};
     let articlesTicketUrgent = {};
 
+    /* 🔔 NOTIFICATION TOAST FLOTTANTE DYNAMIQUE */
+    function afficherToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast-message toast-${type}`;
+        
+        const iconSvg = type === 'success' 
+            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+        toast.innerHTML = `${iconSvg} <span>${message}</span>`;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
     function toggleSidebar() {
         const sidebar = document.getElementById('appSidebar');
         const openBtn = document.getElementById('sidebarToggleOpen');
@@ -614,7 +706,7 @@
         noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
     }
 
-    /* 🚀 FONCTION AJOUT AU PANIER AVEC ANIMAITON SUR LE DOCK SUPÉRIEUR */
+    /* 🚀 FONCTION AJOUT AU PANIER AVEC NOTIFICATION TOAST & ANIMATION DOCK */
     function ajouterAuPanier(id, nom, ref, stock, elementBouton) {
         let max = parseInt(stock) || 999;
         if (panierLocal[id]) {
@@ -623,27 +715,41 @@
             panierLocal[id] = { id: id, nom: nom, ref: ref, qty: 1, max: max };
         }
 
-        // Animation sur le dock Amazon style en haut
+        // Animation du dock
         const dock = document.getElementById('btnPanierFlottant');
         if (dock) {
             dock.classList.remove('dock-pulse-animation');
-            void dock.offsetWidth; // Trigger reflow
+            void dock.offsetWidth;
             dock.classList.add('dock-pulse-animation');
         }
 
+        afficherToast('Article ajouté au panier', 'success');
         actualiserPanierUI();
+    }
+
+    /* 🗑️ RETRAIT D'UN PRODUIT DU PANIER AVEC NOTIFICATION */
+    function retirerDuPanier(id) {
+        if (panierLocal[id]) {
+            delete panierLocal[id];
+            afficherToast('Article retiré du panier', 'danger');
+            actualiserPanierUI();
+        }
     }
 
     function modifierQty(id, delta) {
         if (!panierLocal[id]) return;
         let n = panierLocal[id].qty + delta;
-        if (n <= 0) delete panierLocal[id];
-        else if (n <= panierLocal[id].max) panierLocal[id].qty = n;
-        actualiserPanierUI();
+        if (n <= 0) {
+            retirerDuPanier(id);
+        } else if (n <= panierLocal[id].max) {
+            panierLocal[id].qty = n;
+            actualiserPanierUI();
+        }
     }
 
     function viderPanier() {
         panierLocal = {};
+        afficherToast('Le panier a été entièrement vidé', 'danger');
         actualiserPanierUI();
     }
 
@@ -680,7 +786,7 @@
                                 <span style="padding:0 8px; font-weight:700; font-size:0.95rem;">${item.qty}</span>
                                 <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', 1)">+</button>
                             </div>
-                            <button type="button" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:6px;" title="Retirer" onclick="delete panierLocal['${item.id}']; actualiserPanierUI();">
+                            <button type="button" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:6px;" title="Retirer" onclick="retirerDuPanier('${item.id}')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
                         </div>
@@ -718,11 +824,21 @@
         return true;
     }
 
+    /* 📄 GESTION DE L'EXPORTATION PDF SUR-MESURE */
+    function ouvrirModalConfigPDF() { 
+        document.getElementById('pdfConfigModal').style.display = 'flex'; 
+    }
+
+    function soumettreExportPDF(event) {
+        setTimeout(() => {
+            fermerModal('pdfConfigModal');
+        }, 500);
+        return true;
+    }
+
     function ouvrirModalTicketUrgence() {
         const modal = document.getElementById('ticketUrgenceModal');
-        if (modal) {
-            modal.style.display = 'flex';
-        }
+        if (modal) modal.style.display = 'flex';
     }
 
     function ajouterProduitTicketUrgent() {
@@ -801,13 +917,12 @@
         if (modal) modal.style.display = 'none'; 
     }
 
-    /* 🎴 FICHE DE POP-UP PRODUIT ULTRA ÉPURÉE (SERVICES : NOM, REF, PRIX) */
+    /* 🎴 FICHE DE POP-UP PRODUIT ÉPURÉE */
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         document.getElementById('lblReference').textContent = ref;
         document.getElementById('valNom').textContent = nom;
         document.getElementById('valPrix').textContent = prix ? (parseFloat(prix).toFixed(2).replace('.', ',') + " €") : "Prix sur devis";
 
-        // Admin binding
         if (document.getElementById('hiddenProduitId')) document.getElementById('hiddenProduitId').value = id;
         if (document.getElementById('valCategorie')) document.getElementById('valCategorie').textContent = cat;
         if (document.getElementById('valEmplacement')) document.getElementById('valEmplacement').textContent = emp || "-";
