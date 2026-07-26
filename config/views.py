@@ -137,19 +137,15 @@ def page_accueil(request):
   # -------------------------------------------------------------
   # RÉINITIALISATION HEBDOMADAIRE CHAQUE JEUDI À 20H
   # -------------------------------------------------------------
-  # Calcul du dernier jeudi à 20h00
   if jour > 3 or (jour == 3 and heure >= 20):
-    # Nous sommes après le jeudi 20h de cette semaine
     dernier_jeudi_20h = maintenant.replace(
         hour=20, minute=0, second=0, microsecond=0
     ) - timedelta(days=(jour - 3))
   else:
-    # Le jeudi 20h de cette semaine n'est pas encore atteint (ex: Lundi, Mardi, Mercredi)
     dernier_jeudi_20h = maintenant.replace(
         hour=20, minute=0, second=0, microsecond=0
     ) - timedelta(days=(jour + 4))
 
-  # Réinitialisation de toute déclaration validée AVANT le dernier jeudi 20h00
   declarations_a_reinitialiser = DeclarationHebdomadaire.objects.filter(
       statut='valide', date_validation__lt=dernier_jeudi_20h
   )
@@ -162,7 +158,6 @@ def page_accueil(request):
     dec.reinitialise_cette_semaine = True
     dec.save()
 
-  # Évolutions de statut pour les relances du début de semaine
   est_periode_relance = (
       (jour == 0 and heure >= 12) or (jour in [1, 2]) or (jour == 3 and heure < 20)
   )
@@ -237,15 +232,31 @@ def page_accueil(request):
   )
 
   # -------------------------------------------------------------
-  # AFFICHAGE DE 100% DES DEMANDES EN ATTENTE (SANS DISPARITION)
+  # RECUPERATION DES NOUVEAUX ARRIVAGES ET REASSORTS
+  # -------------------------------------------------------------
+  mouvements_entrees = MouvementStock.objects.filter(
+      type_mouvement='ENTREE'
+  ).order_by('-id')[:10]
+
+  nouveaux_arrivages = []
+  for mvt in mouvements_entrees:
+    # Déterminer si le produit a d'autres entrées antérieures
+    autres_entrees = MouvementStock.objects.filter(
+        produit=mvt.produit, type_mouvement='ENTREE', id__lt=mvt.id
+    ).exists()
+
+    # Attribut dynamique lu directement par le template
+    mvt.est_nouveau = not autres_entrees
+    nouveaux_arrivages.append(mvt)
+
+  # -------------------------------------------------------------
+  # DEMANDES SERVICES ET ALERTES STOCK
   # -------------------------------------------------------------
   limite_48h = timezone.now() - timedelta(hours=48)
 
   if est_role_admin:
-    # L'admin voit absolument toutes les demandes
     demandes_affichees = DemandeService.objects.all().order_by('-id')
   else:
-    # Les services voient TOUTES leurs demandes en attente, OU celles traitées depuis moins de 48h
     demandes_affichees = DemandeService.objects.filter(
         Q(statut='en_attente') | Q(date_demande__gte=limite_48h)
     ).order_by('-id')
@@ -267,6 +278,7 @@ def page_accueil(request):
           'declarations': declarations_reelles,
           'is_admin': est_role_admin,
           'demandes': demandes_affichees,
+          'nouveaux_arrivages': nouveaux_arrivages,  # Transmet les 10 derniers arrivages
           'produits_alerte': page_obj_alerte,
           'services_retardataires': services_retardataires,
           'afficher_barre_relance': afficher_barre_relance,
@@ -755,7 +767,6 @@ def page_gestion_stocks(request):
           or 0
       )
 
-      # RÉCUPÉRATION DU FOURNISSEUR
       fournisseur_select = request.POST.get('fournisseur_select')
       fournisseur_nouveau = request.POST.get(
           'fournisseur_nouveau', ''
@@ -768,7 +779,6 @@ def page_gestion_stocks(request):
             fournisseur_select if fournisseur_select else 'Divers'
         )
 
-      # TRAITEMENT OPTIONNEL DU PRIX (SI NON RENSEIGNÉ = None)
       prix_recu = request.POST.get('prix')
       prix_valeur = None
       if prix_recu and str(prix_recu).strip():
@@ -777,7 +787,6 @@ def page_gestion_stocks(request):
         except ValueError:
           prix_valeur = None
 
-      # PRÉPARATION DES CHAMPS DE CRÉATION
       donnees_creation = {
           'reference': reference_finale,
           'objet': objet_nom,
@@ -788,11 +797,13 @@ def page_gestion_stocks(request):
           'fournisseur': fournisseur_final,
       }
 
-      # INCLUSION DU PRIX UNIQUEMENT S'IL EXISTE SUR LE MODÈLE PRODUIT
       if hasattr(Produit, 'prix'):
         donnees_creation['prix'] = prix_valeur
 
       nouveau_produit = Produit.objects.create(**donnees_creation)
+
+      # Numéro de commande optionnel transmis
+      num_cmd = request.POST.get('numero_commande', '').strip() or None
 
       if quantite_initiale > 0:
         MouvementStock.objects.create(
@@ -801,6 +812,7 @@ def page_gestion_stocks(request):
             produit=nouveau_produit,
             quantite=quantite_initiale,
             service='Administration',
+            numero_commande=num_cmd,
         )
 
       messages.success(request, "Nouveau produit ajouté à l'inventaire")
@@ -809,6 +821,7 @@ def page_gestion_stocks(request):
     elif action_type == 'mouvement_entree':
       ref_produit = request.POST.get('produit')
       quantite_ajoutee = int(request.POST.get('quantite', 0))
+      num_cmd = request.POST.get('numero_commande', '').strip() or None
 
       try:
         with transaction.atomic():
@@ -825,9 +838,10 @@ def page_gestion_stocks(request):
             produit=produit,
             quantite=quantite_ajoutee,
             service='Administration',
+            numero_commande=num_cmd,  # SOURCING DU NUMÉRO DE COMMANDE POUR L'ACCUEIL
             date_mouvement=request.POST.get('date_entree') or date.today(),
         )
-        messages.success(request, 'Quantité ajoutée')
+        messages.success(request, 'Quantité ajoutée avec succès')
       except Produit.DoesNotExist:
         pass
       return redirect('/gestion-stocks/')
@@ -862,7 +876,7 @@ def page_gestion_stocks(request):
             service=service_demandeur,
             date_mouvement=request.POST.get('date_sortie') or date.today(),
         )
-        messages.success(request, 'Quantité retirée')
+        messages.success(request, 'Quantité retirée avec succès')
       except Produit.DoesNotExist:
         pass
       return redirect('/gestion-stocks/')
@@ -872,7 +886,7 @@ def page_gestion_stocks(request):
       try:
         produit = Produit.objects.get(reference=ref_produit)
         produit.delete()
-        messages.success(request, 'Produit supprimé')
+        messages.success(request, 'Produit supprimé de l\'inventaire')
       except Produit.DoesNotExist:
         pass
       return redirect('/gestion-stocks/')
@@ -899,7 +913,6 @@ def page_gestion_stocks(request):
           'date_du_jour': aujourd_hui,
       },
   )
-    
 def page_historique(request):
     profil_actif = get_profil_actif(request.user) 
     if not request.user.is_authenticated:
