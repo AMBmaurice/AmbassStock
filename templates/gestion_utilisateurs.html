@@ -6,78 +6,103 @@
     <title>AmbassStock - Configuration des Profils</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
         .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 10px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: margin-left 0.4s cubic-bezier(0.25, 1, 0.5, 1), padding 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
-        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 35px; }
-        h3 { font-size: 2rem; font-weight: 600; color: #2c351c; }
-        .stat-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px 45px; width: 100%; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); }
-        .card-title { font-size: 1.25rem; font-weight: 600; color: #2c351c; margin-bottom: 30px; }
-        .card-divider { border: 0; height: 1px; background: rgba(226, 230, 225, 0.6); margin: 35px auto; width: 98%; }
-        .form-user-grid { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
-        .form-group { display: flex; flex-direction: column; gap: 8px; position: relative; width: 100%; max-width: 220px; }
-        .modal-box .form-group { max-width: 100%; margin-bottom: 15px; }
-        .form-label { font-size: 0.8rem; color: #7A8278; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .input-custom { height: 44px; padding: 0 14px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.95rem; color: #2c351c; background-color: #ffffff; outline: none; width: 100%; }
-        .input-custom:focus { border-color: #5E6D3E; }
-        .toggle-password-btn { position: absolute; right: 12px; bottom: 12px; background: none; border: none; color: #5E6D3E; cursor: pointer; font-size: 0.85rem; font-weight: 600; z-index: 5; }
-        .access-checkbox-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding-top: 15px; margin-bottom: 5px; }
-        .checkbox-group { display: flex; align-items: center; gap: 10px; }
-        .checkbox-custom { width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer; }
-        .checkbox-label { font-size: 0.95rem; color: #333333; cursor: pointer; }
-    
-        .btn-action-user, .btn-delete-user, .btn-cancel-modal {
-            height: 44px;
-            padding: 0 20px;
-            border: none;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
+
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
+
+        /* EN-TÊTE DE PAGE */
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
+
+        /* PANNEAUX GLASSMORPHIC */
+        .stat-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 28px; padding: 36px 40px; width: 100%; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .stat-container-box:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
+
+        .card-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+
+        /* FORMULAIRE CRÉATION UTILISATEUR */
+        .form-user-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; position: relative; width: 100%; }
+        .form-label { font-size: 0.78rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; }
+
+        .input-custom { height: 48px; padding: 0 18px; border: 1px solid #D0D6CE; border-radius: 14px; font-size: 0.95rem; color: #2C351C; background-color: #FAFBF9; outline: none; font-weight: 500; transition: all 0.2s ease; width: 100%; }
+        .input-custom:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+
+        .toggle-password-btn { position: absolute; right: 14px; bottom: 12px; background: none; border: none; color: #5E6D3E; cursor: pointer; font-size: 0.85rem; font-weight: 700; z-index: 5; transition: color 0.2s; }
+        .toggle-password-btn:hover { color: #495430; }
+
+        /* 👑 MATRICE DE CARTES DE PERMISSIONS INÉDITE (PERMISSIONS CARDS) */
+        .access-checkbox-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; padding-top: 10px; }
+        
+        .perm-card-tile {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            white-space: nowrap;
+            gap: 12px;
+            padding: 14px 16px;
+            background: #FAFBF9;
+            border: 1px solid #D0D6CE;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
         }
+        .perm-card-tile:hover { border-color: #5E6D3E; background: #EBF2E9; }
+        .perm-card-tile.selected { background: #5E6D3E; color: #ffffff; border-color: #5E6D3E; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.22); }
+        .perm-card-tile.selected .perm-icon { stroke: #ffffff; }
+        .perm-card-tile.selected .checkbox-label { color: #ffffff; font-weight: 700; }
 
-        .btn-action-user { background-color: #5E6D3E; color: #ffffff; }
-        .btn-action-user:disabled { background-color: #ECEFEA; color: #A0A69F; cursor: not-allowed; }
-        .btn-action-user:not(:disabled):hover { background-color: #495430; }
+        .perm-icon { stroke: #5E6D3E; flex-shrink: 0; transition: stroke 0.2s; }
+        .checkbox-custom { display: none; }
+        .checkbox-label { font-size: 0.9rem; color: #2C351C; font-weight: 600; cursor: pointer; flex-grow: 1; }
 
-        .btn-delete-user { background-color: #BA3C2A; color: #ffffff; }
-        .btn-delete-user:hover { background-color: #932F20; }
-        
-        .btn-cancel-modal { background-color: #ECEFEA; color: #5E6D3E; }
-        .btn-cancel-modal:hover { background-color: #DDE2DA; }
-        
-        .modal-buttons { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; gap: 15px; width: 100%; border-top: 1px solid #ECEFEA; padding-top: 20px; }
+        /* BOUTONS D'ACTION */
+        .btn-action-user { height: 48px; padding: 0 28px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 14px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(94, 109, 62, 0.22); }
+        .btn-action-user:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; }
+        .btn-action-user:not(:disabled):hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(73, 84, 48, 0.3); }
+
+        .btn-delete-user { height: 48px; padding: 0 22px; background-color: #BA3C2A; color: #ffffff; border: none; border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-delete-user:hover { background-color: #962F20; }
+
+        .btn-cancel-modal { height: 48px; padding: 0 22px; background-color: #FAFBF9; color: #7A8278; border: 1px solid #D0D6CE; border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.2s; }
+        .btn-cancel-modal:hover { background-color: #EBF2E9; color: #2C351C; }
+
+        .modal-buttons { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; gap: 15px; width: 100%; border-top: 1px solid #ECEFEA; padding-top: 20px; flex-wrap: wrap; }
         .modal-right-buttons { display: flex; gap: 12px; }
-    
+
+        /* TABLEAU DU REGISTRE DES UTILISATEURS */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 16px; }
         .user-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .user-table th { background-color: #FAFBF9; padding: 14px 16px; font-size: 0.82rem; color: #7A8278; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #E2E6E1; }
-        .user-table td { padding: 14px 16px; font-size: 0.95rem; border-bottom: 1px solid #ECEFEA; color: #333333; vertical-align: middle; }
-        .user-table tr:hover { background-color: #FAFBF9; }
-        .badge-access-tag { display: inline-block; font-size: 0.8rem; background-color: #EBF2E9; color: #5E6D3E; padding: 3px 8px; border-radius: 6px; margin-right: 5px; font-weight: 600; margin-bottom: 4px; }
-        .btn-edit-table { background: none; border: none; color: #5E6D3E; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-        .btn-edit-table:hover { text-decoration: underline; }
-        .empty-state { text-align: center !important; padding: 40px; color: #A0A69F; font-style: italic; font-size: 0.95rem; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); z-index: 9999; align-items: center; justify-content: center; }
-        .modal-box { background: #ffffff; border-radius: 24px; padding: 40px; width: 550px; border: 1px solid #E2E6E1; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); display: flex; flex-direction: column; gap: 20px; }
+        .user-table th { background-color: #FAFBF9; padding: 16px 20px; font-size: 0.78rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; border-bottom: 1px solid #E2E6E1; }
+        .user-table td { padding: 18px 20px; font-size: 0.95rem; border-bottom: 1px solid #F1F3F0; color: #333333; vertical-align: middle; }
+        .user-table tr:hover td { background-color: #F7FAF6; }
+
+        .badge-access-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; background-color: #EBF2E9; color: #5E6D3E; padding: 3px 10px; border-radius: 8px; font-weight: 700; margin-right: 4px; margin-bottom: 4px; border: 1px solid rgba(94, 109, 62, 0.18); }
+        .btn-edit-table { background: #FAFBF9; border: 1px solid #D0D6CE; color: #5E6D3E; font-weight: 700; cursor: pointer; font-size: 0.88rem; padding: 8px 16px; border-radius: 10px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-edit-table:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
+
+        .empty-state { text-align: center !important; padding: 45px; color: #7A8278; font-style: italic; font-size: 0.95rem; background: #FAFBF9; border-radius: 18px; border: 1px dashed #D0D6CE; }
+
+        /* MODALE GLASSMORPHISM */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(44, 53, 28, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 9999; align-items: center; justify-content: center; padding: 20px; }
+        .modal-box { background: #ffffff; border-radius: 28px; padding: 40px; width: 100%; max-width: 620px; border: 1px solid #E2E6E1; box-shadow: 0 25px 60px rgba(0,0,0,0.22); display: flex; flex-direction: column; gap: 20px; max-height: 90vh; overflow-y: auto; animation: scaleUp 0.25s ease-out; }
+        @keyframes scaleUp { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
-         
-<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+
+<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
         
-<div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
-        
+<div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
         <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
         <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
@@ -85,64 +110,19 @@
         </button>
     </div>
         
-    <ul class="sidebar-menu" style="list-style: none; padding: 0 15px; flex-grow: 1; overflow-y: auto;">
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a>
-        </li>
-        
-        {% if profil_actif.acces_inventaire %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_stocks %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_historique %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a>
-        </li>
-        {% endif %}
-    
-        {% if profil_actif.acces_statistiques %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_gestion_utilisateurs %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a>
-        </li>
-        {% endif %}
-        
-        {% if profil_actif.acces_factures %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a>
-        </li>
-        {% endif %}
-
-        {% if profil_actif.acces_panier %}
-        <li class="sidebar-item" style="margin-bottom: 4px;">
-            <a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a>
-        </li>
-        {% endif %}
-
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        {% if profil_actif.acces_panier %}<li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>{% endif %}
         {% if is_admin or request.user.is_superuser %}
-<li class="sidebar-item" style="margin-bottom: 4px;">
-    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-</li>
-{% endif %}
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
+        {% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -164,272 +144,347 @@
         </a>
     </div>
 </div>
-            
-    <script>
 
-function toggleSidebar() {
-    const sidebar = document.getElementById('appSidebar');
-    const openBtn = document.getElementById('sidebarToggleOpen');
-    const mainContent = document.querySelector('.main-content');
-        
-    if (sidebar.style.transform === 'translateX(-290px)') {
-        // Mode Normal (Sidebar Ouverte)
-        sidebar.style.transform = 'translateX(0px)';
-        sidebar.style.opacity = '1';
-        openBtn.style.display = 'none';
-        if (mainContent) {
-            mainContent.style.marginLeft = '290px';
-            mainContent.style.paddingLeft = '0px';
-            mainContent.style.paddingTop = '0px';
-        }
-    } else {
-        // Mode Plein Écran (Sidebar Fermée)
-        sidebar.style.transform = 'translateX(-290px)';
-        sidebar.style.opacity = '0';
-        openBtn.style.display = 'flex';
-        if (mainContent) {
-            mainContent.style.marginLeft = '15px';
-            mainContent.style.paddingLeft = '65px';
-            mainContent.style.paddingTop = '12px';
-        }
-    }
-}
-
-    </script>
-        
-    <div class="main-content">
-        <div class="header-section">
-            <h3>Configuration des Profils</h3>
-        </div>
-            
-        <div class="stat-container-box">
-
-<h4 class="card-title">Créer un nouveau profil utilisateur</h4>
-                
-<form method="POST" action="" id="create-user-form" style="display: flex; flex-direction: column; gap: 25px;">
-    {% csrf_token %}
-    <input type="hidden" name="action_type" value="creation">
-        
-    <div class="form-user-grid">
-        <div class="form-group">
-            <label class="form-label">Nom complet</label>
-            <input type="text" name="name" id="create_name" class="input-custom" required autocomplete="off" oninput="checkFormValidity('create')">
-        </div>
-    
-        <div class="form-group">
-            <label class="form-label">Adresse E-mail</label>
-            <input type="email" name="email" id="create_email" class="input-custom" autocomplete="off">
-        </div>
-        
-        <div class="form-group">
-            <label class="form-label">Identifiant</label>
-            <input type="text" name="username" id="create_username" class="input-custom" required autocomplete="off" oninput="checkFormValidity('create')">
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Mot de passe</label>
-            <input type="password" name="password" id="create_password" class="input-custom" required autocomplete="off" oninput="checkFormValidity('create')">
-        </div>
+<div class="main-content">
+    <div class="page-header">
+        <h1 class="page-title">Configuration des Profils & Utilisateurs</h1>
+        <p class="welcome-text">Gérez les droits d'accès aux modules, créez de nouveaux comptes de service et définissez les habilitations d'administration.</p>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 15px; border-top: 1px solid rgba(230, 234, 228, 0.7);">
-        <label class="form-label">Autoriser l'accès aux onglets suivants</label>
+    <!-- 👤 BLOC CRÉATION NOUVEAU COMPTE UTILISATEUR -->
+    <div class="stat-container-box">
+        <h2 class="card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            <strong>Créer un nouveau profil utilisateur</strong>
+        </h2>
 
-        <div class="access-checkbox-container">
-            <div class="checkbox-group"><input type="checkbox" name="acces_inventaire" value="true" class="checkbox-custom"><label class="checkbox-label">Inventaire</label></div>
-            <div class="checkbox-group"><input type="checkbox" name="acces_stocks" value="true" class="checkbox-custom"><label class="checkbox-label">Gestion des stocks</label></div>
-            <div class="checkbox-group"><input type="checkbox" name="acces_historique" value="true" class="checkbox-custom"><label class="checkbox-label">Historique</label></div>
-            <div class="checkbox-group"><input type="checkbox" name="acces_gestion_demandes" value="true" class="checkbox-custom"><label class="checkbox-label">Demandes</label></div>
-            <div class="checkbox-group"><input type="checkbox" name="acces_statistiques" value="true" class="checkbox-custom"><label class="checkbox-label">Statistiques</label></div>
-            <div class="checkbox-group"><input type="checkbox" name="acces_gestion_utilisateurs" value="true" class="checkbox-custom"><label class="checkbox-label">Utilisateurs</label></div>
-            <div class="checkbox-group"><input type="checkbox" name="acces_factures" value="true" class="checkbox-custom"><label class="checkbox-label">Factures</label></div>
-        </div>
-    </div>
-    
-    <div style="display: flex; justify-content: flex-end; margin-top: 5px;">
-        <button type="submit" class="btn-action-user" id="create-submit-btn" disabled>Enregistrer le profil</button>
-    </div>
-</form>
+        <form method="POST" action="" id="create-user-form" style="display: flex; flex-direction: column; gap: 25px;">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="creation">
 
-<div class="stat-container-box" style="margin-top: 30px;">
-    <h4 class="card-title">Registre des profils configurés</h4>
-
-    <table class="user-table">
-        <thead>
-            <tr>
-                <th>Nom</th>
-                <th>E-mail</th>
-                <th>Identifiant</th>
-                <th>Mot de passe</th>
-                <th>Droits d'accès</th>
-                <th style="text-align: right;">Action</th>
-            </tr>
-        </thead>
-                        
-        <tbody>
-            {% for u in tous_les_utilisateurs %}
-            <tr>  
-                <td><strong>{{ u.name }}</strong></td>
-                <td>{{ u.email|default:"--" }}</td>                        
-                <td>{{ u.username }}</td>
-                <td>
-                    <div style="position: relative; display: inline-block; padding-right: 70px;">
-                        <input type="password" class="input-custom" value="{{ u.clear_password }}" readonly style="height: 32px; border: none; background: transparent; min-width: 120px; padding: 0;">
-                        <button type="button" class="toggle-password-btn" onclick="toggleTablePassword(this)">Afficher</button>
-                    </div>
-                </td>
-                <td>
-                    {% if u.acces_inventaire %}<span class="badge-access-tag">Inventaire</span>{% endif %}
-                    {% if u.acces_stocks %}<span class="badge-access-tag">Stocks</span>{% endif %}
-                    {% if u.acces_historique %}<span class="badge-access-tag">Historique</span>{% endif %}
-                    {% if u.acces_gestion_demandes %}<span class="badge-access-tag">Demandes</span>{% endif %}
-                    {% if u.acces_statistiques %}<span class="badge-access-tag">Statistiques</span>{% endif %}
-                    {% if u.acces_gestion_utilisateurs %}<span class="badge-access-tag">Utilisateurs</span>{% endif %}
-                    {% if u.acces_factures %}<span class="badge-access-tag">Factures</span>{% endif %}
-                </td>
-                <td style="text-align: right;">
-                    <button 
-                        type="button"
-                        class="btn-edit-table"
-                        onclick="openEditModal('{{ u.id }}', '{{ u.name|escapejs }}', '{{ u.email|escapejs }}', '{{ u.username|escapejs }}', {{ u.acces_inventaire|lower }}, {{ u.acces_stocks|lower }}, {{ u.acces_historique|lower }}, {{ u.acces_gestion_demandes|lower }}, {{ u.acces_statistiques|lower }}, {{ u.acces_gestion_utilisateurs|lower }}, {{ u.acces_factures|lower }})">
-                        Modifier
-                    </button>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6" class="empty-state">Aucun utilisateur additionnel configuré.</td>
-            </tr>  
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-    </div>
-                                    
-<div class="modal-overlay" id="editModal">
-        <div class="modal-box">
-            <h4 class="card-title" style="margin-bottom: 20px;">Modifier les caractéristiques du compte</h4>
-                                    
-            <form method="POST" action="" id="edit-user-form" style="display: flex; flex-direction: column; gap: 15px;">
-                {% csrf_token %}
-                <input type="hidden" name="user_id" id="edit_id">
-                <input type="hidden" name="action_type" id="edit_action_type" value="modification">
-                        
+            <div class="form-user-grid">
                 <div class="form-group">
-                    <label class="form-label">Nom complet</label>
-                    <input type="text" name="name" id="edit_name" class="input-custom" required oninput="checkFormValidity('edit')">
+                    <label class="form-label">Nom complet *</label>
+                    <input type="text" name="name" id="create_name" class="input-custom" placeholder="Ex: Service Consulaire..." required autocomplete="off" oninput="checkFormValidity('create')">
                 </div>
-                                    
+
                 <div class="form-group">
                     <label class="form-label">Adresse E-mail</label>
-                    <input type="email" name="email" id="edit_email" class="input-custom">
-                </div>   
-                    
-                <div class="form-group">
-                    <label class="form-label">Identifiant</label>
-                    <input type="text" name="username" id="edit_username" class="input-custom" required oninput="checkFormValidity('edit')">
+                    <input type="email" name="email" id="create_email" class="input-custom" placeholder="Ex: consulat@ambassade.fr..." autocomplete="off">
                 </div>
-                
+
                 <div class="form-group">
-                    <label class="form-label">Nouveau mot de passe</label>
-                    <input type="password" name="password" id="edit_password" class="input-custom" placeholder="Laisser vide si inchangé">
-                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('edit_password', this)">Afficher</button>
-                </div> 
-    
-                <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 5px;">
-                    <label class="form-label">Accès autorisés</label>
-                            
-                    <div class="access-checkbox-container">
-                        <div class="checkbox-group"><input type="checkbox" name="acces_inventaire" id="edit_chk_inv" value="true" class="checkbox-custom"><label class="checkbox-label">Inventaire</label></div>
-                        <div class="checkbox-group"><input type="checkbox" name="acces_stocks" id="edit_chk_stk" value="true" class="checkbox-custom"><label class="checkbox-label">Stocks</label></div>
-                        <div class="checkbox-group"><input type="checkbox" name="acces_historique" id="edit_chk_hist" value="true" class="checkbox-custom"><label class="checkbox-label">Historique</label></div>
-                        <div class="checkbox-group"><input type="checkbox" name="acces_gestion_demandes" id="edit_chk_dem" value="true" class="checkbox-custom"><label class="checkbox-label">Demandes</label></div>
-                        <div class="checkbox-group"><input type="checkbox" name="acces_statistiques" id="edit_chk_stat" value="true" class="checkbox-custom"><label class="checkbox-label">Statistiques</label></div>
-                        <div class="checkbox-group"><input type="checkbox" name="acces_gestion_utilisateurs" id="edit_chk_uti" value="true" class="checkbox-custom"><label class="checkbox-label">Utilisateurs</label></div>
-                        <div class="checkbox-group"><input type="checkbox" name="acces_factures" id="edit_chk_fac" value="true" class="checkbox-custom"><label class="checkbox-label">Factures</label></div>
+                    <label class="form-label">Identifiant *</label>
+                    <input type="text" name="username" id="create_username" class="input-custom" placeholder="Nom d'utilisateur..." required autocomplete="off" oninput="checkFormValidity('create')">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mot de passe *</label>
+                    <input type="password" name="password" id="create_password" class="input-custom" placeholder="Mot de passe..." required autocomplete="off" oninput="checkFormValidity('create')">
+                </div>
+            </div>
+
+            <!-- 👑 MATRICE DE CARTES DE PERMISSION TACTILES -->
+            <div style="display: flex; flex-direction: column; gap: 12px; padding-top: 15px; border-top: 1px solid #ECEFEA;">
+                <label class="form-label">Autoriser l'accès aux modules suivants :</label>
+
+                <div class="access-checkbox-container">
+                    <div class="perm-card-tile" onclick="togglePermTile(this)">
+                        <svg class="perm-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                        <input type="checkbox" name="acces_inventaire" value="true" class="checkbox-custom">
+                        <span class="checkbox-label">Inventaire</span>
                     </div>
-                </div>          
-                
-                <div class="modal-buttons">
-                    <button type="button" class="btn-delete-user" onclick="confirmDeleteUser()">Supprimer le compte</button>
-                
-                    <div class="modal-right-buttons">
-                        <button type="button" class="btn-cancel-modal" onclick="closeEditModal()">Annuler</button>
-                        <button type="submit" class="btn-action-user" id="edit-submit-btn">Appliquer</button>
+
+                    <div class="perm-card-tile" onclick="togglePermTile(this)">
+                        <svg class="perm-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline></svg>
+                        <input type="checkbox" name="acces_stocks" value="true" class="checkbox-custom">
+                        <span class="checkbox-label">Stocks</span>
+                    </div>
+
+                    <div class="perm-card-tile" onclick="togglePermTile(this)">
+                        <svg class="perm-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <input type="checkbox" name="acces_historique" value="true" class="checkbox-custom">
+                        <span class="checkbox-label">Historique</span>
+                    </div>
+
+                    <div class="perm-card-tile" onclick="togglePermTile(this)">
+                        <svg class="perm-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <input type="checkbox" name="acces_gestion_demandes" value="true" class="checkbox-custom">
+                        <span class="checkbox-label">Demandes</span>
+                    </div>
+
+                    <div class="perm-card-tile" onclick="togglePermTile(this)">
+                        <svg class="perm-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        <input type="checkbox" name="acces_statistiques" value="true" class="checkbox-custom">
+                        <span class="checkbox-label">Statistiques</span>
+                    </div>
+
+                    <div class="perm-card-tile" onclick="togglePermTile(this)">
+                        <svg class="perm-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                        <input type="checkbox" name="acces_gestion_utilisateurs" value="true" class="checkbox-custom">
+                        <span class="checkbox-label">Utilisateurs</span>
+                    </div>
+
+                    <div class="perm-card-tile" onclick="togglePermTile(this)">
+                        <svg class="perm-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+                        <input type="checkbox" name="acces_factures" value="true" class="checkbox-custom">
+                        <span class="checkbox-label">Factures</span>
                     </div>
                 </div>
-            </form>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                <button type="submit" class="btn-action-user" id="create-submit-btn" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <strong>Enregistrer le profil</strong>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 📑 REGISTRE DES UTILISATEURS CONFIGURÉS -->
+    <div class="stat-container-box">
+        <h2 class="card-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+            <strong>Registre des Profils Interne</strong>
+        </h2>
+
+        <div class="table-responsive">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>Nom Complet</th>
+                        <th>E-mail</th>
+                        <th>Identifiant</th>
+                        <th>Mot de Passe</th>
+                        <th>Habilitations Accès</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in tous_les_utilisateurs %}
+                    <tr> 
+                        <td><strong style="color: #2C351C; font-size: 1.02rem;">{{ u.name }}</strong></td>
+                        <td>{{ u.email|default:"--" }}</td>                        
+                        <td><span style="font-weight: 700; color: #5E6D3E;">{{ u.username }}</span></td>
+                        <td>
+                            <div style="position: relative; display: inline-flex; align-items: center; gap: 8px;">
+                                <input type="password" class="input-custom" value="{{ u.clear_password }}" readonly style="height: 36px; border: none; background: transparent; width: 100px; padding: 0; font-weight: 700;">
+                                <button type="button" class="toggle-password-btn" style="position: static;" onclick="toggleTablePassword(this)">Afficher</button>
+                            </div>
+                        </td>
+                        <td>
+                            {% if u.acces_inventaire %}<span class="badge-access-tag">Inventaire</span>{% endif %}
+                            {% if u.acces_stocks %}<span class="badge-access-tag">Stocks</span>{% endif %}
+                            {% if u.acces_historique %}<span class="badge-access-tag">Historique</span>{% endif %}
+                            {% if u.acces_gestion_demandes %}<span class="badge-access-tag">Demandes</span>{% endif %}
+                            {% if u.acces_statistiques %}<span class="badge-access-tag">Statistiques</span>{% endif %}
+                            {% if u.acces_gestion_utilisateurs %}<span class="badge-access-tag">Utilisateurs</span>{% endif %}
+                            {% if u.acces_factures %}<span class="badge-access-tag">Factures</span>{% endif %}
+                        </td>
+                        <td style="text-align: right;">
+                            <button type="button" class="btn-edit-table" onclick="openEditModal('{{ u.id }}', '{{ u.name|escapejs }}', '{{ u.email|escapejs }}', '{{ u.username|escapejs }}', {{ u.acces_inventaire|lower }}, {{ u.acces_stocks|lower }}, {{ u.acces_historique|lower }}, {{ u.acces_gestion_demandes|lower }}, {{ u.acces_statistiques|lower }}, {{ u.acces_gestion_utilisateurs|lower }}, {{ u.acces_factures|lower }})">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                <strong>Modifier</strong>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">Aucun profil utilisateur additionnel configuré pour le moment.</td>
+                    </tr>  
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-                
-    <script>
-        function checkFormValidity(formPrefix) {
-            const name = document.getElementById(formPrefix + '_name').value.trim();
-            const username = document.getElementById(formPrefix + '_username').value.trim();
-            const submitBtn = document.getElementById(formPrefix + '-submit-btn');
-                
-            if (formPrefix === 'create') {
-                const password = document.getElementById('create_password').value.trim();
-                submitBtn.disabled = !(name !== "" && username !== "" && password !== "");
-            } else {
-                submitBtn.disabled = !(name !== "" && username !== "");
-            }
-        }
+</div>
+
+<!-- 🪟 MODALE D'ÉDITION D'UN COMPTE UTILISATEUR -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+        <h3 class="modal-title" style="margin-bottom: 5px;">Modifier les Caractéristiques du Compte</h3>
+                                        
+        <form method="POST" action="" id="edit-user-form" style="display: flex; flex-direction: column; gap: 18px;">
+            {% csrf_token %}
+            <input type="hidden" name="user_id" id="edit_id">
+            <input type="hidden" name="action_type" id="edit_action_type" value="modification">
                     
-        function togglePasswordVisibility(inputId, btn) {
-            const input = document.getElementById(inputId);
+            <div class="form-group">
+                <label class="form-label">Nom complet *</label>
+                <input type="text" name="name" id="edit_name" class="input-custom" required oninput="checkFormValidity('edit')">
+            </div>
+                                        
+            <div class="form-group">
+                <label class="form-label">Adresse E-mail</label>
+                <input type="email" name="email" id="edit_email" class="input-custom">
+            </div>    
                 
-            if (input.type === "password") {
-                input.type = "text";
-                btn.innerText = "Masquer";
-            } else {
-                input.type = "password";
-                btn.innerText = "Afficher";
+            <div class="form-group">
+                <label class="form-label">Identifiant *</label>
+                <input type="text" name="username" id="edit_username" class="input-custom" required oninput="checkFormValidity('edit')">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Nouveau mot de passe (Optionnel)</label>
+                <input type="password" name="password" id="edit_password" class="input-custom" placeholder="Laisser vide pour conserver l'actuel...">
+                <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('edit_password', this)">Afficher</button>
+            </div> 
+
+            <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 5px;">
+                <label class="form-label">Accès autorisés :</label>
+                        
+                <div class="access-checkbox-container">
+                    <div class="perm-card-tile" id="tile_edit_inv" onclick="togglePermTile(this)">
+                        <span class="checkbox-label">Inventaire</span>
+                        <input type="checkbox" name="acces_inventaire" id="edit_chk_inv" value="true" class="checkbox-custom">
+                    </div>
+                    <div class="perm-card-tile" id="tile_edit_stk" onclick="togglePermTile(this)">
+                        <span class="checkbox-label">Stocks</span>
+                        <input type="checkbox" name="acces_stocks" id="edit_chk_stk" value="true" class="checkbox-custom">
+                    </div>
+                    <div class="perm-card-tile" id="tile_edit_hist" onclick="togglePermTile(this)">
+                        <span class="checkbox-label">Historique</span>
+                        <input type="checkbox" name="acces_historique" id="edit_chk_hist" value="true" class="checkbox-custom">
+                    </div>
+                    <div class="perm-card-tile" id="tile_edit_dem" onclick="togglePermTile(this)">
+                        <span class="checkbox-label">Demandes</span>
+                        <input type="checkbox" name="acces_gestion_demandes" id="edit_chk_dem" value="true" class="checkbox-custom">
+                    </div>
+                    <div class="perm-card-tile" id="tile_edit_stat" onclick="togglePermTile(this)">
+                        <span class="checkbox-label">Statistiques</span>
+                        <input type="checkbox" name="acces_statistiques" id="edit_chk_stat" value="true" class="checkbox-custom">
+                    </div>
+                    <div class="perm-card-tile" id="tile_edit_uti" onclick="togglePermTile(this)">
+                        <span class="checkbox-label">Utilisateurs</span>
+                        <input type="checkbox" name="acces_gestion_utilisateurs" id="edit_chk_uti" value="true" class="checkbox-custom">
+                    </div>
+                    <div class="perm-card-tile" id="tile_edit_fac" onclick="togglePermTile(this)">
+                        <span class="checkbox-label">Factures</span>
+                        <input type="checkbox" name="acces_factures" id="edit_chk_fac" value="true" class="checkbox-custom">
+                    </div>
+                </div>
+            </div>          
+            
+            <div class="modal-buttons">
+                <button type="button" class="btn-delete-user" onclick="confirmDeleteUser()">Supprimer le compte</button>
+            
+                <div class="modal-right-buttons">
+                    <button type="button" class="btn-cancel-modal" onclick="closeEditModal()">Annuler</button>
+                    <button type="submit" class="btn-action-user" id="edit-submit-btn"><strong>Appliquer les modifications</strong></button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const openBtn = document.getElementById('sidebarToggleOpen');
+        const mainContent = document.querySelector('.main-content');
+            
+        if (sidebar.style.transform === 'translateX(-290px)') {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.opacity = '1';
+            openBtn.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.marginLeft = '260px';
+                mainContent.style.paddingLeft = '40px';
+            }
+        } else {
+            sidebar.style.transform = 'translateX(-290px)';
+            sidebar.style.opacity = '0';
+            openBtn.style.display = 'flex';
+            if (mainContent) {
+                mainContent.style.marginLeft = '15px';
+                mainContent.style.paddingLeft = '65px';
             }
         }
-        
-        function toggleTablePassword(btn) {
-            const input = btn.previousElementSibling;
+    }
+
+    /* 👑 GESTION TACTILE DES TUILES DE PERMISSION */
+    function togglePermTile(tileElement) {
+        const chk = tileElement.querySelector('input[type="checkbox"]');
+        if (chk) {
+            chk.checked = !chk.checked;
+            tileElement.classList.toggle('selected', chk.checked);
+        }
+    }
+
+    function checkFormValidity(formPrefix) {
+        const name = document.getElementById(formPrefix + '_name').value.trim();
+        const username = document.getElementById(formPrefix + '_username').value.trim();
+        const submitBtn = document.getElementById(formPrefix + '-submit-btn');
+            
+        if (formPrefix === 'create') {
+            const password = document.getElementById('create_password').value.trim();
+            submitBtn.disabled = !(name !== "" && username !== "" && password !== "");
+        } else {
+            submitBtn.disabled = !(name !== "" && username !== "");
+        }
+    }
+            
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            btn.innerText = "Masquer";
+        } else {
+            input.type = "password";
+            btn.innerText = "Afficher";
+        }
+    }
     
-            if (input.type === "password") {
-                input.type = "text";
-                btn.innerText = "Masquer";
-            } else {
-                input.type = "password";
-                btn.innerText = "Afficher";
-            }
+    function toggleTablePassword(btn) {
+        const input = btn.previousElementSibling;
+        if (input.type === "password") {
+            input.type = "text";
+            btn.innerText = "Masquer";
+        } else {
+            input.type = "password";
+            btn.innerText = "Afficher";
         }
-            
-function openEditModal(id, name, email, username, inv, stk, hist, dem, stat, uti, fac) {
-    document.getElementById('edit_action_type').value = "modification";
-    document.getElementById('edit_id').value = id;
-            
-    document.getElementById('edit_name').value = (name === 'None' || name === 'undefined') ? '' : name;
-    document.getElementById('edit_email').value = (email === 'None' || email === 'undefined') ? '' : email;
-    document.getElementById('edit_username').value = username;
-    document.getElementById('edit_password').value = "";
+    }
         
-    document.getElementById('edit_chk_inv').checked = inv;
-    document.getElementById('edit_chk_stk').checked = stk;
-    document.getElementById('edit_chk_hist').checked = hist;
-    document.getElementById('edit_chk_dem').checked = dem;
-    document.getElementById('edit_chk_stat').checked = stat;
-    document.getElementById('edit_chk_uti').checked = uti;
-    document.getElementById('edit_chk_fac').checked = fac;
-     
-    checkFormValidity('edit');
-    document.getElementById('editModal').style.display = 'flex';
-}            
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
+    function openEditModal(id, name, email, username, inv, stk, hist, dem, stat, uti, fac) {
+        document.getElementById('edit_action_type').value = "modification";
+        document.getElementById('edit_id').value = id;
                 
-        function confirmDeleteUser() {
-            if (confirm("Attention ! Voulez-vous vraiment supprimer définitivement cet utilisateur ? Cette action est irréversible.")) {
-                document.getElementById('edit_action_type').value = "suppression";
-                document.getElementById('edit-user-form').submit();
-            }
-        }   
-    </script>
+        document.getElementById('edit_name').value = (name === 'None' || name === 'undefined') ? '' : name;
+        document.getElementById('edit_email').value = (email === 'None' || email === 'undefined') ? '' : email;
+        document.getElementById('edit_username').value = username;
+        document.getElementById('edit_password').value = "";
+            
+        const setChk = (chkId, tileId, val) => {
+            const chk = document.getElementById(chkId);
+            const tile = document.getElementById(tileId);
+            chk.checked = val;
+            if (tile) tile.classList.toggle('selected', val);
+        };
+
+        setChk('edit_chk_inv', 'tile_edit_inv', inv);
+        setChk('edit_chk_stk', 'tile_edit_stk', stk);
+        setChk('edit_chk_hist', 'tile_edit_hist', hist);
+        setChk('edit_chk_dem', 'tile_edit_dem', dem);
+        setChk('edit_chk_stat', 'tile_edit_stat', stat);
+        setChk('edit_chk_uti', 'tile_edit_uti', uti);
+        setChk('edit_chk_fac', 'tile_edit_fac', fac);
+         
+        checkFormValidity('edit');
+        document.getElementById('editModal').style.display = 'flex';
+    }            
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+            
+    function confirmDeleteUser() {
+        if (confirm("Attention ! Voulez-vous vraiment supprimer définitivement cet utilisateur ? Cette action est irréversible.")) {
+            document.getElementById('edit_action_type').value = "suppression";
+            document.getElementById('edit-user-form').submit();
+        }
+    }   
+</script>
 </body>
 </html>
