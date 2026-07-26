@@ -122,9 +122,6 @@ def page_accueil(request):
   )  # 0 = Lundi, 1 = Mardi, 2 = Mercredi, 3 = Jeudi, 4 = Vendredi, 5 = Samedi, 6 = Dimanche
   heure = maintenant.hour
 
-  # Identification du numéro de semaine ISO actuel (ex: (2026, 30))
-  annee_actuelle, iso_semaine_actuelle, _ = maintenant.isocalendar()
-
   liste_des_services = [
       'Consulaire',
       'Secrétaire',
@@ -138,51 +135,36 @@ def page_accueil(request):
     DeclarationHebdomadaire.objects.get_or_create(service=nom_service)
 
   # -------------------------------------------------------------
-  # AUTOMATISATION FIABLE DE LA RÉINITIALISATION HEBDOMADAIRE
+  # RÉINITIALISATION HEBDOMADAIRE CHAQUE JEUDI À 20H
   # -------------------------------------------------------------
+  # Calcul du dernier jeudi à 20h00
+  if jour > 3 or (jour == 3 and heure >= 20):
+    # Nous sommes après le jeudi 20h de cette semaine
+    dernier_jeudi_20h = maintenant.replace(
+        hour=20, minute=0, second=0, microsecond=0
+    ) - timedelta(days=(jour - 3))
+  else:
+    # Le jeudi 20h de cette semaine n'est pas encore atteint (ex: Lundi, Mardi, Mercredi)
+    dernier_jeudi_20h = maintenant.replace(
+        hour=20, minute=0, second=0, microsecond=0
+    ) - timedelta(days=(jour + 4))
 
-  # Déterminer si nous sommes dans le nouveau cycle (Jeudi après 18h00, Vendredi, Samedi ou Dimanche)
-  est_apres_cloture_jeudi = (
-      (jour == 3 and heure >= 18) or (jour in [4, 5, 6]) or (jour < 0)
+  # Réinitialisation de toute déclaration validée AVANT le dernier jeudi 20h00
+  declarations_a_reinitialiser = DeclarationHebdomadaire.objects.filter(
+      statut='valide', date_validation__lt=dernier_jeudi_20h
   )
 
-  # Récupération de toutes les déclarations
-  declarations_toutes = DeclarationHebdomadaire.objects.all()
+  for dec in declarations_a_reinitialiser:
+    dec.statut = 'en_attente'
+    dec.reponse = None
+    dec.date_validation = None
+    dec.force_valide_par_admin = False
+    dec.reinitialise_cette_semaine = True
+    dec.save()
 
-  for dec in declarations_toutes:
-    # Si la déclaration a une date de validation, on extrait sa semaine calendaire
-    valide_cette_semaine = False
-    if dec.date_validation:
-      val_annee, val_semaine, _ = dec.date_validation.isocalendar()
-      if val_annee == annee_actuelle and val_semaine == iso_semaine_actuelle:
-        valide_cette_semaine = True
-
-    # RÉINITIALISATION : Si on est après jeudi 18h et que la validation date d'une semaine antérieure (ou si non réinitialisé)
-    if est_apres_cloture_jeudi and not dec.reinitialise_cette_semaine:
-      if dec.statut == 'valide' and not valide_cette_semaine:
-        dec.statut = 'en_attente'
-        dec.reponse = None
-        dec.date_validation = None
-        dec.force_valide_par_admin = False
-        dec.non_reponses_consecutives = 0
-        dec.reinitialise_cette_semaine = True
-        dec.save()
-
-      elif dec.statut in ['a_relancer', 'en_attente'] and not valide_cette_semaine:
-        dec.statut = 'non_repondu'
-        dec.non_reponses_consecutives += 1
-        dec.reinitialise_cette_semaine = True
-        dec.save()
-
-  # Remise à zéro automatique du verrou de réinitialisation chaque début de semaine (Lundi matin)
-  if jour == 0 and heure < 12:
-    DeclarationHebdomadaire.objects.all().update(
-        reinitialise_cette_semaine=False
-    )
-
-  # Passer en "a_relancer" pendant le créneau de relance (Lundi 12h -> Jeudi 18h)
+  # Évolutions de statut pour les relances du début de semaine
   est_periode_relance = (
-      (jour == 0 and heure >= 12) or (jour in [1, 2]) or (jour == 3 and heure < 18)
+      (jour == 0 and heure >= 12) or (jour in [1, 2]) or (jour == 3 and heure < 20)
   )
   if est_periode_relance:
     DeclarationHebdomadaire.objects.filter(statut='en_attente').update(
@@ -201,7 +183,6 @@ def page_accueil(request):
         dec.reponse = reponse_choisie
         dec.statut = 'valide'
         dec.date_validation = timezone.now()
-        dec.reinitialise_cette_semaine = False
         dec.save()
       except DeclarationHebdomadaire.DoesNotExist:
         pass
@@ -214,7 +195,6 @@ def page_accueil(request):
         dec.statut = 'valide'
         dec.force_valide_par_admin = True
         dec.date_validation = timezone.now()
-        dec.reinitialise_cette_semaine = False
         dec.save()
       except DeclarationHebdomadaire.DoesNotExist:
         pass
@@ -237,14 +217,12 @@ def page_accueil(request):
 
   declarations_reelles = DeclarationHebdomadaire.objects.all()
 
-  # Extraction des services retardataires
   services_retardataires = [
       d.service
       for d in declarations_reelles
       if d.statut in ['a_relancer', 'non_repondu']
   ]
 
-  # Activation des notifications selon les créneaux
   afficher_barre_relance = ((jour == 0 and heure >= 12) or jour == 1 or (
       jour == 2 and heure < 12
   )) and len(services_retardataires) > 0
@@ -252,7 +230,6 @@ def page_accueil(request):
       jour == 4 and heure < 12
   )) and len(services_retardataires) > 0
 
-  # Alertes récidivistes pour l'administrateur
   alertes_admin_recidive = (
       DeclarationHebdomadaire.objects.filter(non_reponses_consecutives__gte=3)
       if est_role_admin
@@ -260,15 +237,15 @@ def page_accueil(request):
   )
 
   # -------------------------------------------------------------
-  # GESTION DES DEMANDES ET DISPARITION AUTOMATIQUE (48H)
+  # AFFICHAGE DE 100% DES DEMANDES EN ATTENTE (SANS DISPARITION)
   # -------------------------------------------------------------
   limite_48h = timezone.now() - timedelta(hours=48)
 
   if est_role_admin:
-    # L'admin voit toutes les demandes sans restriction
+    # L'admin voit absolument toutes les demandes
     demandes_affichees = DemandeService.objects.all().order_by('-id')
   else:
-    # Les services voient leurs demandes en attente OU traitées depuis moins de 48h
+    # Les services voient TOUTES leurs demandes en attente, OU celles traitées depuis moins de 48h
     demandes_affichees = DemandeService.objects.filter(
         Q(statut='en_attente') | Q(date_demande__gte=limite_48h)
     ).order_by('-id')
@@ -297,7 +274,6 @@ def page_accueil(request):
           'alertes_admin_recidive': alertes_admin_recidive,
       },
   )
-
 
 def page_inventaire(request):
     if not request.user.is_authenticated:
