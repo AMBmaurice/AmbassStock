@@ -44,16 +44,17 @@
 
         /* LISTE DE CARTES PRODUIT */
         .inventory-grid { display: flex; flex-direction: column; gap: 14px; }
-        .inventory-card { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 18px; padding: 20px 26px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; gap: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .inventory-card { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 18px; padding: 20px 26px; display: flex; justify-content: space-between; align-items: center; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); gap: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
         .inventory-card:hover { border-color: #5E6D3E; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(73, 84, 48, 0.06); }
         
         .card-details { display: flex; flex-direction: column; gap: 6px; cursor: pointer; flex-grow: 1; }
         .product-ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.82rem; font-weight: 700; color: #5E6D3E; background: #EBF2E9; padding: 2px 8px; border-radius: 6px; width: fit-content; border: 1px solid rgba(94, 109, 62, 0.15); }
         .product-title { font-size: 1.15rem; font-weight: 700; color: #2C351C; }
 
-        .btn-add-inline { background-color: #5E6D3E; color: white; border: none; padding: 11px 20px; border-radius: 12px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-add-inline:hover { background-color: #495430; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.2); }
-        .btn-add-inline:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; opacity: 0.8; }
+        .btn-add-inline { background-color: #5E6D3E; color: white; border: none; padding: 11px 22px; border-radius: 12px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.15); }
+        .btn-add-inline:hover { background-color: #495430; transform: scale(1.02); box-shadow: 0 6px 16px rgba(73, 84, 48, 0.25); }
+        .btn-add-inline:active { transform: scale(0.96); }
+        .btn-add-inline:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; transform: none !important; opacity: 0.8; }
 
         /* PUCES DE STATUT DE STOCK */
         .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; cursor: pointer; }
@@ -62,10 +63,87 @@
         .status-red { background-color: #FF3B30; animation: elegantPulse 2s infinite ease-in-out; }
         @keyframes elegantPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
 
-        /* BOUTON FLOTTANT DU PANIER */
-        .floating-cart-btn { position: fixed; bottom: 35px; right: 35px; width: 64px; height: 64px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 30px rgba(44, 53, 28, 0.35); cursor: pointer; z-index: 900; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s; }
-        .floating-cart-btn:hover { transform: scale(1.1); background-color: #495430; }
-        .floating-cart-badge { position: absolute; top: -2px; right: -2px; background-color: #BA3C2A; color: #ffffff; font-size: 0.78rem; font-weight: 800; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2.5px solid #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        /* ------------------------------------------------------------- */
+        /* 🚀 NOUVEAU DOCK FLOTTANT DU PANIER (ULTRA-PREMIUM GLASS DOCK) */
+        /* ------------------------------------------------------------- */
+        .floating-cart-dock { 
+            position: fixed; 
+            bottom: 30px; 
+            right: 30px; 
+            z-index: 900; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 8px 10px 8px 20px; 
+            background: rgba(44, 53, 28, 0.88); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px); 
+            border: 1px solid rgba(255, 255, 255, 0.18); 
+            border-radius: 40px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25), 0 0 0 1px rgba(94, 109, 62, 0.3); 
+            cursor: pointer; 
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .floating-cart-dock:hover { 
+            transform: translateY(-4px) scale(1.03); 
+            background: rgba(44, 53, 28, 0.95); 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.32); 
+        }
+        
+        .dock-cart-icon-wrapper { 
+            position: relative; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 44px; 
+            height: 44px; 
+            background: rgba(255, 255, 255, 0.12); 
+            border-radius: 50%; 
+            color: #ffffff; 
+        }
+        .dock-badge-count { 
+            position: absolute; 
+            top: -4px; 
+            right: -4px; 
+            background: #BA3C2A; 
+            color: #ffffff; 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            min-width: 22px; 
+            height: 22px; 
+            padding: 0 6px; 
+            border-radius: 11px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border: 2px solid #2C351C; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+        }
+        .dock-text-info { display: flex; flex-direction: column; gap: 2px; }
+        .dock-title { color: #ffffff; font-size: 0.92rem; font-weight: 700; letter-spacing: -0.2px; }
+        .dock-sub { color: rgba(255, 255, 255, 0.7); font-size: 0.75rem; font-weight: 500; }
+        
+        .dock-btn-open { 
+            width: 38px; 
+            height: 38px; 
+            background: #5E6D3E; 
+            color: white; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-left: 6px; 
+            transition: background-color 0.2s; 
+        }
+        .floating-cart-dock:hover .dock-btn-open { background: #7A895C; }
+
+        /* Animation d'onde lors de l'ajout au panier */
+        @keyframes cartPulse { 
+            0% { transform: scale(1); } 
+            50% { transform: scale(1.12); border-color: rgba(255,255,255,0.6); } 
+            100% { transform: scale(1); } 
+        }
+        .dock-pulse-animation { animation: cartPulse 0.45s ease-in-out; }
 
         /* PAGINATION */
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 35px; }
@@ -73,14 +151,31 @@
         .page-link:hover { background: #EBF2E9; border-color: #5E6D3E; }
         .page-current { padding: 9px 18px; border-radius: 10px; background: #5E6D3E; color: white; font-weight: 700; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.2); }
 
-        /* MODALES UNIFIÉES */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
-        .modal-box { background: #ffffff; border-radius: 24px; width: 100%; max-width: 720px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: modalFadeIn 0.25s ease-out; }
+        /* MODALES UNIFIÉES HAUT DE GAMME */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-box { background: #ffffff; border-radius: 28px; width: 100%; max-width: 740px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 25px 60px rgba(0,0,0,0.22); animation: modalFadeIn 0.25s ease-out; }
         @keyframes modalFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         
-        .modal-close { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.6rem; cursor: pointer; color: #7A8278; transition: color 0.2s; }
-        .modal-close:hover { color: #2C351C; }
-        .modal-title { font-size: 1.6rem; font-weight: 700; color: #2C351C; margin-bottom: 25px; } 
+        .modal-close { position: absolute; top: 25px; right: 25px; background: #FAFBF9; border: 1px solid #E2E6E1; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7A8278; transition: all 0.2s; }
+        .modal-close:hover { color: #2C351C; background: #EBF2E9; border-color: #5E6D3E; }
+        .modal-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; } 
+
+        /* CARTES D'ARTICLES DANS LA MODALE PANIER */
+        .cart-items-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .cart-item-card { display: flex; justify-content: space-between; align-items: center; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 16px; padding: 16px 20px; gap: 15px; }
+        .cart-item-info { display: flex; flex-direction: column; gap: 4px; }
+        .cart-item-title { font-size: 1.05rem; font-weight: 700; color: #2C351C; }
+
+        .qty-controls { display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 4px 8px; border-radius: 10px; border: 1px solid #D0D6CE; }
+        .btn-qty-mini { width: 30px; height: 30px; border-radius: 8px; border: none; background: #FAFBF9; font-weight: 700; cursor: pointer; color: #2C351C; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-qty-mini:hover { background: #EBF2E9; color: #5E6D3E; }
+
+        .btn-submit-cart { height: 52px; padding: 0 28px; background-color: #5E6D3E; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 0.98rem; cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.25); }
+        .btn-submit-cart:hover:not(:disabled) { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
+        .btn-submit-cart:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; }
+        
+        .select-custom, .input-custom { height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; outline: none; background: #FAFBF9; width: 100%; color: #2C351C; font-weight: 500; transition: border-color 0.2s; }
+        .select-custom:focus, .input-custom:focus { border-color: #5E6D3E; background: #ffffff; }
 
         .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; background-color: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 18px; padding: 25px; margin-bottom: 25px; }
         .detail-item { display: flex; flex-direction: column; gap: 6px; }
@@ -88,21 +183,6 @@
         .view-value { font-size: 1.05rem; font-weight: 600; color: #2C351C; }
         .edit-input { display: none; padding: 10px 14px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.95rem; outline: none; background: #ffffff; transition: border-color 0.2s; }
         .edit-input:focus { border-color: #5E6D3E; }
-
-        .cart-summary-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        .cart-summary-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: #7A8278; padding: 12px 14px; border-bottom: 2px solid #E2E6E1; text-align: left; }
-        .cart-summary-table td { padding: 14px; border-bottom: 1px solid #F1F3F0; font-size: 0.95rem; vertical-align: middle; }
-        
-        .qty-controls { display: flex; align-items: center; gap: 8px; }
-        .btn-qty-mini { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #D0D6CE; background: #FAFBF9; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .btn-qty-mini:hover { background: #EBF2E9; border-color: #5E6D3E; color: #5E6D3E; }
-
-        .btn-submit-cart { height: 50px; padding: 0 28px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-submit-cart:hover:not(:disabled) { background-color: #495430; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.2); }
-        .btn-submit-cart:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; }
-        
-        .select-custom, .input-custom { height: 46px; padding: 0 14px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; outline: none; background: #FAFBF9; width: 100%; color: #2C351C; font-weight: 500; transition: border-color 0.2s; }
-        .select-custom:focus, .input-custom:focus { border-color: #5E6D3E; background: #ffffff; }
     </style>
 </head>
 <body>
@@ -235,7 +315,7 @@
                     Fermé (Option d'urgence)
                 </button>
                 {% else %}
-                <button type="button" class="btn-add-inline" onclick="ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}')">
+                <button type="button" class="btn-add-inline" onclick="ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Ajouter au panier
                 </button>
@@ -268,21 +348,32 @@
     {% endif %}
 </div>
 
-<!-- BOUTON FLOTTANT DU PANIER -->
-<button class="floating-cart-btn" onclick="ouvrirModalPanier()" id="btnPanierFlottant" title="Voir le récapitulatif du panier">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="9" cy="21" r="1"></circle>
-        <circle cx="20" cy="21" r="1"></circle>
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-    </svg>
-    <div class="floating-cart-badge" id="cartBadgeCount">0</div>
-</button>
+<!-- ------------------------------------------------------------- -->
+<!-- 🚀 NOUVEAU DOCK FLOTTANT DU PANIER (ULTRA-PREMIUM GLASS DOCK) -->
+<!-- ------------------------------------------------------------- -->
+<div class="floating-cart-dock" id="btnPanierFlottant" onclick="ouvrirModalPanier()" title="Consulter et valider la commande">
+    <div class="dock-cart-icon-wrapper">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        <div class="dock-badge-count" id="cartBadgeCount">0</div>
+    </div>
+    <div class="dock-text-info">
+        <span class="dock-title">Panier de commande</span>
+        <span class="dock-sub" id="cartBadgeText">Aucun article</span>
+    </div>
+    <div class="dock-btn-open">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+</div>
 
 <!-- MODALE TICKET D'URGENCE DÉDIÉE -->
 <div class="modal-overlay" id="ticketUrgenceModal" onclick="if(event.target === this) fermerModal('ticketUrgenceModal');">
     <div class="modal-box" style="max-width: 680px;">
         <button class="modal-close" onclick="fermerModal('ticketUrgenceModal')">✕</button>
-        <h3 class="modal-title" style="color: #BA3C2A; display: flex; align-items: center; gap: 10px;">
+        <h3 class="modal-title" style="color: #BA3C2A;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             Créer un ticket d'urgence
         </h3>
@@ -329,17 +420,12 @@
                     <button type="button" onclick="ajouterProduitTicketUrgent()" class="btn-add-inline" style="background-color: #BA3C2A; height: 46px; white-space: nowrap;">Ajouter</button>
                 </div>
 
-                <table class="cart-summary-table" style="margin-top: 10px; margin-bottom: 0;">
-                    <thead>
-                        <tr><th>Désignation</th><th style="width: 80px;">Qté</th><th style="text-align: right;">Action</th></tr>
-                    </thead>
-                    <tbody id="tbodyTicketUrgent">
-                        <tr><td colspan="3" style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</td></tr>
-                    </tbody>
-                </table>
+                <div class="cart-items-container" id="tbodyTicketUrgent">
+                    <div style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</div>
+                </div>
             </div>
 
-            <button type="submit" onclick="return preparerSoumissionTicketUrgent()" class="btn-submit-cart" style="background-color: #BA3C2A; width: 100%; height: 50px; font-size: 1rem; font-weight: 700; margin-top: 5px;">
+            <button type="submit" onclick="return preparerSoumissionTicketUrgent()" class="btn-submit-cart" style="background-color: #BA3C2A; width: 100%; height: 52px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                 Valider et transmettre le ticket d'urgence
             </button>
@@ -396,25 +482,25 @@
     </div>
 </div>
 
-<!-- MODALE RÉCAPITULATIF DU PANIER FLOTTANT -->
+<!-- ------------------------------------------------------------- -->
+<!-- 🛒 MODALE RÉCAPITULATIF DU PANIER (REFONTE HAUTE-GAMME) -->
+<!-- ------------------------------------------------------------- -->
 <div class="modal-overlay" id="cartModal" onclick="if(event.target === this) fermerModal('cartModal');">
     <div class="modal-box">
         <button class="modal-close" onclick="fermerModal('cartModal')">✕</button>
-        <h3 class="modal-title">Récapitulatif de votre demande</h3>
+        <h3 class="modal-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            Récapitulatif de votre commande
+        </h3>
 
-        <div id="cartEmptyState" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px 20px;">
+        <div id="cartEmptyState" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px 20px; background: #FAFBF9; border-radius: 18px; border: 1px dashed #D0D6CE;">
             Votre panier est actuellement vide. Cliquez sur "+ Ajouter au panier" à côté d'un article pour commencer.
         </div>
 
         <div id="cartFilledState" style="display: none;">
-            <table class="cart-summary-table">
-                <thead>
-                    <tr><th>Référence</th><th>Désignation</th><th style="width:120px;">Quantité</th><th style="text-align:right;">Action</th></tr>
-                </thead>
-                <tbody id="cartTableBody"></tbody>
-            </table>
+            <div class="cart-items-container" id="cartItemsList"></div>
 
-            <form method="POST" action="" onsubmit="return preparerSoumissionPanier(event)" style="display:flex; flex-direction:column; gap:20px; background:#FAFBF9; padding:25px; border-radius:18px; border:1px solid #E2E6E1;">
+            <form method="POST" action="" onsubmit="return preparerSoumissionPanier(event)" style="display:flex; flex-direction:column; gap:20px; background:#FAFBF9; padding:25px; border-radius:20px; border:1px solid #E2E6E1; margin-top: 10px;">
                 {% csrf_token %}
                 <input type="hidden" name="action_type" value="ajouter_panier_groupe">
                 <input type="hidden" name="panier_json" id="cartJsonData">
@@ -422,7 +508,7 @@
 
                 <div>
                     <label style="font-size: 0.8rem; font-weight: 700; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">À quel service sont destinés ces articles ? <span style="color:#BA3C2A;">*</span></label>
-                    <select name="service" id="selectServicePanier" onchange="verifierServicePanier()" class="select-custom" style="margin-top:6px;" required>
+                    <select name="service" id="selectServicePanier" onchange="verifierServicePanier()" class="select-custom" style="margin-top:8px;" required>
                         <option value="" disabled selected>Sélectionner un service pour valider...</option>
                         <option value="Consulaire">Consulaire</option>
                         <option value="Secrétaire">Secrétaire</option>
@@ -436,9 +522,12 @@
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px; margin-top: 5px;">
-                    <button type="button" onclick="viderPanier()" style="background:none; border:none; color:#BA3C2A; font-weight:600; cursor:pointer; font-size:0.9rem;">Vider le panier</button>
+                    <button type="button" onclick="viderPanier()" style="background:none; border:none; color:#BA3C2A; font-weight:700; cursor:pointer; font-size:0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        Vider le panier
+                    </button>
                     <button type="submit" id="btnSubmitCart" class="btn-submit-cart" disabled>
-                        Valider et transmettre au panier global
+                        Valider et transmettre
                     </button>
                 </div>
             </form>
@@ -523,7 +612,7 @@
 
                 let boutonActionHtml = estBloqueSemaine 
                     ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le ticket d'urgence.">Fermé (Option d'urgence)</button>`
-                    : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter au panier</button>`;
+                    : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter au panier</button>`;
 
                 card.innerHTML = `
                     <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}', '${p.prix}')">
@@ -542,13 +631,23 @@
         noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
     }
 
-    function ajouterAuPanier(id, nom, ref, stock) {
+    /* 🚀 FONCTION AJOUT AU PANIER AVEC MICRO-INTERACTION */
+    function ajouterAuPanier(id, nom, ref, stock, elementBouton) {
         let max = parseInt(stock) || 999;
         if (panierLocal[id]) {
             if (panierLocal[id].qty < max) panierLocal[id].qty++;
         } else {
             panierLocal[id] = { id: id, nom: nom, ref: ref, qty: 1, max: max };
         }
+
+        // Animation sur le dock flottant
+        const dock = document.getElementById('btnPanierFlottant');
+        if (dock) {
+            dock.classList.remove('dock-pulse-animation');
+            void dock.offsetWidth; // Trigger reflow
+            dock.classList.add('dock-pulse-animation');
+        }
+
         actualiserPanierUI();
     }
 
@@ -571,10 +670,11 @@
         keys.forEach(k => total += panierLocal[k].qty);
         
         document.getElementById('cartBadgeCount').textContent = total;
+        document.getElementById('cartBadgeText').textContent = total === 0 ? "Aucun article" : `${total} article${total > 1 ? 's' : ''}`;
         
         let empty = document.getElementById('cartEmptyState');
         let filled = document.getElementById('cartFilledState');
-        let tbody = document.getElementById('cartTableBody');
+        let itemsContainer = document.getElementById('cartItemsList');
 
         if (keys.length === 0) {
             empty.style.display = 'block';
@@ -582,22 +682,26 @@
         } else {
             empty.style.display = 'none';
             filled.style.display = 'block';
-            tbody.innerHTML = '';
+            itemsContainer.innerHTML = '';
             keys.forEach(k => {
                 let item = panierLocal[k];
-                tbody.innerHTML += `
-                    <tr>
-                        <td><span class="product-ref-code">${item.ref}</span></td>
-                        <td><strong>${item.nom}</strong></td>
-                        <td>
+                itemsContainer.innerHTML += `
+                    <div class="cart-item-card">
+                        <div class="cart-item-info">
+                            <span class="product-ref-code">${item.ref}</span>
+                            <span class="cart-item-title">${item.nom}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:15px;">
                             <div class="qty-controls">
                                 <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', -1)">-</button>
-                                <span style="padding:0 6px; font-weight:700;">${item.qty}</span>
+                                <span style="padding:0 8px; font-weight:700; font-size:0.95rem;">${item.qty}</span>
                                 <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', 1)">+</button>
                             </div>
-                        </td>
-                        <td style="text-align:right;"><button type="button" style="background:none; border:none; color:#BA3C2A; font-weight:600; cursor:pointer;" onclick="delete panierLocal['${item.id}']; actualiserPanierUI();">Retirer</button></td>
-                    </tr>
+                            <button type="button" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:6px;" title="Retirer" onclick="delete panierLocal['${item.id}']; actualiserPanierUI();">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </div>
                 `;
             });
         }
@@ -670,7 +774,7 @@
         const keys = Object.keys(articlesTicketUrgent);
 
         if (keys.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</td></tr>';
+            tbody.innerHTML = '<div style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</div>';
             return;
         }
 
@@ -678,11 +782,18 @@
         keys.forEach(k => {
             const item = articlesTicketUrgent[k];
             tbody.innerHTML += `
-                <tr>
-                    <td><strong>${item.nom}</strong> <small style="color:#7A8278;">(${item.ref})</small></td>
-                    <td><strong>${item.qty}</strong></td>
-                    <td style="text-align: right;"><button type="button" onclick="supprimerItemTicketUrgent('${item.id}')" style="background:none; border:none; color:#BA3C2A; font-weight:700; cursor:pointer;">Retirer</button></td>
-                </tr>
+                <div class="cart-item-card" style="margin-bottom: 8px;">
+                    <div class="cart-item-info">
+                        <span class="product-ref-code">${item.ref}</span>
+                        <span class="cart-item-title">${item.nom}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <span style="font-weight:700; font-size:1rem; color:#2C351C;">x${item.qty}</span>
+                        <button type="button" onclick="supprimerItemTicketUrgent('${item.id}')" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:4px;" title="Retirer">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
             `;
         });
     }
