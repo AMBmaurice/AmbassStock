@@ -920,21 +920,20 @@ def page_historique(request):
 
   profil_actif = get_profil_actif(request.user)
 
+  # Récupération des filtres GET
   entree_debut = request.GET.get('entree_debut')
   entree_fin = request.GET.get('entree_fin')
   sortie_debut = request.GET.get('sortie_debut')
   sortie_fin = request.GET.get('sortie_fin')
-  sortie_service = request.GET.get('sortie_service')
+  sortie_service = request.GET.get('sortie_service', '').strip()
 
   # -------------------------------------------------------------
-  # TENTATIVE 1 : REQUÊTE NORMALE AVEC REGROUPEMENT PAR SERVICE
+  # REQUÊTE ET FILTRAGE DES SORTIES
   # -------------------------------------------------------------
   try:
     flux_entrees = MouvementStock.objects.filter(
         type_mouvement='ENTREE'
     ).order_by('-date_mouvement', '-id')
-
-    # **TRI REGROUPÉ PAR SERVICE POUR LES SORTIES**
     flux_sorties = MouvementStock.objects.filter(
         type_mouvement='SORTIE'
     ).order_by('service', '-date_mouvement', '-id')
@@ -947,23 +946,20 @@ def page_historique(request):
       flux_sorties = flux_sorties.filter(date_mouvement__gte=sortie_debut)
     if sortie_fin:
       flux_sorties = flux_sorties.filter(date_mouvement__lte=sortie_fin)
+
+    # Si un service spécifique est sélectionné dans le filtre
     if sortie_service:
       flux_sorties = flux_sorties.filter(service=sortie_service)
 
     liste_entrees = list(flux_entrees)
     liste_sorties = list(flux_sorties)
 
-  # -------------------------------------------------------------
-  # TENTATIVE 2 : SECOURS DE MIGRATION (DEFER DE NUMERO_COMMANDE)
-  # -------------------------------------------------------------
   except Exception:
     flux_entrees = (
         MouvementStock.objects.defer('numero_commande')
         .filter(type_mouvement='ENTREE')
         .order_by('-date_mouvement', '-id')
     )
-
-    # **TRI REGROUPÉ PAR SERVICE POUR LES SORTIES (SECOURS)**
     flux_sorties = (
         MouvementStock.objects.defer('numero_commande')
         .filter(type_mouvement='SORTIE')
@@ -984,9 +980,7 @@ def page_historique(request):
     liste_entrees = list(flux_entrees)
     liste_sorties = list(flux_sorties)
 
-  # -------------------------------------------------------------
-  # ENRICHISSEMENT DES OBJETS & REFERENCES PRODUITS
-  # -------------------------------------------------------------
+  # Enrichissement des références et noms de produits
   for movimiento in liste_entrees:
     if movimiento.produit:
       movimiento.objet = movimiento.produit.objet
@@ -998,15 +992,27 @@ def page_historique(request):
       movimiento.reference = movimiento.produit.reference
 
   # -------------------------------------------------------------
-  # PAGINATION (50 ÉLÉMENTS PAR PAGE POUR ÉVITER DE COUPER UN SERVICE)
+  # PAGINATION : 15 ÉLÉMENTS PAR PAGE (POUR UNE LECTURE FLUIDE)
   # -------------------------------------------------------------
-  paginator_entrees = Paginator(liste_entrees, 25)
+  paginator_entrees = Paginator(liste_entrees, 15)
   page_entrees = request.GET.get('page_entrees', 1)
   page_obj_entrees = paginator_entrees.get_page(page_entrees)
 
-  paginator_sorties = Paginator(liste_sorties, 50)
+  paginator_sorties = Paginator(liste_sorties, 15)
   page_sorties = request.GET.get('page_sorties', 1)
   page_obj_sorties = paginator_sorties.get_page(page_sorties)
+
+  # Liste des services pour alimenter les onglets / filtres
+  liste_services_disponibles = [
+      'Consulaire',
+      'Secrétaire',
+      'Secrétaire AMB',
+      '1ère Secrétaire',
+      '2ème Secrétaire',
+      'Diplomate',
+      'Administration',
+      'Sécurité',
+  ]
 
   return render(
       request,
@@ -1017,6 +1023,8 @@ def page_historique(request):
           'page_obj_sorties': page_obj_sorties,
           'entrees': page_obj_entrees.object_list,
           'sorties': page_obj_sorties.object_list,
+          'service_selectionne': sortie_service,
+          'liste_services': liste_services_disponibles,
       },
   )
  
