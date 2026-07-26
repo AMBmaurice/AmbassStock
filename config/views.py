@@ -1171,7 +1171,7 @@ def page_gestion_demandes(request):
         if action == 'valider':
           demande.statut = 'valide'
         elif action == 'refuser':
-          demande.statut = 'lu'
+          demande.statut = 'refuse'
         elif action == 'repondre':
           reponse_text = request.POST.get('message_reponse', '').strip()
           demande.reponse_admin = reponse_text
@@ -1186,7 +1186,7 @@ def page_gestion_demandes(request):
 
   search_query = request.GET.get('q', '').strip()
 
-  # RÉCUPÉRATION DIRECTE DE TOUTES LES DEMANDES SANS FILTRE
+  # Récupération globale des demandes
   demandes_liste = DemandeService.objects.all().order_by('-id')
 
   if search_query:
@@ -1196,16 +1196,22 @@ def page_gestion_demandes(request):
         | Q(type_demande__icontains=search_query)
     )
 
+  # TOUTES LES DEMANDES NON CLÔTURÉES RESTE DANS "DEMANDES ACTUELLES"
+  demandes_en_cours = demandes_liste.exclude(statut__in=['valide', 'refuse'])
+
+  # UNICUEMENT LES DEMANDES DÉFINITIVEMENT TRAITÉES VONT DANS HISTORIQUE
+  demandes_passees = demandes_liste.filter(statut__in=['valide', 'refuse'])
+
   return render(
       request,
       'gestion_demandes.html',
       {
           'profil_actif': profil_actif,
-          'demandes': demandes_liste,  # Transmet l'intégralité des enregistrements
+          'demandes_en_cours': demandes_en_cours,
+          'demandes_passees': demandes_passees,
           'search_query': search_query,
       },
   )
-
 def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
