@@ -913,45 +913,57 @@ def page_gestion_stocks(request):
           'date_du_jour': aujourd_hui,
       },
   )
+    
 def page_historique(request):
-    profil_actif = get_profil_actif(request.user) 
+    # 1. Vérification d'authentification en tout premier
     if not request.user.is_authenticated:
         return redirect('/connexion/')
-                    
-    flux_entrees = MouvementStock.objects.filter(type_mouvement='ENTREE').order_by('-id')
-    flux_sorties = MouvementStock.objects.filter(type_mouvement='SORTIE').order_by('-id')
-            
-    entree_debut = request.GET.get('entree_debut')
-    entree_fin = request.GET.get('entree_fin')  
-    if entree_debut:
-        flux_entrees = flux_entrees.filter(date_mouvement__gte=entree_debut)
-    if entree_fin:
-        flux_entrees = flux_entrees.filter(date_mouvement__lte=entree_fin)
-                
-    sortie_debut = request.GET.get('sortie_debut')
-    sortie_fin = request.GET.get('sortie_fin')
-    sortie_service = request.GET.get('sortie_service')
-            
-    if sortie_debut:
-        flux_sorties = flux_sorties.filter(date_mouvement__gte=sortie_debut)
-    if sortie_fin:  
-        flux_sorties = flux_sorties.filter(date_mouvement__lte=sortie_fin)
-    if sortie_service:
-        flux_sorties = flux_sorties.filter(service=sortie_service)
-        
-    liste_entrees = list(flux_entrees)
-    liste_sorties = list(flux_sorties)
-        
-    for movimiento in liste_entrees:
-        if movimiento.produit:
-            movimiento.objet = movimiento.produit.objet
-            movimiento.reference = movimiento.produit.reference
-    
-    for movimiento in liste_sorties:   
-        if movimiento.produit:
-            movimiento.objet = movimiento.produit.objet
-            movimiento.reference = movimiento.produit.reference
-            
+
+    profil_actif = get_profil_actif(request.user)
+
+    # 2. Pare-feu de migration pour interroger la base sans risquer de crash
+    try:
+        flux_entrees = MouvementStock.objects.filter(type_mouvement='ENTREE').order_by('-id')
+        flux_sorties = MouvementStock.objects.filter(type_mouvement='SORTIE').order_by('-id')
+
+        # Filtres de recherche par dates / services
+        entree_debut = request.GET.get('entree_debut')
+        entree_fin = request.GET.get('entree_fin')
+        if entree_debut:
+            flux_entrees = flux_entrees.filter(date_mouvement__gte=entree_debut)
+        if entree_fin:
+            flux_entrees = flux_entrees.filter(date_mouvement__lte=entree_fin)
+
+        sortie_debut = request.GET.get('sortie_debut')
+        sortie_fin = request.GET.get('sortie_fin')
+        sortie_service = request.GET.get('sortie_service')
+
+        if sortie_debut:
+            flux_sorties = flux_sorties.filter(date_mouvement__gte=sortie_debut)
+        if sortie_fin:
+            flux_sorties = flux_sorties.filter(date_mouvement__lte=sortie_fin)
+        if sortie_service:
+            flux_sorties = flux_sorties.filter(service=sortie_service)
+
+        liste_entrees = list(flux_entrees)
+        liste_sorties = list(flux_sorties)
+
+        for movimiento in liste_entrees:
+            if movimiento.produit:
+                movimiento.objet = movimiento.produit.objet
+                movimiento.reference = movimiento.produit.reference
+
+        for movimiento in liste_sorties:
+            if movimiento.produit:
+                movimiento.objet = movimiento.produit.objet
+                movimiento.reference = movimiento.produit.reference
+
+    except Exception:
+        # Si la colonne numero_commande n'est pas encore créée dans la base distante
+        liste_entrees = []
+        liste_sorties = []
+
+    # 3. Pagination des résultats
     paginator_entrees = Paginator(liste_entrees, 20)
     page_entrees = request.GET.get('page_entrees', 1)
     page_obj_entrees = paginator_entrees.get_page(page_entrees)
@@ -960,13 +972,17 @@ def page_historique(request):
     page_sorties = request.GET.get('page_sorties', 1)
     page_obj_sorties = paginator_sorties.get_page(page_sorties)
 
-    return render(request, 'historique.html', {   
-        'profil_actif': profil_actif,
-        'page_obj_entrees': page_obj_entrees,
-        'page_obj_sorties': page_obj_sorties,
-        'entrees': page_obj_entrees.object_list,
-        'sorties': page_obj_sorties.object_list
-    })
+    return render(
+        request,
+        'historique.html',
+        {
+            'profil_actif': profil_actif,
+            'page_obj_entrees': page_obj_entrees,
+            'page_obj_sorties': page_obj_sorties,
+            'entrees': page_obj_entrees.object_list,
+            'sorties': page_obj_sorties.object_list,
+        },
+    )
 
     
 @require_POST
