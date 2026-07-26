@@ -3,101 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AmbassStock - Gestion des demandes</title>
+    <title>AmbassStock - Gestion des Demandes</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #333333; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
         .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 10px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 10px; font-weight: 500; transition: all 0.3s; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .card-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 40px; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); margin-bottom: 30px; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .page-title { font-size: 2.2rem; font-weight: 700; color: #2c351c; }
-        
-        /* NAVIGATION PAR ONGLETS */
-        .tabs-container { display: flex; gap: 12px; margin-bottom: 25px; border-bottom: 1px solid #E2E6E1; padding-bottom: 15px; }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
+
+        /* EN-TÊTE DE PAGE & CONTENEURS */
+        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
+
+        .card-panel { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 28px; padding: 36px 40px; width: 100%; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.2s, box-shadow 0.2s; }
+        .card-panel:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
+
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 20px; }
+
+        /* 🔍 BARRE DE RECHERCHE DYNAMIQUE */
+        .search-bar-container { position: relative; width: 100%; max-width: 340px; }
+        .search-bar-container svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); stroke: #7A8278; }
+        .search-input { width: 100%; height: 46px; padding: 0 18px 0 46px; border: 1px solid #D0D6CE; border-radius: 14px; background-color: #FAFBF9; outline: none; font-size: 0.95rem; font-weight: 500; color: #2C351C; transition: all 0.2s ease; }
+        .search-input:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+
+        /* 🎛️ NAVIGATION PAR ONGLETS PILULES (TABS SYSTEM) */
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 28px; border-bottom: 1px solid #ECEFEA; padding-bottom: 18px; flex-wrap: wrap; }
         .tab-btn { 
             padding: 10px 22px; 
-            border-radius: 12px; 
+            border-radius: 20px; 
             border: 1px solid #D0D6CE; 
             background: #FAFBF9; 
             color: #495430; 
-            font-weight: 600; 
-            font-size: 0.95rem; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
             cursor: pointer; 
-            transition: all 0.2s; 
-            display: flex; 
+            transition: all 0.25s ease; 
+            display: inline-flex; 
             align-items: center; 
-            gap: 8px; 
+            gap: 10px; 
         }
+        .tab-btn:hover { background: #EBF2E9; border-color: #5E6D3E; }
         .tab-btn.active { 
             background: #5E6D3E; 
             color: #ffffff; 
             border-color: #5E6D3E; 
-            box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); 
+            box-shadow: 0 4px 14px rgba(94, 109, 62, 0.22); 
         }
         .tab-badge { 
-            background: rgba(0,0,0,0.08); 
-            padding: 2px 8px; 
-            border-radius: 20px; 
-            font-size: 0.8rem; 
+            background: rgba(0,0,0,0.06); 
+            padding: 2px 9px; 
+            border-radius: 12px; 
+            font-size: 0.78rem; 
+            font-weight: 800;
         }
-        .tab-btn.active .tab-badge { background: rgba(255,255,255,0.25); color: white; }
+        .tab-btn.active .tab-badge { background: rgba(255,255,255,0.22); color: #ffffff; }
 
-        .search-bar-container { position: relative; width: 100%; max-width: 300px; }
-        .search-input { width: 100%; height: 42px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; background-color: #FAFBF9; outline: none; font-size: 0.95rem; }
+        /* 📑 LISTE ET LIGNES DE DEMANDES */
+        .demande-list { display: flex; flex-direction: column; gap: 12px; }
+        .demande-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 22px 26px; 
+            background: #FAFBF9; 
+            border: 1px solid #E2E6E1; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
+            gap: 20px;
+        }
+        .demande-row:hover { 
+            background-color: #ffffff; 
+            border-color: #5E6D3E; 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 20px rgba(73, 84, 48, 0.05); 
+        }
+        
+        .demande-info-left { display: flex; flex-direction: column; gap: 6px; }
+        .meta-service-tag { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.8rem; font-weight: 800; color: #5E6D3E; background: #EBF2E9; padding: 2px 10px; border-radius: 6px; width: fit-content; border: 1px solid rgba(94, 109, 62, 0.18); text-transform: uppercase; }
+        .demande-type-label { font-size: 1.15rem; font-weight: 800; color: #2C351C; }
+        .demande-date-sub { font-size: 0.88rem; color: #7A8278; font-weight: 500; display: flex; align-items: center; gap: 8px; }
 
-        .demande-list { display: flex; flex-direction: column; }
-        .demande-row { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #F1F3F0; cursor: pointer; transition: background 0.2s; }
-        .demande-row:hover { background-color: #FAFBF9; }
-        .demande-info-left { display: flex; flex-direction: column; gap: 4px; }
-        .meta-service { font-size: 0.78rem; font-weight: 700; color: #5E6D3E; text-transform: uppercase; letter-spacing: 0.5px; }
-        .demande-type-label { font-size: 1.1rem; font-weight: 700; color: #2c351c; }
-        .demande-date-sub { font-size: 0.88rem; color: #7A8278; }
-        .arrow-right { color: #D0D6CE; font-size: 1.2rem; margin-right: 10px; }
+        .arrow-action-icon { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            background: #ffffff; 
+            border: 1px solid #E2E6E1; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #7A8278; 
+            transition: all 0.2s; 
+        }
+        .demande-row:hover .arrow-action-icon { background: #5E6D3E; color: #ffffff; border-color: #5E6D3E; }
 
-        /* DESIGN POP-UP HARMONISÉ ET SECTION DE RÉPONSE DÉDIÉE */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 53, 28, 0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 9999 !important; justify-content: center; align-items: center; padding: 20px; }
-        .modal-box { background: #ffffff; border-radius: 24px; width: 100%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.2); border: 1px solid #E2E6E1; overflow-y: auto; padding: 35px 40px; position: relative; }
+        /* 🪟 MODALE HIGH-END ET ZONES DE TRAITEMENT */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 53, 28, 0.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 9999 !important; justify-content: center; align-items: center; padding: 20px; }
+        .modal-box { background: #ffffff; border-radius: 28px; width: 100%; max-width: 820px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.22); border: 1px solid #E2E6E1; overflow-y: auto; padding: 40px; position: relative; animation: modalFadeIn 0.25s ease-out; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
         .modal-header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .modal-breadcrumb { font-size: 0.88rem; color: #7A8278; font-weight: 500; }
-        .modal-close-btn { background: none; border: none; font-size: 1.8rem; color: #7A8278; cursor: pointer; padding: 0; line-height: 1; transition: color 0.2s; }
-        .modal-close-btn:hover { color: #2c351c; }
-        .modal-grid-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; background-color: #FAFBF9; padding: 18px 24px; border-radius: 16px; border: 1px solid #E2E6E1; margin-bottom: 25px; }
-        .meta-block { display: flex; flex-direction: column; gap: 4px; }
-        .meta-label { font-size: 0.8rem; color: #7A8278; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .meta-value { font-size: 1.05rem; font-weight: 700; color: #2c351c; }
-        
-        .message-box { margin-bottom: 25px; }
-        .message-title { font-size: 0.82rem; color: #495430; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .message-content { font-size: 1rem; color: #333333; line-height: 1.6; background: #FAFBF9; padding: 18px; border-radius: 14px; border: 1px solid #E2E6E1; white-space: pre-wrap; }
-        
-        /* SECTION AFFICHAGE DE LA RÉPONSE HISTORIQUE DE L'ADMIN */
-        .reponse-archive-box { background-color: #EBF2E9; border-left: 4px solid #5E6D3E; padding: 18px; border-radius: 0 14px 14px 0; margin-bottom: 25px; }
-        .reponse-archive-title { font-size: 0.82rem; font-weight: 700; color: #495430; text-transform: uppercase; margin-bottom: 6px; }
-        .reponse-archive-text { font-size: 0.98rem; color: #2c351c; line-height: 1.5; white-space: pre-wrap; }
+        .modal-breadcrumb { font-size: 0.88rem; color: #7A8278; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .modal-close-btn { background: #FAFBF9; border: 1px solid #E2E6E1; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7A8278; transition: all 0.2s; }
+        .modal-close-btn:hover { color: #2C351C; background: #EBF2E9; border-color: #5E6D3E; }
 
-        .btn-row { display: flex; gap: 15px; margin-bottom: 25px; width: 100%; }
+        .modal-grid-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background-color: #FAFBF9; padding: 20px 24px; border-radius: 18px; border: 1px solid #E2E6E1; margin-bottom: 25px; }
+        .meta-block { display: flex; flex-direction: column; gap: 4px; }
+        .meta-label { font-size: 0.75rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .meta-value { font-size: 1.05rem; font-weight: 800; color: #2C351C; }
+
+        .message-box { margin-bottom: 25px; }
+        .message-title { font-size: 0.78rem; color: #495430; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+        .message-content { font-size: 0.98rem; color: #2C351C; line-height: 1.6; background: #FAFBF9; padding: 20px; border-radius: 16px; border: 1px solid #E2E6E1; white-space: pre-wrap; font-weight: 500; }
+
+        /* 📦 HISTORIQUE RÉPONSE ET DÉCISION */
+        .reponse-archive-box { background-color: #EBF2E9; border-left: 5px solid #5E6D3E; padding: 20px; border-radius: 0 16px 16px 0; margin-bottom: 25px; }
+        .reponse-archive-title { font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .reponse-archive-text { font-size: 0.98rem; color: #2C351C; line-height: 1.5; white-space: pre-wrap; font-weight: 600; }
+
+        .btn-row { display: flex; gap: 14px; margin-bottom: 25px; width: 100%; }
         .btn-row form { flex: 1; }
-        .btn-modal-validate { width: 100%; height: 48px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s; }
-        .btn-modal-validate:hover { background-color: #495430; }
-        .btn-modal-reject { width: 100%; height: 48px; background-color: #FAFBF9; color: #495430; border: 1px solid #D0D6CE; border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background-color 0.2s; }
-        .btn-modal-reject:hover { background-color: #F1F3F0; border-color: #A3AFA0; }
-        .fine-divider { border: 0; height: 1px; background: rgba(73, 84, 48, 0.12); margin: 25px 0; }
-        .reply-section-title { font-size: 1.3rem; font-weight: 700; color: #2c351c; margin-bottom: 15px; }
-        .textarea-reply { width: 100%; height: 110px; padding: 16px; border: 1px solid #D0D6CE; border-radius: 14px; background-color: #FAFBF9; outline: none; font-size: 0.98rem; color: #2c351c; margin-bottom: 18px; resize: vertical; }
-        .btn-send-reply { height: 46px; padding: 0 35px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: background-color 0.2s; }
-        .btn-send-reply:hover { background-color: #495430; }
-        .info-hint-box { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); border-radius: 14px; padding: 14px 18px; color: #495430; font-size: 0.92rem; font-weight: 500; display: flex; align-items: center; gap: 12px; margin-top: 25px; }
+        
+        .btn-modal-validate { width: 100%; height: 48px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
+        .btn-modal-validate:hover { background-color: #495430; transform: translateY(-1px); }
+        
+        .btn-modal-reject { width: 100%; height: 48px; background-color: #FAFBF9; color: #BA3C2A; border: 1px solid rgba(186, 60, 42, 0.4); border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; }
+        .btn-modal-reject:hover { background-color: #BA3C2A; color: #ffffff; border-color: #BA3C2A; }
+
+        .fine-divider { border: 0; height: 1px; background: #ECEFEA; margin: 25px 0; }
+        .reply-section-title { font-size: 1.25rem; font-weight: 800; color: #2C351C; margin-bottom: 15px; }
+        
+        .textarea-reply { width: 100%; height: 110px; padding: 16px; border: 1px solid #D0D6CE; border-radius: 14px; background-color: #FAFBF9; outline: none; font-size: 0.95rem; color: #2C351C; font-weight: 500; margin-bottom: 16px; resize: vertical; transition: border-color 0.2s; }
+        .textarea-reply:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+
+        .btn-send-reply { height: 48px; padding: 0 32px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
+        .btn-send-reply:hover { background-color: #495430; transform: translateY(-1px); }
+
+        .info-hint-box { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); border-radius: 14px; padding: 14px 18px; color: #495430; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 12px; margin-top: 25px; }
+
+        .empty-state { text-align: center; color: #7A8278; font-style: italic; padding: 45px; background: #FAFBF9; border-radius: 20px; border: 1px dashed #D0D6CE; font-size: 0.95rem; }
     </style>
 </head>
 <body>
 
-<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+<button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
         
@@ -109,18 +166,18 @@
         </button>
     </div>
         
-    <ul class="sidebar-menu" style="list-style: none; padding: 0 15px; flex-grow: 1; overflow-y: auto;">
-        <li class="sidebar-item" style="margin-bottom: 4px;"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
-        <li class="sidebar-item" style="margin-bottom: 4px;"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>
-        {% if profil_actif.acces_stocks %}<li class="sidebar-item" style="margin-bottom: 4px;"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
-        {% if profil_actif.acces_historique %}<li class="sidebar-item" style="margin-bottom: 4px;"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
-        <li class="sidebar-item" style="margin-bottom: 4px;"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>
-        {% if profil_actif.acces_statistiques %}<li class="sidebar-item" style="margin-bottom: 4px;"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item" style="margin-bottom: 4px;"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
-        {% if profil_actif.acces_factures %}<li class="sidebar-item" style="margin-bottom: 4px;"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        <li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
         {% if is_admin or request.user.is_superuser %}
-        <li class="sidebar-item" style="margin-bottom: 4px;"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>
-        <li class="sidebar-item" style="margin-bottom: 4px;"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
+        <li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
         {% endif %}
     </ul>
             
@@ -144,170 +201,194 @@
     </div>
 </div>
 
-<script>
-function toggleSidebar() {
-    const sidebar = document.getElementById('appSidebar');
-    const openBtn = document.getElementById('sidebarToggleOpen');
-    const mainContent = document.querySelector('.main-content');
-        
-    if (sidebar.style.transform === 'translateX(-290px)') {
-        sidebar.style.transform = 'translateX(0px)';
-        sidebar.style.opacity = '1';
-        openBtn.style.display = 'none';
-        if (mainContent) {
-            mainContent.style.marginLeft = '290px';
-            mainContent.style.paddingLeft = '0px';
-            mainContent.style.paddingTop = '0px';
-        }
-    } else {
-        sidebar.style.transform = 'translateX(-290px)';
-        sidebar.style.opacity = '0';
-        openBtn.style.display = 'flex';
-        if (mainContent) {
-            mainContent.style.marginLeft = '15px';
-            mainContent.style.paddingLeft = '65px';
-            mainContent.style.paddingTop = '12px';
-        }
-    }
-}
-</script>
-
 <div class="main-content">
-    <div class="card-box">
+    <div class="page-header">
+        <h1 class="page-title">Gestion des Demandes & Suggestions</h1>
+        <p class="welcome-text">Instruisez les requêtes transmises par les différents services de l'ambassade et communiquez vos réponses officielles.</p>
+    </div>
+
+    <div class="card-panel">
         <div class="header-row">
-            <h2 class="page-title">Demandes et Suggestions</h2>
+            <!-- 🎛️ ONGLETS DE SÉLECTION -->
+            <div class="tabs-container" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+                <button class="tab-btn active" id="btnTabEnCours" onclick="changerOnglet('en_cours')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Demandes en attente</span>
+                    <span class="tab-badge">{{ demandes_en_cours.count }}</span>
+                </button>
+                <button class="tab-btn" id="btnTabPassees" onclick="changerOnglet('passees')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>Historique / Demandes traitées</span>
+                    <span class="tab-badge">{{ demandes_passees.count }}</span>
+                </button>
+            </div>
+
+            <!-- 🔍 RECHERCHE DYNAMIQUE -->
             <div class="search-bar-container">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <form method="GET" action="">
-                    <input type="text" name="q" class="search-input" placeholder="Recherche..." value="{{ search_query|default:'' }}">
+                    <input type="text" name="q" class="search-input" placeholder="Rechercher par service, mot clé..." value="{{ search_query|default:'' }}">
                 </form>
             </div>
         </div>
 
-        <div class="tabs-container">
-            <button class="tab-btn active" id="btnTabEnCours" onclick="changerOnglet('en_cours')">
-                <span>Demandes actuelles</span>
-                <span class="tab-badge">{{ demandes_en_cours.count }}</span>
-            </button>
-            <button class="tab-btn" id="btnTabPassees" onclick="changerOnglet('passees')">
-                <span>Demandes passées / Historique</span>
-                <span class="tab-badge">{{ demandes_passees.count }}</span>
-            </button>
-        </div>
+        <hr class="fine-divider" style="margin-top: 15px; margin-bottom: 25px;">
 
-        <!-- VUE 1 : DEMANDES ACTUELLES (EN ATTENTE) -->
+        <!-- ⏳ VUE 1 : DEMANDES EN COURS (EN ATTENTE) -->
         <div id="sectionDemandesEnCours" class="demande-list">
             {% for d in demandes_en_cours %}
             <div class="demande-row" onclick="ouvrirPopUpDemande('{{ d.id }}', '{% if d.type_demande == 'suggestion' %}Suggestion{% elif d.type_demande == 'reapprovisionnement' %}Réapprovisionnement{% else %}Autre{% endif %}', '{{ d.date_demande|date:'d/m/Y' }}', '{{ d.service }}', '{{ d.message|escapejs }}', '{{ d.statut }}', '{{ d.reponse_admin|default:''|escapejs }}')">
                 <div class="demande-info-left">
-                    <span class="meta-service">{{ d.service }}</span>
-                    <span class="demande-type-label">{% if d.type_demande == 'suggestion' %}Suggestion{% elif d.type_demande == 'reapprovisionnement' %}Réapprovisionnement{% else %}Autre{% endif %}</span>
-                    <span class="demande-date-sub">{{ d.date_demande|date:"d/m/Y" }}</span>
+                    <span class="meta-service-tag">{{ d.service }}</span>
+                    <span class="demande-type-label">{% if d.type_demande == 'suggestion' %}Suggestion{% elif d.type_demande == 'reapprovisionnement' %}Réapprovisionnement{% else %}Autre requête{% endif %}</span>
+                    <span class="demande-date-sub">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        Reçue le {{ d.date_demande|date:"d/m/Y" }}
+                    </span>
                 </div>
-                <div class="arrow-right">&#8250;</div>
+                <div class="arrow-action-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
             </div>
             {% empty %}
-            <p style="color: #7A8278; font-style: italic; padding: 20px; text-align: center;">Aucune nouvelle demande en cours d'attente.</p>
+            <div class="empty-state">Aucune nouvelle demande en cours d'attente pour le moment.</div>
             {% endfor %}
         </div>
 
-        <!-- VUE 2 : DEMANDES PASSÉES (HISTORIQUE AVEC DÉCISION ET RÉPONSE) -->
+        <!-- 📂 VUE 2 : DEMANDES PASSÉES (HISTORIQUE DES DÉCISIONS) -->
         <div id="sectionDemandesPassees" class="demande-list" style="display: none;">
             {% for d in demandes_passees %}
-            <div class="demande-row" style="opacity: 0.85;" onclick="ouvrirPopUpDemande('{{ d.id }}', '{% if d.type_demande == 'suggestion' %}Suggestion{% elif d.type_demande == 'reapprovisionnement' %}Réapprovisionnement{% else %}Autre{% endif %}', '{{ d.date_demande|date:'d/m/Y' }}', '{{ d.service }}', '{{ d.message|escapejs }}', '{{ d.statut }}', '{{ d.reponse_admin|default:''|escapejs }}')">
+            <div class="demande-row" style="opacity: 0.9;" onclick="ouvrirPopUpDemande('{{ d.id }}', '{% if d.type_demande == 'suggestion' %}Suggestion{% elif d.type_demande == 'reapprovisionnement' %}Réapprovisionnement{% else %}Autre{% endif %}', '{{ d.date_demande|date:'d/m/Y' }}', '{{ d.service }}', '{{ d.message|escapejs }}', '{{ d.statut }}', '{{ d.reponse_admin|default:''|escapejs }}')">
                 <div class="demande-info-left">
-                    <span class="meta-service" style="color: #7A8278;">{{ d.service }}</span>
-                    <span class="demande-type-label">{% if d.type_demande == 'suggestion' %}Suggestion{% elif d.type_demande == 'reapprovisionnement' %}Réapprovisionnement{% else %}Autre{% endif %}</span>
-                    <span class="demande-date-sub">{{ d.date_demande|date:"d/m/Y" }} • <strong style="color: {% if d.statut == 'valide' %}#5E6D3E{% else %}#BA3C2A{% endif %};">{% if d.statut == 'valide' %}✓ Accepté / Validé{% else %}✕ Refusé / Classé{% endif %}</strong></span>
+                    <span class="meta-service-tag" style="background: #F1F3F0; color: #7A8278; border-color: #E2E6E1;">{{ d.service }}</span>
+                    <span class="demande-type-label">{% if d.type_demande == 'suggestion' %}Suggestion{% elif d.type_demande == 'reapprovisionnement' %}Réapprovisionnement{% else %}Autre requête{% endif %}</span>
+                    <span class="demande-date-sub">
+                        Le {{ d.date_demande|date:"d/m/Y" }} • 
+                        <strong style="color: {% if d.statut == 'valide' %}#5E6D3E{% else %}#BA3C2A{% endif %}; margin-left: 4px;">
+                            {% if d.statut == 'valide' %}Acceptée / Validée{% else %}Refusée / Classée{% endif %}
+                        </strong>
+                    </span>
                 </div>
-                <div class="arrow-right">&#8250;</div>
+                <div class="arrow-action-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
             </div>
             {% empty %}
-            <p style="color: #7A8278; font-style: italic; padding: 20px; text-align: center;">Aucune demande archivée dans l'historique pour le moment.</p>
+            <div class="empty-state">Aucune demande archivée dans l'historique pour le moment.</div>
             {% endfor %}
         </div>
-
     </div>
 </div>
 
-<!-- POP-UP MODAL AVEC AFFICHAGE DYNAMIQUE DES DÉCISIONS ET RÉPONSES -->
+<!-- 🪟 POP-UP MODALE D'INSTRUCTION ET DE RÉPONSE ADMINISTRATEUR -->
 <div class="modal-overlay" id="popupAdminDemande" onclick="fermerPopUpDemande(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
         
         <div class="modal-header-nav">
-            <div class="modal-breadcrumb">&lt; Gestion des demandes / <span id="lblBreadcrumb">Type</span></div>
-            <button class="modal-close-btn" onclick="fermerPopUpForce()">&times;</button>
+            <div class="modal-breadcrumb">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                Instruction de la requête / <span id="lblBreadcrumb" style="color: #2C351C; font-weight: 700;">Type</span>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="fermerPopUpForce()">✕</button>
         </div>
         
         <div class="modal-grid-meta">
             <div class="meta-block">
-                <span class="meta-label">Type</span>
-                <span class="meta-value" id="lblType">Type</span>
+                <span class="meta-label">Motif / Objet</span>
+                <span class="meta-value" id="lblType">-</span>
             </div>
             <div class="meta-block">
-                <span class="meta-label">Date</span>
-                <span class="meta-value" id="lblDate">Date</span>
+                <span class="meta-label">Date d'Émission</span>
+                <span class="meta-value" id="lblDate">-</span>
             </div>
             <div class="meta-block">
-                <span class="meta-label">Utilisateur / Service</span>
-                <span class="meta-value" id="lblUtilisateur">Utilisateur</span>
+                <span class="meta-label">Service Emetteur</span>
+                <span class="meta-value" id="lblUtilisateur">-</span>
             </div>
         </div>
 
         <!-- MESSAGE ORIGINAL DU SERVICE -->
         <div class="message-box">
-            <div class="message-title">Message initial du service</div>
-            <div class="message-content" id="lblMessage">Contenu du message associé...</div>
+            <div class="message-title">Contenu du message transmis</div>
+            <div class="message-content" id="lblMessage">Saisie du message...</div>
         </div>
 
-        <!-- ZONE D'AFFICHAGE DE LA DÉCISION ET DE LA RÉPONSE PRÉCÉDENTE (SI EXISTANTE) -->
+        <!-- ZONE D'AFFICHAGE DE LA DÉCISION ET RÉPONSE HISTORIQUE (SI DÉJÀ TRAITÉ) -->
         <div id="boxReponseExistante" class="reponse-archive-box" style="display: none;">
-            <div class="reponse-archive-title" id="lblTitreDecision">Décision & Réponse envoyée :</div>
+            <div class="reponse-archive-title" id="lblTitreDecision">Décision & Réponse officielle :</div>
             <div class="reponse-archive-text" id="lblTextReponseExistante"></div>
         </div>
 
-        <!-- BOUTONS DE TRAITEMENT (MASQUÉS SI DÉJÀ TRAITÉ) -->
+        <!-- BOUTONS D'ACTION ADMINISTRATEUR (VALIDER / REFUSER) -->
         <div class="btn-row" id="rowActionsAdmin">
             <form method="POST" action="">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="valider">
                 <input type="hidden" name="demande_id" class="txt-demande-id">
-                <button type="submit" class="btn-modal-validate">✓ Valider la demande</button>
+                <button type="submit" class="btn-modal-validate">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Valider la demande
+                </button>
             </form>
 
             <form method="POST" action="">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="refuser">
                 <input type="hidden" name="demande_id" class="txt-demande-id">
-                <button type="submit" class="btn-modal-reject">✕ Refuser la demande</button>
+                <button type="submit" class="btn-modal-reject">
+                    Refuser la demande
+                </button>
             </form>
         </div>
 
         <hr class="fine-divider">
 
-        <h3 class="reply-section-title" id="lblTitreSectionReponse">Joindre / Modifier une réponse</h3>
+        <h3 class="reply-section-title" id="lblTitreSectionReponse">Rédiger / Modifier la réponse</h3>
         <form method="POST" action="" id="formReponseAdmin">
             {% csrf_token %}
             <input type="hidden" name="action" value="repondre">
             <input type="hidden" name="demande_id" class="txt-demande-id">
             
-            <div class="message-title">Message</div>
-            <textarea name="message_reponse" id="txtReponseContent" class="textarea-reply" placeholder="Écrire votre réponse..." required></textarea>
+            <textarea name="message_reponse" id="txtReponseContent" class="textarea-reply" placeholder="Rédigez ici votre réponse officielle à l'attention du service..." required></textarea>
             
-            <button type="submit" class="btn-send-reply">Envoyer</button>
+            <button type="submit" class="btn-send-reply">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                Transmettre la réponse au service
+            </button>
         </form>
 
         <div class="info-hint-box">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            <span>Ce message apparaîtra directement dans le suivi de la section/service concerné.</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>Ce message sera instantanément notifié sur le tableau de bord du service émetteur.</span>
         </div>
     </div>
 </div>
 
 <script>
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const openBtn = document.getElementById('sidebarToggleOpen');
+        const mainContent = document.querySelector('.main-content');
+            
+        if (sidebar.style.transform === 'translateX(-290px)') {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.opacity = '1';
+            openBtn.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.marginLeft = '260px';
+                mainContent.style.paddingLeft = '40px';
+            }
+        } else {
+            sidebar.style.transform = 'translateX(-290px)';
+            sidebar.style.opacity = '0';
+            openBtn.style.display = 'flex';
+            if (mainContent) {
+                mainContent.style.marginLeft = '15px';
+                mainContent.style.paddingLeft = '65px';
+            }
+        }
+    }
+
     function changerOnglet(type) {
         const sectionEnCours = document.getElementById('sectionDemandesEnCours');
         const sectionPassees = document.getElementById('sectionDemandesPassees');
@@ -342,20 +423,18 @@ function toggleSidebar() {
         const lblTextReponse = document.getElementById('lblTextReponseExistante');
         const txtReponseInput = document.getElementById('txtReponseContent');
 
-        // Pré-remplir le champ de réponse si elle existe
         txtReponseInput.value = reponseAdmin || '';
 
-        // Si la demande a déjà été traitée (différente de 'en_attente')
         if (statut && statut !== 'en_attente') {
             boxReponse.style.display = 'block';
             
             if (statut === 'valide') {
-                lblTitreDecision.textContent = '✓ DÉCISION : DEMANDE ACCEPTÉE / VALIDÉE';
+                lblTitreDecision.textContent = 'DÉCISION : DEMANDE ACCEPTÉE / VALIDÉE';
                 lblTitreDecision.style.color = '#5E6D3E';
                 boxReponse.style.borderLeftColor = '#5E6D3E';
                 boxReponse.style.backgroundColor = '#EBF2E9';
             } else {
-                lblTitreDecision.textContent = '✕ DÉCISION : DEMANDE REFUSÉE / CLASSÉE';
+                lblTitreDecision.textContent = 'DÉCISION : DEMANDE REFUSÉE / CLASSÉE';
                 lblTitreDecision.style.color = '#BA3C2A';
                 boxReponse.style.borderLeftColor = '#BA3C2A';
                 boxReponse.style.backgroundColor = '#FCEAE8';
