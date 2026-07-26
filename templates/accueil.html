@@ -149,8 +149,22 @@
         
         .btn-admin-validate { width: 100%; height: 38px; background-color: #BA3C2A; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s; }
         .btn-admin-validate:hover { background-color: #962F20; }
+
+        /* DESIGN DE LA SECTION NOUVEAUTÉS / ARRIVAGES */
+        .arrivages-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; margin-top: 15px; }
+        .arrivage-card { background: #ffffff; border: 1px solid #E2E6E1; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; box-shadow: 0 4px 12px rgba(73, 84, 48, 0.02); transition: transform 0.2s, border-color 0.2s; }
+        .arrivage-card:hover { border-color: #5E6D3E; transform: translateY(-2px); }
+        
+        .badge-type-ajout { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-nouveau { background-color: #EBF2E9; color: #5E6D3E; border: 1px solid rgba(94, 109, 62, 0.2); }
+        .badge-reassort { background-color: #EAF3FC; color: #2A7BBA; border: 1px solid rgba(42, 123, 186, 0.2); }
+        
+        .arrivage-title { font-size: 1.1rem; font-weight: 700; color: #2c351c; margin-top: 4px; }
+        .arrivage-sub { font-size: 0.88rem; color: #7A8278; display: flex; align-items: center; gap: 8px; }
+        .btn-voir-inventaire { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; width: 100%; background: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 10px; font-weight: 600; font-size: 0.88rem; text-decoration: none; transition: background-color 0.2s, border-color 0.2s; }
+        .btn-voir-inventaire:hover { background: #EBF2E9; border-color: #5E6D3E; color: #2c351c; }
             
-        /* **NOUVEAU CSS CORRIGÉ POUR LA MODALE DES SUGGESTIONS** */
+        /* MODALE DES SUGGESTIONS */
         .modal-overlay { 
             display: none; 
             position: fixed; 
@@ -161,7 +175,7 @@
             background: rgba(44, 53, 28, 0.5); 
             backdrop-filter: blur(6px); 
             -webkit-backdrop-filter: blur(6px); 
-            z-index: 9999 !important; /* Force l'affichage au-dessus de la sidebar */
+            z-index: 9999 !important;
             justify-content: center; 
             align-items: center; 
             padding: 20px;
@@ -364,6 +378,43 @@ function toggleSidebar() {
         </div>
     </div>
 
+    <!-- **NOUVELLE SECTION : NOUVEAUTÉS ET RÉAPPROVISIONNEMENTS RÉCENTS** -->
+    <div class="card-box" style="margin-bottom: 30px;">
+        <h4 class="card-title">📦 Derniers arrivages & Réapprovisionnements</h4>
+        <p class="card-subtitle">Consultez les articles récemment ajoutés ou réintégrés en réserve cette semaine.</p>
+        
+        <div class="arrivages-grid">
+            {% for mvt in nouveaux_arrivages %}
+            <div class="arrivage-card">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        {% if mvt.est_nouveau %}
+                        <span class="badge-type-ajout badge-nouveau">✦ Nouveau produit</span>
+                        {% else %}
+                        <span class="badge-type-ajout badge-reassort">↻ Réassort stock</span>
+                        {% endif %}
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #7A8278;">{{ mvt.date_mouvement|date:"d/m/Y" }}</span>
+                    </div>
+
+                    <div class="arrivage-title">{{ mvt.objet }}</div>
+                    <div class="arrivage-sub" style="margin-top: 6px;">
+                        <span>Quantité ajoutée : <strong style="color: #2c351c;">+{{ mvt.quantite }}</strong></span>
+                        {% if mvt.numero_commande %}• <span style="font-style: italic;">Réf : {{ mvt.numero_commande }}</span>{% endif %}
+                    </div>
+                </div>
+
+                <a href="/inventaire/?q={{ mvt.objet|urlencode }}" class="btn-voir-inventaire">
+                    Consulter dans l'inventaire →
+                </a>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; color: #7A8278; font-style: italic; padding: 25px; background: #FAFBF9; border-radius: 14px; border: 1px solid #E2E6E1;">
+                Aucun nouvel arrivage enregistré récemment.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <div class="dashboard-grid">
                         
         {% if not is_admin %}
@@ -456,7 +507,6 @@ function toggleSidebar() {
         {% endif %}
                         
         {% if is_admin %}
-        <!-- DÉCLARATION HEBDOMADAIRE ADMIN -->
         <div class="card-box">
             <h4 class="card-title">Déclaration hebdomadaire de l'Administration</h4>
             <p class="card-subtitle">Validation des mouvements logistiques pour le service Administration.</p>
@@ -567,7 +617,7 @@ function toggleSidebar() {
     </div>
 </div>
             
-<!-- POP-UP OBLIGATOIRE ET PERSISTANTE DE RELANCE (Mercredi 12h - Vendredi 12h) -->
+<!-- POP-UP OBLIGATOIRE DE RELANCE -->
 {% if afficher_popup_relance %}
 <div id="popupRelanceOBLIGATOIRE" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44, 53, 28, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; display: flex; align-items: center; justify-content: center;">
     <div style="background: #ffffff; border-radius: 24px; padding: 40px; width: 90%; max-width: 520px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); text-align: center; border: 1px solid #E2E6E1;">
@@ -598,6 +648,7 @@ document.addEventListener("visibilitychange", function() {
 </script>
 {% endif %}
 
+<!-- MODALE STATUT DES DEMANDES -->
 <div class="modal-overlay" id="modalDemandes" onclick="fermerStatutDemandes(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
         <div class="modal-header">
