@@ -3,57 +3,262 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AmbassStock - Connexion</title>
+    <title>AmbassStock - Connexion Scurisée</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(-45deg, #495430, #74854C, #495430, #74854C); background-size: 400% 400%; animation: gradientMovement 15s ease infinite; overflow: hidden; }
-        @keyframes gradientMovement { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        h1 { color: #ffffff; font-size: 2.5rem; font-weight: 600; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); text-align: center; transition: all 0.5s ease; }
-        h1.loading-active { font-size: 4.5rem; margin-bottom: 40px; }
-        .login-container { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.25); padding: 40px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); transition: opacity 0.4s ease; }
-        .input-group { margin-bottom: 22px; text-align: left; }
-        .input-group label { display: block; color: rgba(255, 255, 255, 0.9); font-size: 1rem; margin-bottom: 8px; }
+        
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            background: linear-gradient(-45deg, #3D4828, #5E6D3E, #495430, #7A895C); 
+            background-size: 400% 400%; 
+            animation: gradientMovement 16s ease infinite; 
+            overflow: hidden; 
+            position: relative;
+            padding: 20px;
+        }
+
+        @keyframes gradientMovement { 
+            0% { background-position: 0% 50%; } 
+            50% { background-position: 100% 50%; } 
+            100% { background-position: 0% 50%; } 
+        }
+
+        /* FILIGRANE DE FOND ORGANIQUE */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* 👑 TITRE PRINCIPAL DYNAMIQUE */
+        h1.brand-header { 
+            color: #ffffff; 
+            font-size: 2.8rem; 
+            font-weight: 800; 
+            margin-bottom: 25px; 
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.25); 
+            text-align: center; 
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); 
+            letter-spacing: -0.5px;
+            z-index: 2;
+        }
+        h1.brand-header.loading-active { 
+            font-size: 4.5rem; 
+            margin-bottom: 35px; 
+            transform: translateY(-10px);
+        }
+
+        /* 💎 CONTENEUR DE CONNEXION GLASSMORPHISM HIGH-END */
+        .login-container { 
+            background: rgba(255, 255, 255, 0.12); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px); 
+            border: 1px solid rgba(255, 255, 255, 0.25); 
+            padding: 45px; 
+            border-radius: 28px; 
+            width: 100%; 
+            max-width: 440px; 
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1) inset; 
+            transition: opacity 0.4s ease, transform 0.4s ease; 
+            z-index: 2;
+            animation: containerAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes containerAppear {
+            from { opacity: 0; transform: translateY(20px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .auth-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: fit-content;
+        }
+
+        /* FORMULAIRES & INPUTS */
+        .input-group { margin-bottom: 24px; text-align: left; }
+        .input-group label { display: block; color: rgba(255, 255, 255, 0.95); font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+        
         .input-wrapper { position: relative; display: flex; align-items: center; }
-        .input-group input { width: 100%; padding: 14px 16px; padding-right: 50px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: #ffffff; font-size: 1.05rem; outline: none; }
-        .toggle-password { position: absolute; right: 14px; background: none; border: none; color: rgba(255, 255, 255, 0.7); cursor: pointer; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; }
-        .submit-btn { width: 100%; padding: 15px; background: #ffffff; border: none; border-radius: 12px; color: #495430; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .loading-box { display: none; opacity: 0; flex-direction: column; align-items: center; text-align: center; transition: opacity 0.5s ease; }
-        .welcome-title { color: rgba(255, 255, 255, 0.75); font-size: 1.6rem; font-weight: 400; margin-bottom: 8px; }
-        .welcome-user { color: #ffffff; font-size: 2.2rem; font-weight: 600; margin-bottom: 35px; text-transform: capitalize; }
-        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.2); border-top: 5px solid #ffffff; border-radius: 50%; animation: spin 1s linear infinite; }
+        .input-icon-left { position: absolute; left: 16px; color: rgba(255, 255, 255, 0.7); display: flex; align-items: center; pointer-events: none; }
+
+        .input-group input { 
+            width: 100%; 
+            height: 52px;
+            padding: 0 48px; 
+            background: rgba(255, 255, 255, 0.12); 
+            border: 1px solid rgba(255, 255, 255, 0.25); 
+            border-radius: 14px; 
+            color: #ffffff; 
+            font-size: 1rem; 
+            font-weight: 500;
+            outline: none; 
+            transition: all 0.25s ease;
+        }
+        .input-group input::placeholder { color: rgba(255, 255, 255, 0.5); }
+        .input-group input:focus { 
+            background: rgba(255, 255, 255, 0.2); 
+            border-color: #ffffff; 
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15); 
+        }
+
+        .toggle-password { 
+            position: absolute; 
+            right: 14px; 
+            background: none; 
+            border: none; 
+            color: rgba(255, 255, 255, 0.75); 
+            cursor: pointer; 
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+        .toggle-password:hover { color: #ffffff; }
+
+        .submit-btn { 
+            width: 100%; 
+            height: 52px; 
+            background: #ffffff; 
+            border: none; 
+            border-radius: 14px; 
+            color: #2C351C; 
+            font-size: 1rem; 
+            font-weight: 800; 
+            cursor: pointer; 
+            margin-top: 10px; 
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .submit-btn:hover { 
+            background: #EBF2E9; 
+            transform: translateY(-2px); 
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.22);
+        }
+        .submit-btn:active { transform: translateY(0); }
+
+        /* 🚀 ÉCRAN DE CHARGEMENT & BIENVENUE THÉÂTRAL */
+        .loading-box { 
+            display: none; 
+            opacity: 0; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+            transition: opacity 0.5s ease; 
+            z-index: 2;
+        }
+        .welcome-title { color: rgba(255, 255, 255, 0.82); font-size: 1.5rem; font-weight: 500; margin-bottom: 6px; letter-spacing: -0.2px; }
+        .welcome-user { color: #ffffff; font-size: 2.6rem; font-weight: 800; margin-bottom: 35px; text-transform: capitalize; letter-spacing: -0.5px; text-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        
+        .spinner { 
+            width: 52px; 
+            height: 52px; 
+            border: 4px solid rgba(255, 255, 255, 0.2); 
+            border-top: 4px solid #ffffff; 
+            border-radius: 50%; 
+            animation: spin 0.9s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* FOOTER DES MENTIONS */
+        .footer-credits {
+            position: absolute;
+            bottom: 25px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.82rem;
+            font-weight: 500;
+            z-index: 2;
+        }
     </style>
 </head>
 <body>
-    <h1 id="siteTitle">AmbassStock</h1>
+
+    <h1 class="brand-header" id="siteTitle">AmbassStock</h1>
+
+    <!-- 💳 CONTENEUR DE FORMULAIRE SÉCURISÉ -->
     <div class="login-container" id="loginContainer">
+        <div class="auth-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <strong>Espace Scuris</strong>
+        </div>
+
         <form id="loginForm" method="POST" action="" onsubmit="startFakeLoading(event);">
             {% csrf_token %} 
+
             <div class="input-group">
-                <label for="username">Identifiant</label>
-                <div class="input-wrapper"><input type="text" id="username" name="username" placeholder="Entrez votre identifiant" required></div>
+                <label for="username">Identifiant de service</label>
+                <div class="input-wrapper">
+                    <div class="input-icon-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    </div>
+                    <input type="text" id="username" name="username" placeholder="Nom d'utilisateur..." required autocomplete="username">
+                </div>
             </div>
+
             <div class="input-group">
                 <label for="password">Mot de passe</label>
                 <div class="input-wrapper">
-                    <input type="password" id="password" name="password" placeholder="Entrez votre mot de passe" required>
-                    <button type="button" id="togglePassword" class="toggle-password">Voir</button>
+                    <div class="input-icon-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    </div>
+                    <input type="password" id="password" name="password" placeholder="Mot de passe..." required autocomplete="current-password">
+                    <button type="button" id="togglePassword" class="toggle-password" title="Afficher/Masquer le mot de passe">
+                        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
                 </div>
             </div>
-            <button type="submit" class="submit-btn">Se connecter</button>
+
+            <button type="submit" class="submit-btn">
+                <span>Se connecter</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
         </form>
     </div>
+
+    <!-- 🚀 ÉCRAN DE TRANSITION & CHARGEMENT -->
     <div class="loading-box" id="loadingBox">
-        <div class="welcome-title">Bienvenue</div>
+        <div class="welcome-title">Connexion autorise</div>
         <div class="welcome-user" id="welcomeUser">Utilisateur</div>
         <div class="spinner"></div>
     </div>
+
+    <div class="footer-credits">AmbassStock &bull; Plateforme Institutionnelle de Gestion des Stocks</div>
+
     <script>
         const passwordInput = document.getElementById('password');
         const togglePasswordButton = document.getElementById('togglePassword');
+        const eyeIcon = document.getElementById('eyeIcon');
+
         togglePasswordButton.addEventListener('click', function () {
-            if (passwordInput.type === 'password') { passwordInput.type = 'text'; togglePasswordButton.textContent = 'Masquer'; }
-            else { passwordInput.type = 'password'; togglePasswordButton.textContent = 'Voir'; }
+            if (passwordInput.type === 'password') { 
+                passwordInput.type = 'text'; 
+                eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.45 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+            } else { 
+                passwordInput.type = 'password'; 
+                eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
         });
 
         function startFakeLoading(event) {
@@ -68,6 +273,8 @@
             
             welcomeUser.textContent = username;
             loginContainer.style.opacity = '0';
+            loginContainer.style.transform = 'translateY(15px) scale(0.95)';
+
             setTimeout(() => {
                 loginContainer.style.display = 'none';
                 siteTitle.classList.add('loading-active');
@@ -77,7 +284,7 @@
             
             setTimeout(() => {
                 HTMLFormElement.prototype.submit.call(loginForm);
-            }, 2000);
+            }, 1800);
         }
     </script>
 </body>
