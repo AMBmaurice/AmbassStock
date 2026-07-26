@@ -1375,7 +1375,7 @@ def page_inventaire(request):
           if est_urgente:
             messages.warning(
                 request,
-                f'🚨 Demande URGENTE transmise avec succès pour le service'
+                f' Demande URGENTE transmise avec succès pour le service'
                 f' {service} !',
             )
           else:
@@ -1395,7 +1395,6 @@ def page_inventaire(request):
 
     # 5. GESTION AJOUT AU PANIER UNIQUE (BOUTON DIRECT EN LIGNE)
     elif action_type == 'ajouter_panier':
-      # Bloqué strictly en période de fermeture
       if panier_bloque and not is_admin:
         messages.error(
             request,
@@ -1458,7 +1457,6 @@ def page_inventaire(request):
         if fournisseur_recu:
           produit.fournisseur = fournisseur_recu
 
-        # **ENREGISTREMENT DU PRIX DU PRODUIT**
         prix_recu = request.POST.get('prix')
         if prix_recu:
           try:
@@ -1469,7 +1467,6 @@ def page_inventaire(request):
           produit.prix = None
 
         produit.save()
-
         messages.success(
             request,
             f'Modification du produit "{produit.objet}" enregistrée avec'
@@ -1500,7 +1497,6 @@ def page_inventaire(request):
         produit = Produit.objects.get(id=produit_id)
         nom_produit_supprime = produit.objet
         produit.delete()
-
         messages.success(
             request,
             f'Le produit "{nom_produit_supprime}" a été supprimé'
@@ -1519,56 +1515,63 @@ def page_inventaire(request):
 
       return redirect(redirect_url)
 
-    # 9. GÉNÉRATION DU PDF D'INVENTAIRE
+    # 9. GÉNÉRATION DU PDF D'INVENTAIRE SUR-MESURE (COLONNES COCHÉES)
     elif action_type == 'generer_recapitulatif_pdf':
-      produits_actifs = (
-          Produit.objects.exclude(emplacement='Archivé')
-          .filter(quantite__gt=0)
-          .order_by('emplacement', 'objet')
-      )
+      tous_les_produits_pdf = Produit.objects.all().order_by('objet')
 
       buffer = io.BytesIO()
       doc = SimpleDocTemplate(
           buffer,
           pagesize=letter,
-          rightMargin=40,
-          leftMargin=40,
-          topMargin=40,
-          bottomMargin=40,
+          rightMargin=30,
+          leftMargin=30,
+          topMargin=30,
+          bottomMargin=30,
       )
       story = []
+
+      # Récupération des options de colonnes cochées dans la modale
+      inc_ref = 'col_reference' in request.POST
+      inc_cat = 'col_categorie' in request.POST
+      inc_fournisseur = 'col_fournisseur' in request.POST
+      inc_prix = 'col_prix' in request.POST
+      inc_stock = 'col_stock' in request.POST
+      inc_quota = 'col_quota' in request.POST
+      inc_emp = 'col_emplacement' in request.POST
 
       styles = getSampleStyleSheet()
       style_titre = ParagraphStyle(
           'TitrePDF',
           parent=styles['Heading1'],
           fontName='Helvetica-Bold',
-          fontSize=24,
-          leading=28,
+          fontSize=18,
+          leading=22,
           textColor=colors.HexColor('#2C351C'),
-          spaceAfter=10,
+          spaceAfter=6,
       )
       style_meta = ParagraphStyle(
           'MetaPDF',
           parent=styles['Normal'],
           fontName='Helvetica',
-          fontSize=10,
+          fontSize=9,
+          leading=12,
           textColor=colors.HexColor('#7A8278'),
-          spaceAfter=25,
+          spaceAfter=20,
       )
       style_cellule = ParagraphStyle(
           'CellPDF',
           parent=styles['Normal'],
           fontName='Helvetica',
-          fontSize=10,
-          leading=13,
+          fontSize=9,
+          leading=11,
+          textColor=colors.HexColor('#333333'),
       )
       style_entete = ParagraphStyle(
           'HeaderPDF',
           parent=styles['Normal'],
           fontName='Helvetica-Bold',
-          fontSize=10,
-          leading=13,
+          fontSize=9,
+          leading=11,
           textColor=colors.white,
       )
 
@@ -1577,40 +1580,61 @@ def page_inventaire(request):
           Paragraph("Récapitulatif officiel de l'inventaire", style_titre)
       )
       story.append(
-          Paragraph(
-              f'Document généré le {date_generation} — Uniquement les articles'
-              ' disponibles en réserve',
-              style_meta,
+          Paragraph(f'Document généré le {date_generation}', style_meta)
+      )
+
+      # Construction dynamique des en-têtes
+      headers = [Paragraph("Désignation de l'objet", style_entete)]
+      if inc_ref:
+        headers.append(Paragraph('Référence', style_entete))
+      if inc_cat:
+        headers.append(Paragraph('Catégorie', style_entete))
+      if inc_fournisseur:
+        headers.append(Paragraph('Fournisseur', style_entete))
+      if inc_prix:
+        headers.append(Paragraph('Prix Unit.', style_entete))
+      if inc_stock:
+        headers.append(Paragraph('Stock', style_entete))
+      if inc_quota:
+        headers.append(Paragraph('Quota', style_entete))
+      if inc_emp:
+        headers.append(Paragraph('Emplacement', style_entete))
+
+      donnees_table = [headers]
+
+      for prod in tous_les_produits_pdf:
+        row = [Paragraph(prod.objet, style_cellule)]
+        if inc_ref:
+          row.append(Paragraph(prod.reference, style_cellule))
+        if inc_cat:
+          row.append(Paragraph(prod.categorie or '-', style_cellule))
+        if inc_fournisseur:
+          row.append(
+              Paragraph(prod.fournisseur or 'Divers', style_cellule)
           )
-      )
+        if inc_prix:
+          prix_str = f'{prod.prix:.2f} €' if prod.prix else '-'
+          row.append(Paragraph(prix_str, style_cellule))
+        if inc_stock:
+          row.append(Paragraph(str(prod.quantite), style_cellule))
+        if inc_quota:
+          quota_str = (
+              str(prod.quota_minimum)
+              if prod.quota_minimum is not None
+              else '-'
+          )
+          row.append(Paragraph(quota_str, style_cellule))
+        if inc_emp:
+          row.append(Paragraph(prod.emplacement or '-', style_cellule))
+        donnees_table.append(row)
 
-      donnees_table = [[
-          Paragraph('Référence', style_entete),
-          Paragraph("Désignation de l'objet", style_entete),
-          Paragraph('Catégorie', style_entete),
-          Paragraph('Emplacement', style_entete),
-          Paragraph('Stock', style_entete),
-      ]]
-
-      for prod in produits_actifs:
-        donnees_table.append([
-            Paragraph(prod.reference, style_cellule),
-            Paragraph(prod.objet, style_cellule),
-            Paragraph(prod.categorie, style_cellule),
-            Paragraph(prod.emplacement or '-', style_cellule),
-            Paragraph(str(prod.quantite), style_cellule),
-        ])
-
-      tableau_inventaire = Table(
-          donnees_table, colWidths=[80, 160, 110, 120, 50]
-      )
+      tableau_inventaire = Table(donnees_table)
       tableau_inventaire.setStyle(
           TableStyle([
               ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#5E6D3E')),
-              ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-              ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-              ('TOPPADDING', (0, 0), (-1, 0), 10),
+              ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+              ('TOPPADDING', (0, 0), (-1, 0), 8),
               (
                   'ROWBACKGROUNDS',
                   (0, 1),
@@ -1618,8 +1642,8 @@ def page_inventaire(request):
                   [colors.HexColor('#FAFBF9'), colors.white],
               ),
               ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E2E6E1')),
-              ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
-              ('TOPPADDING', (0, 1), (-1, -1), 8),
+              ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+              ('TOPPADDING', (0, 1), (-1, -1), 6),
           ])
       )
 
@@ -1630,8 +1654,7 @@ def page_inventaire(request):
       date_fichier = timezone.now().strftime('%Y_%m_%d')
       response = HttpResponse(buffer.read(), content_type='application/pdf')
       response['Content-Disposition'] = (
-          'attachment;'
-          f' filename="Recapitulatif_Inventaire_{date_fichier}.pdf"'
+          f'attachment; filename="Inventaire_Complet_{date_fichier}.pdf"'
       )
       return response
 
@@ -1669,10 +1692,8 @@ def page_inventaire(request):
 
     tous_les_produits = tous_les_produits.filter(id__in=produits_filtres_ids)
 
-  # Récupération complète pour la recherche JS globale
   tous_les_produits_complets = list(tous_les_produits)
 
-  # Récupération des articles actuellement au panier
   paniers_actifs = ArticlePanier.objects.all()
   produits_dans_panier = {p.produit_id: p for p in paniers_actifs}
 
