@@ -1131,36 +1131,49 @@ def page_gestion_demandes(request):
 
     profil_actif = get_profil_actif(request.user)
 
-    # **1. GESTION DES ACTIONS DE L'ADMINISTRATEUR (REPONDRE OU CHANGER LE STATUT)**
     if request.method == 'POST':
+        action = request.POST.get('action')
         demande_id = request.POST.get('demande_id')
-        nouveau_statut = request.POST.get('statut')
-        reponse_text = request.POST.get('reponse_admin', '').strip()
 
         if demande_id:
             try:
                 demande = DemandeService.objects.get(id=demande_id)
-                if nouveau_statut:
-                    demande.statut = nouveau_statut
-                if reponse_text:
+                if action == 'valider':
+                    demande.statut = 'valide'
+                elif action == 'refuser':
+                    demande.statut = 'lu'
+                elif action == 'repondre':
+                    reponse_text = request.POST.get('message_reponse', '').strip()
                     demande.reponse_admin = reponse_text
+                    demande.statut = 'valide'
+
                 demande.save()
-                messages.success(request, f"La demande du service {demande.service} a été mise à jour avec succès !")
+                messages.success(request, "La demande a été mise à jour.")
             except DemandeService.DoesNotExist:
-                messages.error(request, "Demande introuvable.")
+                pass
 
         return redirect('/gestion-demandes/')
 
-    # **2. RÉCUPÉRATION DE TOUTES LES DEMANDES DEPUIS LA BASE DE DONNÉES**
+    search_query = request.GET.get('q', '').strip()
+
+    # **RÉCUPÉRATION DE TOUTES LES DEMANDES EN BASE SANS AUCUN FILTRE DE STATUT**
     demandes = DemandeService.objects.all().order_by('-id')
+
+    if search_query:
+        demandes = demandes.filter(
+            Q(service__icontains=search_query) | 
+            Q(message__icontains=search_query) |
+            Q(type_demande__icontains=search_query)
+        )
 
     return render(
         request,
         'gestion_demandes.html',
         {
             'profil_actif': profil_actif,
-            'demandes': demandes,  # **Transmet la liste complète des suggestions à la page HTML**
-        }
+            'demandes': demandes,  # **TOUTES LES DEMANDES SONT TRANSMISES DIRECTEMENT**
+            'search_query': search_query,
+        },
     )
 
 
