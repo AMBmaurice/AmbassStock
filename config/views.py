@@ -8,19 +8,19 @@ from datetime import date, datetime, timedelta
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
+from django.core.mail import send_mail
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Count, F, Q, Sum
-from django.http import HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-from django.core.mail import send_mail
-from django.http import FileResponse, Http404
 
 from .models import (
     ArticlePanier,
@@ -100,150 +100,203 @@ def page_connexion(request):
 
 
 def page_accueil(request):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
-        
-    try:
-        profil_actif = get_profil_actif(request.user)
-    except Exception:
-        profil_actif = None
-        
-    est_role_admin = request.user.is_superuser or (
-        profil_actif and (
-            getattr(profil_actif, 'type_profil', '') == 'admin' or 
-            getattr(profil_actif, 'role', '') == 'Administrateur'
-        )
+  if not request.user.is_authenticated:
+    return redirect('/connexion/')
+
+  try:
+    profil_actif = get_profil_actif(request.user)
+  except Exception:
+    profil_actif = None
+
+  est_role_admin = request.user.is_superuser or (
+      profil_actif
+      and (
+          getattr(profil_actif, 'type_profil', '') == 'admin'
+          or getattr(profil_actif, 'role', '') == 'Administrateur'
+      )
+  )
+
+  maintenant = timezone.now()
+  jour = (
+      maintenant.weekday()
+  )  # 0 = Lundi, 1 = Mardi, 2 = Mercredi, 3 = Jeudi, 4 = Vendredi, 5 = Samedi, 6 = Dimanche
+  heure = maintenant.hour
+
+  # Identification du numéro de semaine ISO actuel (ex: (2026, 30))
+  annee_actuelle, iso_semaine_actuelle, _ = maintenant.isocalendar()
+
+  liste_des_services = [
+      'Consulaire',
+      'Secrétaire',
+      'Secrétaire AMB',
+      '1ère Secrétaire',
+      '2ème Secrétaire',
+      'Diplomate',
+      'Administration',
+  ]
+  for nom_service in liste_des_services:
+    DeclarationHebdomadaire.objects.get_or_create(service=nom_service)
+
+  # -------------------------------------------------------------
+  # AUTOMATISATION FIABLE DE LA RÉINITIALISATION HEBDOMADAIRE
+  # -------------------------------------------------------------
+
+  # Déterminer si nous sommes dans le nouveau cycle (Jeudi après 18h00, Vendredi, Samedi ou Dimanche)
+  est_apres_cloture_jeudi = (
+      (jour == 3 and heure >= 18) or (jour in [4, 5, 6]) or (jour < 0)
+  )
+
+  # Récupération de toutes les déclarations
+  declarations_toutes = DeclarationHebdomadaire.objects.all()
+
+  for dec in declarations_toutes:
+    # Si la déclaration a une date de validation, on extrait sa semaine calendaire
+    valide_cette_semaine = False
+    if dec.date_validation:
+      val_annee, val_semaine, _ = dec.date_validation.isocalendar()
+      if val_annee == annee_actuelle and val_semaine == iso_semaine_actuelle:
+        valide_cette_semaine = True
+
+    # RÉINITIALISATION : Si on est après jeudi 18h et que la validation date d'une semaine antérieure (ou si non réinitialisé)
+    if est_apres_cloture_jeudi and not dec.reinitialise_cette_semaine:
+      if dec.statut == 'valide' and not valide_cette_semaine:
+        dec.statut = 'en_attente'
+        dec.reponse = None
+        dec.date_validation = None
+        dec.force_valide_par_admin = False
+        dec.non_reponses_consecutives = 0
+        dec.reinitialise_cette_semaine = True
+        dec.save()
+
+      elif dec.statut in ['a_relancer', 'en_attente'] and not valide_cette_semaine:
+        dec.statut = 'non_repondu'
+        dec.non_reponses_consecutives += 1
+        dec.reinitialise_cette_semaine = True
+        dec.save()
+
+  # Remise à zéro automatique du verrou de réinitialisation chaque début de semaine (Lundi matin)
+  if jour == 0 and heure < 12:
+    DeclarationHebdomadaire.objects.all().update(
+        reinitialise_cette_semaine=False
     )
-    
-    maintenant = timezone.now()
-    jour = maintenant.weekday()  # 0 = Lundi, 1 = Mardi, 2 = Mercredi, 3 = Jeudi, 4 = Vendredi, ...
-    heure = maintenant.hour
-    
-    liste_des_services = [
-        "Consulaire", "Secrétaire", "Secrétaire AMB",
-        "1ère Secrétaire", "2ème Secrétaire", "Diplomate", "Administration"
-    ]
-    for nom_service in liste_des_services:
-        DeclarationHebdomadaire.objects.get_or_create(service=nom_service)
 
-    # -------------------------------------------------------------
-    # GESTION DES CYCLES TEMPORELS ET DÉCALAGES
-    # -------------------------------------------------------------
-    
-    # 1. Jeudi à partir de 18h (Jeudi soir) : Réinitialisation automatique pour ceux qui ont répondu
-    if jour == 3 and heure >= 18:
-        declarations_validees = DeclarationHebdomadaire.objects.filter(statut='valide', reinitialise_cette_semaine=False)
-        for dec in declarations_validees:
-            dec.statut = 'en_attente'
-            dec.reponse = None
-            dec.date_validation = None
-            dec.force_valide_par_admin = False
-            dec.non_reponses_consecutives = 0
-            dec.reinitialise_cette_semaine = True
-            dec.save()
+  # Passer en "a_relancer" pendant le créneau de relance (Lundi 12h -> Jeudi 18h)
+  est_periode_relance = (
+      (jour == 0 and heure >= 12) or (jour in [1, 2]) or (jour == 3 and heure < 18)
+  )
+  if est_periode_relance:
+    DeclarationHebdomadaire.objects.filter(statut='en_attente').update(
+        statut='a_relancer'
+    )
 
-    # 2. Jeudi 18h : Clôture de la période pour les retardataires qui n'ont pas répondu
-    if jour == 3 and heure >= 18:
-        declarations_retard = DeclarationHebdomadaire.objects.exclude(statut__in=['valide', 'en_attente'])
-        for dec in declarations_retard:
-            if dec.statut != 'non_repondu':
-                dec.statut = 'non_repondu'
-                dec.non_reponses_consecutives += 1
-                dec.save()
+  # -------------------------------------------------------------
+  # GESTION DES SOUMISSIONS POST
+  # -------------------------------------------------------------
+  if request.method == 'POST':
+    if 'soumettre_declaration' in request.POST:
+      service_choisi = request.POST.get('service')
+      reponse_choisie = request.POST.get('reponse')
+      try:
+        dec = DeclarationHebdomadaire.objects.get(service=service_choisi)
+        dec.reponse = reponse_choisie
+        dec.statut = 'valide'
+        dec.date_validation = timezone.now()
+        dec.reinitialise_cette_semaine = False
+        dec.save()
+      except DeclarationHebdomadaire.DoesNotExist:
+        pass
+      return redirect('/accueil/')
 
-    # 3. Vendredi à partir de 12h00 : Remise à zéro ultime pour les retardataires ("n'a pas répondu")
-    if jour == 4 and heure >= 12:
-        DeclarationHebdomadaire.objects.filter(statut='non_repondu').update(
-            statut='en_attente',
-            reponse=None,
-            date_validation=None,
-            force_valide_par_admin=False,
-            reinitialise_cette_semaine=True
+    elif 'valider_admin' in request.POST and est_role_admin:
+      id_declaration = request.POST.get('declaration_id')
+      try:
+        dec = DeclarationHebdomadaire.objects.get(id=id_declaration)
+        dec.statut = 'valide'
+        dec.force_valide_par_admin = True
+        dec.date_validation = timezone.now()
+        dec.reinitialise_cette_semaine = False
+        dec.save()
+      except DeclarationHebdomadaire.DoesNotExist:
+        pass
+      return redirect('/accueil/')
+
+    elif 'soumettre_demande' in request.POST and not est_role_admin:
+      type_demande = request.POST.get('type_demande')
+      service = request.POST.get('service_demande')
+      date_demande = request.POST.get('date_demande')
+      message = request.POST.get('message_demande')
+
+      if type_demande and service and date_demande and message:
+        DemandeService.objects.create(
+            type_demande=type_demande,
+            service=service,
+            date_demande=date_demande,
+            message=message,
         )
+      return redirect('/accueil/')
 
-    # 4. Remise à zéro du flag de réinitialisation le Vendredi soir à 23h
-    if jour == 4 and heure >= 23:
-        DeclarationHebdomadaire.objects.all().update(reinitialise_cette_semaine=False)
+  declarations_reelles = DeclarationHebdomadaire.objects.all()
 
-    # 5. Évolution automatique du statut "en_attente" vers "a_relancer" du Lundi 12h au Jeudi 18h
-    est_periode_relance = (jour == 0 and heure >= 12) or (jour in [1, 2]) or (jour == 3 and heure < 18)
-    if est_periode_relance:
-        DeclarationHebdomadaire.objects.filter(statut='en_attente').update(statut='a_relancer')
+  # Extraction des services retardataires
+  services_retardataires = [
+      d.service
+      for d in declarations_reelles
+      if d.statut in ['a_relancer', 'non_repondu']
+  ]
 
-    # -------------------------------------------------------------
-    # GESTION DES SOUMISSIONS POST
-    # -------------------------------------------------------------
-    if request.method == "POST":
-        if "soumettre_declaration" in request.POST:
-            service_choisi = request.POST.get('service')
-            reponse_choisie = request.POST.get('reponse')
-            try:
-                dec = DeclarationHebdomadaire.objects.get(service=service_choisi)
-                dec.reponse = reponse_choisie
-                dec.statut = 'valide'
-                dec.date_validation = timezone.now()
-                dec.save()
-            except DeclarationHebdomadaire.DoesNotExist:
-                pass
-            return redirect('/accueil/')
-     
-        elif "valider_admin" in request.POST and est_role_admin:
-            id_declaration = request.POST.get('declaration_id')
-            try:
-                dec = DeclarationHebdomadaire.objects.get(id=id_declaration)
-                dec.statut = 'valide'
-                dec.force_valide_par_admin = True
-                dec.date_validation = timezone.now()
-                dec.save()
-            except DeclarationHebdomadaire.DoesNotExist:
-                pass
-            return redirect('/accueil/')
-    
-        elif "soumettre_demande" in request.POST and not est_role_admin:
-            type_demande = request.POST.get('type_demande')
-            service = request.POST.get('service_demande')
-            date_demande = request.POST.get('date_demande')
-            message = request.POST.get('message_demande')
-            
-            if type_demande and service and date_demande and message:
-                DemandeService.objects.create(
-                    type_demande=type_demande,
-                    service=service, 
-                    date_demande=date_demande,
-                    message=message
-                )
-            return redirect('/accueil/')
-            
-    declarations_reelles = DeclarationHebdomadaire.objects.all()
-    
-    # Extraction des services retardataires (statut 'a_relancer' ou 'non_repondu')
-    services_retardataires = [d.service for d in declarations_reelles if d.statut in ['a_relancer', 'non_repondu']]
+  # Activation des notifications selon les créneaux
+  afficher_barre_relance = ((jour == 0 and heure >= 12) or jour == 1 or (
+      jour == 2 and heure < 12
+  )) and len(services_retardataires) > 0
+  afficher_popup_relance = ((jour == 2 and heure >= 12) or jour == 3 or (
+      jour == 4 and heure < 12
+  )) and len(services_retardataires) > 0
 
-    # Activation des notifications selon les créneaux exacts
-    afficher_barre_relance = ((jour == 0 and heure >= 12) or jour == 1 or (jour == 2 and heure < 12)) and len(services_retardataires) > 0
-    afficher_popup_relance = ((jour == 2 and heure >= 12) or jour == 3 or (jour == 4 and heure < 12)) and len(services_retardataires) > 0
+  # Alertes récidivistes pour l'administrateur
+  alertes_admin_recidive = (
+      DeclarationHebdomadaire.objects.filter(non_reponses_consecutives__gte=3)
+      if est_role_admin
+      else []
+  )
 
-    # Détection des récidivistes (3 absences consécutives) pour l'administrateur
-    alertes_admin_recidive = DeclarationHebdomadaire.objects.filter(non_reponses_consecutives__gte=3) if est_role_admin else []
+  # -------------------------------------------------------------
+  # GESTION DES DEMANDES ET DISPARITION AUTOMATIQUE (48H)
+  # -------------------------------------------------------------
+  limite_48h = timezone.now() - timedelta(hours=48)
 
-    page_obj_alerte = None
-    if est_role_admin:
-        liste_alerte = Produit.objects.filter(quantite__lte=F('quota_minimum')).order_by('objet')
-        paginator_alerte = Paginator(liste_alerte, 10)
-        page_number = request.GET.get('page_alerte')
-        page_obj_alerte = paginator_alerte.get_page(page_number)
-            
-    return render(request, 'accueil.html', {
-        'profil_actif': profil_actif,
-        'declarations': declarations_reelles,
-        'is_admin': est_role_admin,
-        'demandes': DemandeService.objects.all().order_by('-id'),
-        'produits_alerte': page_obj_alerte,
-        'services_retardataires': services_retardataires,
-        'afficher_barre_relance': afficher_barre_relance,
-        'afficher_popup_relance': afficher_popup_relance,
-        'alertes_admin_recidive': alertes_admin_recidive
-    })
+  if est_role_admin:
+    # L'admin voit toutes les demandes sans restriction
+    demandes_affichees = DemandeService.objects.all().order_by('-id')
+  else:
+    # Les services voient leurs demandes en attente OU traitées depuis moins de 48h
+    demandes_affichees = DemandeService.objects.filter(
+        Q(statut='en_attente') | Q(date_demande__gte=limite_48h)
+    ).order_by('-id')
+
+  page_obj_alerte = None
+  if est_role_admin:
+    liste_alerte = Produit.objects.filter(
+        quantite__lte=F('quota_minimum')
+    ).order_by('objet')
+    paginator_alerte = Paginator(liste_alerte, 10)
+    page_number = request.GET.get('page_alerte')
+    page_obj_alerte = paginator_alerte.get_page(page_number)
+
+  return render(
+      request,
+      'accueil.html',
+      {
+          'profil_actif': profil_actif,
+          'declarations': declarations_reelles,
+          'is_admin': est_role_admin,
+          'demandes': demandes_affichees,
+          'produits_alerte': page_obj_alerte,
+          'services_retardataires': services_retardataires,
+          'afficher_barre_relance': afficher_barre_relance,
+          'afficher_popup_relance': afficher_popup_relance,
+          'alertes_admin_recidive': alertes_admin_recidive,
+      },
+  )
 
 
 def page_inventaire(request):
@@ -1126,55 +1179,60 @@ def afficher_facture(request, facture_id):
     return redirect('/factures/')
     
 def page_gestion_demandes(request):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
+  if not request.user.is_authenticated:
+    return redirect('/connexion/')
 
-    profil_actif = get_profil_actif(request.user)
+  profil_actif = get_profil_actif(request.user)
 
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        demande_id = request.POST.get('demande_id')
+  if request.method == 'POST':
+    action = request.POST.get('action')
+    demande_id = request.POST.get('demande_id')
 
-        if demande_id:
-            try:
-                demande = DemandeService.objects.get(id=demande_id)
-                if action == 'valider':
-                    demande.statut = 'valide'
-                elif action == 'refuser':
-                    demande.statut = 'lu'
-                elif action == 'repondre':
-                    reponse_text = request.POST.get('message_reponse', '').strip()
-                    demande.reponse_admin = reponse_text
-                    demande.statut = 'valide'
+    if demande_id:
+      try:
+        demande = DemandeService.objects.get(id=demande_id)
+        if action == 'valider':
+          demande.statut = 'valide'
+        elif action == 'refuser':
+          demande.statut = 'lu'
+        elif action == 'repondre':
+          reponse_text = request.POST.get('message_reponse', '').strip()
+          demande.reponse_admin = reponse_text
+          demande.statut = 'valide'
 
-                demande.save()
-                messages.success(request, "La demande a été mise à jour.")
-            except DemandeService.DoesNotExist:
-                pass
+        demande.save()
+        messages.success(request, 'La demande a été mise à jour.')
+      except DemandeService.DoesNotExist:
+        pass
 
-        return redirect('/gestion-demandes/')
+    return redirect('/gestion-demandes/')
 
-    search_query = request.GET.get('q', '').strip()
+  search_query = request.GET.get('q', '').strip()
 
-    # **RÉCUPÉRATION DE TOUTES LES DEMANDES EN BASE SANS AUCUN FILTRE DE STATUT**
-    demandes = DemandeService.objects.all().order_by('-id')
+  # **CÔTÉ ADMIN : SÉPARATION DEMANDES ACTIVES ET DEMANDES PASSÉES**
+  demandes_base = DemandeService.objects.all().order_by('-id')
 
-    if search_query:
-        demandes = demandes.filter(
-            Q(service__icontains=search_query) | 
-            Q(message__icontains=search_query) |
-            Q(type_demande__icontains=search_query)
-        )
-
-    return render(
-        request,
-        'gestion_demandes.html',
-        {
-            'profil_actif': profil_actif,
-            'demandes': demandes,  # **TOUTES LES DEMANDES SONT TRANSMISES DIRECTEMENT**
-            'search_query': search_query,
-        },
+  if search_query:
+    demandes_base = demandes_base.filter(
+        Q(service__icontains=search_query)
+        | Q(message__icontains=search_query)
+        | Q(type_demande__icontains=search_query)
     )
+
+  # Séparation entre les demandes non traitées et l'historique archivé
+  demandes_en_cours = demandes_base.filter(statut='en_attente')
+  demandes_passees = demandes_base.exclude(statut='en_attente')
+
+  return render(
+      request,
+      'gestion_demandes.html',
+      {
+          'profil_actif': profil_actif,
+          'demandes_en_cours': demandes_en_cours,
+          'demandes_passees': demandes_passees,
+          'search_query': search_query,
+      },
+  )
 
 
 def page_gestion_utilisateurs(request):
