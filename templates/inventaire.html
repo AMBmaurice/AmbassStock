@@ -8,7 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
         
-        /* SIDEBAR UNIFIÉE */
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
         .sidebar-menu { list-style: none; padding: 0 15px; }
         .sidebar-item { margin-bottom: 4px; }
@@ -24,7 +24,7 @@
 
         .header-actions-group { display: flex; align-items: center; gap: 15px; }
 
-        /* 🛒 DOCK PANIER FLOTTANT HAUT-DE-GAMME (TOP-RIGHT AMAZON STYLE) */
+        /* 🛒 DOCK PANIER FLOTTANT HAUT-DE-GAMME */
         .amazon-cart-dock { 
             display: flex; 
             align-items: center; 
@@ -88,7 +88,7 @@
         .btn-pdf-export { height: 44px; padding: 0 20px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
         .btn-pdf-export:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
 
-        /* 🔔 NOTIFICATIONS TOAST DYNAMIQUES */
+        /* 🔔 NOTIFICATIONS TOAST DYNAMIQUES UNIFIÉES EN BAS D'ÉCRAN */
         .toast-container {
             position: fixed;
             bottom: 30px;
@@ -115,20 +115,20 @@
             animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transition: all 0.3s ease;
         }
-        .toast-success { background: rgba(235, 242, 233, 0.95); color: #5E6D3E; border: 1px solid #5E6D3E; }
-        .toast-danger { background: rgba(252, 234, 232, 0.95); color: #BA3C2A; border: 1px solid #BA3C2A; }
+        .toast-success { background: rgba(235, 242, 233, 0.96); color: #5E6D3E; border: 1px solid #5E6D3E; }
+        .toast-danger { background: rgba(252, 234, 232, 0.96); color: #BA3C2A; border: 1px solid #BA3C2A; }
 
         @keyframes toastIn {
             from { opacity: 0; transform: translateY(20px) scale(0.9); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* BANNIÈRES DE STATUT ET AVERTISSEMENTS */
+        /* BANNIÈRES D'INFORMATION */
         .info-banner { padding: 18px 24px; border-radius: 16px; font-weight: 600; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; }
         .info-red-banner { background-color: #FCEAE8; border: 1px solid rgba(186, 60, 42, 0.25); border-left: 6px solid #BA3C2A; color: #7A2417; justify-content: space-between; flex-wrap: wrap; }
 
-        /* BARRE DE RECHERCHE & PILULES DE FILTRAGE */
+        /* BARRE DE RECHERCHE & FILTRES */
         .search-filter-card { background: #ffffff; padding: 20px 26px; border-radius: 20px; border: 1px solid #E2E6E1; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
         .search-wrapper { position: relative; flex-grow: 1; max-width: 520px; }
         .search-wrapper svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); stroke: #7A8278; }
@@ -167,7 +167,7 @@
         .page-link:hover { background: #EBF2E9; border-color: #5E6D3E; }
         .page-current { padding: 9px 18px; border-radius: 10px; background: #5E6D3E; color: white; font-weight: 700; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.2); }
 
-        /* MODALES UNIFIÉES HAUT DE GAMME */
+        /* MODALES UNIFIÉES */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         .modal-box { background: #ffffff; border-radius: 28px; width: 100%; max-width: 680px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 25px 60px rgba(0,0,0,0.22); animation: modalFadeIn 0.25s ease-out; }
         @keyframes modalFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
@@ -176,18 +176,17 @@
         .modal-close:hover { color: #2C351C; background: #EBF2E9; border-color: #5E6D3E; }
         .modal-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; } 
 
-        /* GRILLE DES OPTIONS D'EXPORTATION PDF */
         .pdf-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 22px; margin-bottom: 25px; }
         .checkbox-custom-label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; color: #2C351C; cursor: pointer; user-select: none; }
         .checkbox-custom-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer; }
 
-        /* 🎴 FICHE DÉTAIL PRODUIT ÉPURÉE (SERVICES & PUBLIC) */
+        /* 🎴 FICHE DÉTAIL PRODUIT ÉPURÉE */
         .product-hero-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 30px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 16px; text-align: center; align-items: center; }
         .hero-ref-tag { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; font-weight: 800; color: #5E6D3E; background: #EBF2E9; padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(94, 109, 62, 0.2); }
         .hero-product-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; line-height: 1.3; }
         .hero-price-tag { font-size: 2.1rem; font-weight: 800; color: #5E6D3E; letter-spacing: -0.5px; }
 
-        /* CARTES D'ARTICLES DANS LA MODALE PANIER */
+        /* PANIER MODALE */
         .cart-items-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
         .cart-item-card { display: flex; justify-content: space-between; align-items: center; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 16px; padding: 16px 20px; gap: 15px; }
         .cart-item-info { display: flex; flex-direction: column; gap: 4px; }
@@ -198,23 +197,22 @@
         .btn-qty-mini:hover { background: #EBF2E9; color: #5E6D3E; }
 
         .btn-submit-cart { height: 52px; padding: 0 28px; background-color: #5E6D3E; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 0.98rem; cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.25); }
-        .btn-submit-cart:hover:not(:disabled) { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
+        .btn-submit-cart:hover:not(:disabled) { background-color: #495430; transform: translateY(-1px); }
         .btn-submit-cart:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; }
         
         .select-custom, .input-custom { height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; outline: none; background: #FAFBF9; width: 100%; color: #2C351C; font-weight: 500; transition: border-color 0.2s; }
-        .select-custom:focus, .input-custom:focus { border-color: #5E6D3E; background: #ffffff; }
 
-        /* CADRE ADMIN SECOURS */
+        /* CADRE ADMIN ÉDITION */
         .admin-edit-panel { background: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 18px; padding: 22px; margin-top: 15px; display: flex; flex-direction: column; gap: 14px; }
         .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .detail-item { display: flex; flex-direction: column; gap: 4px; }
         .detail-label { font-size: 0.75rem; color: #7A8278; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .edit-input { padding: 8px 12px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.9rem; outline: none; background: #ffffff; }
+        .edit-input { padding: 8px 12px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.9rem; outline: none; background: #ffffff; width: 100%; }
     </style>
 </head>
 <body>
 
-<!-- 🔔 CONTENEUR DE TOASTS FLOTTANTS -->
+<!-- 🔔 CONTENEUR UNIQUE DE NOTIFICATIONS TOAST EN BAS D'ÉCRAN -->
 <div class="toast-container" id="toastContainer"></div>
 
 <button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
@@ -272,12 +270,11 @@
         </div>
         
         <div class="header-actions-group">
-            <!-- 🛒 DOCK FLOTTANT POSITIONNÉ EN HAUT À DROITE (AMAZON STYLE) -->
+            <!-- 🛒 DOCK FLOTTANT PANIER -->
             <div class="amazon-cart-dock" id="btnPanierFlottant" onclick="ouvrirModalPanier()" title="Consulter et valider la commande">
                 <div class="dock-cart-icon-wrapper">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
+                        <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                     </svg>
                     <div class="dock-badge-count" id="cartBadgeCount">0</div>
@@ -288,7 +285,7 @@
                 </div>
             </div>
 
-            <!-- 📄 BOUTON EXPORT PDF QUI OUVRE LA MODALE DE CONFIGURATION SUR-MESURE -->
+            <!-- 📄 BOUTON EXPORT PDF -->
             <button type="button" class="btn-pdf-export" onclick="ouvrirModalConfigPDF()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                 PDF
@@ -315,19 +312,19 @@
     {% else %}
     <div class="info-banner info-green-banner">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        <span><strong>Rappel d'usage :</strong> Une fois votre sélection terminée, ouvrez le panier situé en haut à droite pour valider définitivement votre commande. Dans le cas contraire, votre demande ne sera pas transmitted.</span>
+        <span><strong>Rappel d'usage :</strong> Une fois votre sélection terminée, ouvrez le panier situé en haut à droite pour valider définitivement votre commande. Dans le cas contraire, votre demande ne sera pas transmise.</span>
     </div>
     {% endif %}
 
+    <!-- 🟢 CHARGEMENT DES MESSAGES FLASH DJANGO SOUS FORME DE TOASTS EN BAS -->
     {% if messages %}
-        <div id="djangoMessagesContainer" style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
-            {% for message in messages %}
-                <div class="flash-message-box" style="padding: 16px 20px; border-radius: 14px; background-color: #EBF9EE; color: #1E7E34; border: 1px solid #C2EED0; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03);">
-                    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
+        {% for message in messages %}
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    afficherToast("{{ message|escapejs }}", "{% if message.tags == 'error' or message.tags == 'warning' %}danger{% else %}success{% endif %}");
+                });
+            </script>
+        {% endfor %}
     {% endif %}
 
     <!-- BARRE DE RECHERCHE ET PILULES DE FILTRAGE PAR STATUT DE STOCK -->
@@ -345,11 +342,13 @@
         </div>
     </div>
             
-    <!-- GRILLE D'INVENTAIRE -->
+    <!-- 🛒 GRILLE D'INVENTAIRE : EXPÉRIENCE CIBLÉE -->
     <div class="inventory-grid" id="inventoryList">
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
-            <div class="card-details" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|default_if_none:'' }}')">
+            
+            <!-- **1. COMPORTEMENT DU CLIC SUR LA CARTE : DIRECTEMENT AJOUT AU PANIER POUR LES SERVICES / MODALE POUR ADMINS** -->
+            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|default_if_none:'' }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
                 <span class="product-ref-code">{{ produit.reference }}</span>
                 <span class="product-title">{{ produit.objet }}</span>
             </div> 
@@ -367,7 +366,7 @@
                 {% endif %}
             </div>
 
-            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}" onclick="openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|default_if_none:'' }}')"></div>
+            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}"></div>
         </div>
         {% empty %}
         <div id="emptyDjangoMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px; background: #ffffff; border-radius: 18px; border: 1px dashed #D0D6CE;">Aucun produit trouvé dans cet inventaire.</div>
@@ -427,29 +426,48 @@
     </div>
 </div>
 
-<!-- 🎴 MODALE FICHE DÉTAIL PRODUIT ÉPURÉE (SERVICES : NOM, REF, PRIX) -->
+<!-- 🎴 MODALE FICHE DÉTAIL & ÉDITION PRODUIT (ADMIN) -->
 <div class="modal-overlay" id="productModal" onclick="if(event.target === this) fermerModal('productModal');">
     <div class="modal-box">
         <button class="modal-close" onclick="fermerModal('productModal')">✕</button>
         <h3 class="modal-title">Fiche Produit</h3>
                 
-        <!-- BLOC ÉPURÉ PAR DÉFAUT POUR TOUS LES SERVICES -->
         <div class="product-hero-card">
             <span class="hero-ref-tag" id="lblReference">REF-XXX</span>
             <h2 class="hero-product-title" id="valNom">Désignation du produit</h2>
             <div class="hero-price-tag" id="valPrix">0,00 €</div>
         </div>
 
-        {% if request.user.is_superuser or profil_actif.type_profil == 'administrateur' or profil_actif.type_profil == 'admin' %}
-        <!-- VOLET DE MAINTENANCE ADMINISTRATEUR (MASQUÉ POUR LES SERVICES) -->
+        {% if request.user.is_superuser or is_admin %}
+        <!-- VOLET DE MAINTENANCE ADMINISTRATEUR -->
         <div class="admin-edit-panel">
             <span style="font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase;">Paramètres d'administration de la réserve</span>
             
             <div class="details-grid">
-                <div class="detail-item"><span class="detail-label">Catégorie</span><span class="view-value" id="valCategorie">-</span><input type="text" id="txtCategorie" form="editForm" name="categorie" class="edit-input" required></div>
-                <div class="detail-item"><span class="detail-label">Emplacement</span><span class="view-value" id="valEmplacement">-</span><input type="text" id="txtEmplacement" form="editForm" name="emplacement" class="edit-input"></div>
-                <div class="detail-item"><span class="detail-label">Fournisseur</span><span class="view-value" id="valFournisseur">-</span></div>
-                <div class="detail-item"><span class="detail-label">Stock Réel</span><span class="view-value" id="valStock">-</span><input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required></div>
+                <div class="detail-item">
+                    <span class="detail-label">Catégorie</span>
+                    <span class="view-value" id="valCategorie">-</span>
+                    <input type="text" id="txtCategorie" form="editForm" name="categorie" class="edit-input" required>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Emplacement</span>
+                    <span class="view-value" id="valEmplacement">-</span>
+                    <input type="text" id="txtEmplacement" form="editForm" name="emplacement" class="edit-input">
+                </div>
+
+                <!-- **2. CASE FOURNISSEUR MODIFIABLE AVEC CHAMP DE SAISIE EN ÉDITION** -->
+                <div class="detail-item">
+                    <span class="detail-label">Fournisseur</span>
+                    <span class="view-value" id="valFournisseur">-</span>
+                    <input type="text" id="txtFournisseur" form="editForm" name="fournisseur" class="edit-input" placeholder="Ex: Le Voltigeur, All Office...">
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Stock Réel</span>
+                    <span class="view-value" id="valStock">-</span>
+                    <input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required>
+                </div>
             </div>
 
             <form id="editForm" method="POST" action="">
@@ -460,7 +478,6 @@
                 <input type="hidden" id="txtNom" name="objet">
                 <input type="hidden" id="txtPrix" name="prix">
                 <input type="hidden" id="txtQuota" name="quota_minimum">
-                <input type="hidden" id="txtFournisseur" name="fournisseur">
 
                 <div style="display: flex; gap: 12px; margin-top: 10px;">
                     <button type="button" id="btnEdit" class="btn-add-inline" style="flex-grow:1; height: 44px; justify-content: center;" onclick="activerModeEdition()">Modifier</button>
@@ -592,6 +609,7 @@
 
 <script>
     const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
+    const isUserAdmin = {% if request.user.is_superuser or is_admin %}true{% else %}false{% endif %};
 
     const fullInventory = [
         {% for produit in tous_les_produits_complets %}
@@ -612,7 +630,7 @@
     let panierLocal = {};
     let articlesTicketUrgent = {};
 
-    /* 🔔 NOTIFICATION TOAST FLOTTANTE DYNAMIQUE */
+    /* 🔔 1. NOTIFICATION TOAST FLOTTANTE EN BAS D'ÉCRAN */
     function afficherToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -685,12 +703,16 @@
                 let card = document.createElement('div');
                 card.className = 'inventory-card temp-search-card';
 
+                let clickAction = isUserAdmin 
+                    ? `openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}', '${p.prix}')`
+                    : `ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}', this)`;
+
                 let boutonActionHtml = estBloqueSemaine 
                     ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le ticket d'urgence.">Fermé (Option d'urgence)</button>`
                     : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter au panier</button>`;
 
                 card.innerHTML = `
-                    <div class="card-details" onclick="openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}', '${p.prix}')">
+                    <div class="card-details" onclick="${clickAction}">
                         <span class="product-ref-code">${p.reference}</span>
                         <span class="product-title">${p.nom}</span>
                     </div>
@@ -706,7 +728,7 @@
         noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
     }
 
-    /* 🚀 FONCTION AJOUT AU PANIER AVEC NOTIFICATION TOAST & ANIMATION DOCK */
+    /* 🚀 AJOUT AU PANIER AVEC TOAST NOTIFICATION */
     function ajouterAuPanier(id, nom, ref, stock, elementBouton) {
         let max = parseInt(stock) || 999;
         if (panierLocal[id]) {
@@ -715,7 +737,6 @@
             panierLocal[id] = { id: id, nom: nom, ref: ref, qty: 1, max: max };
         }
 
-        // Animation du dock
         const dock = document.getElementById('btnPanierFlottant');
         if (dock) {
             dock.classList.remove('dock-pulse-animation');
@@ -727,7 +748,7 @@
         actualiserPanierUI();
     }
 
-    /* 🗑️ RETRAIT D'UN PRODUIT DU PANIER AVEC NOTIFICATION */
+    /* 🗑️ RETRAIT DU PANIER AVEC TOAST NOTIFICATION */
     function retirerDuPanier(id) {
         if (panierLocal[id]) {
             delete panierLocal[id];
@@ -815,7 +836,7 @@
     function preparerSoumissionPanier(event) {
         if (estBloqueSemaine) {
             if (event) event.preventDefault();
-            alert("Les commandes sont actuellement fermées. Veuillez créer un ticket d'urgence dans le bandeau rouge.");
+            afficherToast("Commandes fermées ! Utilisez le ticket d'urgence.", 'danger');
             return false;
         }
 
@@ -824,22 +845,9 @@
         return true;
     }
 
-    /* 📄 GESTION DE L'EXPORTATION PDF SUR-MESURE */
-    function ouvrirModalConfigPDF() { 
-        document.getElementById('pdfConfigModal').style.display = 'flex'; 
-    }
-
-    function soumettreExportPDF(event) {
-        setTimeout(() => {
-            fermerModal('pdfConfigModal');
-        }, 500);
-        return true;
-    }
-
-    function ouvrirModalTicketUrgence() {
-        const modal = document.getElementById('ticketUrgenceModal');
-        if (modal) modal.style.display = 'flex';
-    }
+    function ouvrirModalConfigPDF() { document.getElementById('pdfConfigModal').style.display = 'flex'; }
+    function soumettreExportPDF(event) { setTimeout(() => { fermerModal('pdfConfigModal'); }, 500); return true; }
+    function ouvrirModalTicketUrgence() { const modal = document.getElementById('ticketUrgenceModal'); if (modal) modal.style.display = 'flex'; }
 
     function ajouterProduitTicketUrgent() {
         const select = document.getElementById('selectProduitCatalogue');
@@ -900,24 +908,17 @@
     function preparerSoumissionTicketUrgent() {
         const keys = Object.keys(articlesTicketUrgent);
         if (keys.length === 0) {
-            alert("Veuillez ajouter au moins un article dans votre ticket d'urgence.");
+            afficherToast("Ajoutez au moins un article dans votre ticket d'urgence.", 'danger');
             return false;
         }
         document.getElementById('jsonTicketUrgence').value = JSON.stringify(articlesTicketUrgent);
         return true;
     }
 
-    function ouvrirModalPanier() { 
-        document.getElementById('cartModal').style.display = 'flex'; 
-        verifierServicePanier();
-    }
+    function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
+    function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
 
-    function fermerModal(id) { 
-        const modal = document.getElementById(id);
-        if (modal) modal.style.display = 'none'; 
-    }
-
-    /* 🎴 FICHE DE POP-UP PRODUIT ÉPURÉE */
+    /* 🎴 FICHE PRODUIT / ÉDITION (RESERVÉ ADMINS) */
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         document.getElementById('lblReference').textContent = ref;
         document.getElementById('valNom').textContent = nom;
@@ -926,14 +927,17 @@
         if (document.getElementById('hiddenProduitId')) document.getElementById('hiddenProduitId').value = id;
         if (document.getElementById('valCategorie')) document.getElementById('valCategorie').textContent = cat;
         if (document.getElementById('valEmplacement')) document.getElementById('valEmplacement').textContent = emp || "-";
+        
+        // **2. BINDING ET ÉDITION DU FOURNISSEUR DANS LA MODALE ADMIN**
         if (document.getElementById('valFournisseur')) document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
+        if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
+
         if (document.getElementById('valStock')) document.getElementById('valStock').textContent = stock;
 
         if (document.getElementById('txtReference')) document.getElementById('txtReference').value = ref;
         if (document.getElementById('txtNom')) document.getElementById('txtNom').value = nom;
         if (document.getElementById('txtCategorie')) document.getElementById('txtCategorie').value = cat;
         if (document.getElementById('txtEmplacement')) document.getElementById('txtEmplacement').value = emp;
-        if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
         if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = prix || "";
         if (document.getElementById('txtStock')) document.getElementById('txtStock').value = stock;
         if (document.getElementById('txtQuota')) document.getElementById('txtQuota').value = quota;
@@ -966,15 +970,6 @@
 
     document.addEventListener("DOMContentLoaded", function() {
         verifierServicePanier();
-        const messageBoxes = document.querySelectorAll('.flash-message-box');
-        messageBoxes.forEach(function(box) {
-            setTimeout(function() {
-                box.style.transition = "opacity 0.6s ease, transform 0.6s ease";
-                box.style.opacity = "0";
-                box.style.transform = "translateY(-10px)";
-                setTimeout(function() { box.remove(); }, 600);
-            }, 5000);
-        });
     });
 </script>
 </body>
