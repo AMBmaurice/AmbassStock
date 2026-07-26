@@ -1160,6 +1160,7 @@ def page_gestion_demandes(request):
 
   profil_actif = get_profil_actif(request.user)
 
+  # Traitement des actions Administrateur (Valider, Refuser, Répondre)
   if request.method == 'POST':
     action = request.POST.get('action')
     demande_id = request.POST.get('demande_id')
@@ -1185,31 +1186,25 @@ def page_gestion_demandes(request):
 
   search_query = request.GET.get('q', '').strip()
 
-  # **CÔTÉ ADMIN : SÉPARATION DEMANDES ACTIVES ET DEMANDES PASSÉES**
-  demandes_base = DemandeService.objects.all().order_by('-id')
+  # RÉCUPÉRATION DIRECTE DE TOUTES LES DEMANDES SANS FILTRE
+  demandes_liste = DemandeService.objects.all().order_by('-id')
 
   if search_query:
-    demandes_base = demandes_base.filter(
+    demandes_liste = demandes_liste.filter(
         Q(service__icontains=search_query)
         | Q(message__icontains=search_query)
         | Q(type_demande__icontains=search_query)
     )
-
-  # Séparation entre les demandes non traitées et l'historique archivé
-  demandes_en_cours = demandes_base.filter(statut='en_attente')
-  demandes_passees = demandes_base.exclude(statut='en_attente')
 
   return render(
       request,
       'gestion_demandes.html',
       {
           'profil_actif': profil_actif,
-          'demandes_en_cours': demandes_en_cours,
-          'demandes_passees': demandes_passees,
+          'demandes': demandes_liste,  # Transmet l'intégralité des enregistrements
           'search_query': search_query,
       },
   )
-
 
 def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
