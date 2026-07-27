@@ -44,37 +44,38 @@ class Produit(models.Model):
 
 
 class ProfilUtilisateur(models.Model):
-  user = models.OneToOneField(
-      User, on_delete=models.CASCADE, related_name='profil'
-  )
-  nom_complet = models.CharField(max_length=150)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='profil'
+    )
+    nom_complet = models.CharField(max_length=150)
 
-  # **NOM DE COLONNE COMPATIBLE AVEC VOTRE BASE POSTGRESQL ACTUELLE**
-  mot_de_passe_clair = models.CharField(
-      max_length=128,
-      default='',
-      blank=True,
-      null=True,
-      verbose_name='Mot de passe en clair',
-  )
+    # Champ physique aligné sur la colonne PostgreSQL actuelle
+    mot_de_passe_clair = models.CharField(
+        max_length=128,
+        default='',
+        blank=True,
+        null=True,
+        verbose_name='Mot de passe en clair',
+    )
 
-  acces_inventaire = models.BooleanField(default=True)
-  acces_stocks = models.BooleanField(default=False)
-  acces_historique = models.BooleanField(default=False)
-  acces_statistiques = models.BooleanField(default=False)
-  acces_gestion_demandes = models.BooleanField(default=False)
-  acces_gestion_utilisateurs = models.BooleanField(default=False)
-  acces_factures = models.BooleanField(default=False)
-  acces_panier = models.BooleanField(default=True)
-  type_profil = models.CharField(max_length=20, default='services')
+    acces_inventaire = models.BooleanField(default=True)
+    acces_stocks = models.BooleanField(default=False)
+    acces_historique = models.BooleanField(default=False)
+    acces_statistiques = models.BooleanField(default=False)
+    acces_gestion_demandes = models.BooleanField(default=False)
+    acces_gestion_utilisateurs = models.BooleanField(default=False)
+    acces_factures = models.BooleanField(default=False)
+    acces_panier = models.BooleanField(default=True)
+    type_profil = models.CharField(max_length=20, default='services')
 
-# **ALIASED EN PROPERTY POUR NE JAMAIS FAIRE PLANTER LE CODE OU LES TEMPLATES**
-  @property
-  def clear_password(self):
-    return self.mot_de_passe_clair or '••••••••'
+    # Alias sous forme de propriété pour compatibilité ascendante
+    @property
+    def clear_password(self):
+        return self.mot_de_passe_clair or '••••••••'
 
-  def __str__(self):
-    return self.nom_complet or self.user.username
+    def __str__(self):
+        return self.nom_complet or self.user.username
+
 
 class DeclarationHebdomadaire(models.Model):
     CHOIX_SERVICES = [
@@ -205,8 +206,8 @@ class MouvementStock(models.Model):
     ]
     type_mouvement = models.CharField(max_length=10, choices=CHOIX_TYPES)
     objet = models.CharField(max_length=200)
-    
-    # **CONSERVATION DE L'HISTORIQUE MÊME SI LE PRODUIT EST SUPPRIMÉ (SET_NULL)**
+
+    # Conservation de l'historique même si le produit est supprimé (SET_NULL)
     produit = models.ForeignKey(
         Produit,
         on_delete=models.SET_NULL,
@@ -218,7 +219,7 @@ class MouvementStock(models.Model):
     service = models.CharField(max_length=100, default='Administration')
     date_mouvement = models.DateTimeField(default=timezone.now)
 
-    # CHAMP PERMETTANT DE REGROUPER LES ARRIVAGES PAR BON/COMMANDES
+    # Champ permettant de regrouper les arrivages par bon/commandes
     numero_commande = models.CharField(
         max_length=100,
         blank=True,
