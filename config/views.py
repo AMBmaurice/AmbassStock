@@ -807,14 +807,24 @@ def page_gestion_stocks(request):
       num_cmd = request.POST.get('numero_commande', '').strip() or None
 
       if quantite_initiale > 0:
-        MouvementStock.objects.create(
-            type_mouvement='ENTREE',
-            objet=objet_nom,
-            produit=nouveau_produit,
-            quantite=quantite_initiale,
-            service='Administration',
-            numero_commande=num_cmd,
-        )
+        # **SÉCURISATION SANS CRASH SI LA COLONNE numero_commande EST ABSENTE DE LA BDD**
+        try:
+          MouvementStock.objects.create(
+              type_mouvement='ENTREE',
+              objet=objet_nom,
+              produit=nouveau_produit,
+              quantite=quantite_initiale,
+              service='Administration',
+              numero_commande=num_cmd,
+          )
+        except (ProgrammingError, OperationalError, Exception):
+          MouvementStock.objects.create(
+              type_mouvement='ENTREE',
+              objet=objet_nom,
+              produit=nouveau_produit,
+              quantite=quantite_initiale,
+              service='Administration',
+          )
 
       messages.success(request, "Nouveau produit ajouté à l'inventaire")
       return redirect('/gestion-stocks/')
@@ -833,15 +843,27 @@ def page_gestion_stocks(request):
           produit.save(update_fields=['quantite'])
           produit.refresh_from_db()
 
-        MouvementStock.objects.create(
-            type_mouvement='ENTREE',
-            objet=produit.objet,
-            produit=produit,
-            quantite=quantite_ajoutee,
-            service='Administration',
-            numero_commande=num_cmd,
-            date_mouvement=request.POST.get('date_entree') or date.today(),
-        )
+        # **SÉCURISATION SANS CRASH POUR LES ENTRÉES**
+        try:
+          MouvementStock.objects.create(
+              type_mouvement='ENTREE',
+              objet=produit.objet,
+              produit=produit,
+              quantite=quantite_ajoutee,
+              service='Administration',
+              numero_commande=num_cmd,
+              date_mouvement=request.POST.get('date_entree') or date.today(),
+          )
+        except (ProgrammingError, OperationalError, Exception):
+          MouvementStock.objects.create(
+              type_mouvement='ENTREE',
+              objet=produit.objet,
+              produit=produit,
+              quantite=quantite_ajoutee,
+              service='Administration',
+              date_mouvement=request.POST.get('date_entree') or date.today(),
+          )
+
         messages.success(request, 'Quantité ajoutée avec succès')
       except Produit.DoesNotExist:
         pass
@@ -887,7 +909,7 @@ def page_gestion_stocks(request):
       try:
         produit = Produit.objects.get(reference=ref_produit)
         produit.delete()
-        messages.success(request, 'Produit supprimé de l\'inventaire')
+        messages.success(request, "Produit supprimé de l'inventaire")
       except Produit.DoesNotExist:
         pass
       return redirect('/gestion-stocks/')
