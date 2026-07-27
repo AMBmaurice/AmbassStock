@@ -997,7 +997,7 @@ def page_gestion_stocks(request):
           'fournisseurs_existants': fournisseurs_existants,
           'date_du_jour': aujourd_hui,
       },
-  )
+  ) 
     
 def page_historique(request):
   if not request.user.is_authenticated:
