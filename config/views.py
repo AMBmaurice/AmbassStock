@@ -807,24 +807,40 @@ def page_gestion_stocks(request):
       num_cmd = request.POST.get('numero_commande', '').strip() or None
 
       if quantite_initiale > 0:
-        # **SÉCURISATION SANS CRASH SI LA COLONNE numero_commande EST ABSENTE DE LA BDD**
+        # **CRÉATION SÉCURISÉE DE MOUVEMENT PAR REQUÊTE DIRECTE SI LA COLONNE EXISTE OU PAS**
         try:
-          MouvementStock.objects.create(
-              type_mouvement='ENTREE',
-              objet=objet_nom,
-              produit=nouveau_produit,
-              quantite=quantite_initiale,
-              service='Administration',
-              numero_commande=num_cmd,
-          )
-        except (ProgrammingError, OperationalError, Exception):
-          MouvementStock.objects.create(
-              type_mouvement='ENTREE',
-              objet=objet_nom,
-              produit=nouveau_produit,
-              quantite=quantite_initiale,
-              service='Administration',
-          )
+          with transaction.atomic():
+            mvt = MouvementStock(
+                type_mouvement='ENTREE',
+                objet=objet_nom,
+                produit=nouveau_produit,
+                quantite=quantite_initiale,
+                service='Administration',
+            )
+            if hasattr(mvt, 'numero_commande') and num_cmd:
+              setattr(mvt, 'numero_commande', num_cmd)
+            mvt.save()
+        except Exception:
+          # Fallback si la colonne n'existe pas du tout en BDD PostgreSQL
+          try:
+            from django.db import connection
+
+            with connection.cursor() as cursor:
+              cursor.execute(
+                  """
+                                INSERT INTO config_mouvementstock (type_mouvement, objet, quantite, service, date_mouvement, produit_id)
+                                VALUES (%s, %s, %s, %s, NOW(), %s)
+                            """,
+                  [
+                      'ENTREE',
+                      objet_nom,
+                      quantite_initiale,
+                      'Administration',
+                      nouveau_produit.id,
+                  ],
+              )
+          except Exception:
+            pass
 
       messages.success(request, "Nouveau produit ajouté à l'inventaire")
       return redirect('/gestion-stocks/')
@@ -843,26 +859,42 @@ def page_gestion_stocks(request):
           produit.save(update_fields=['quantite'])
           produit.refresh_from_db()
 
-        # **SÉCURISATION SANS CRASH POUR LES ENTRÉES**
+        date_mvt = request.POST.get('date_entree') or date.today()
+
         try:
-          MouvementStock.objects.create(
-              type_mouvement='ENTREE',
-              objet=produit.objet,
-              produit=produit,
-              quantite=quantite_ajoutee,
-              service='Administration',
-              numero_commande=num_cmd,
-              date_mouvement=request.POST.get('date_entree') or date.today(),
-          )
-        except (ProgrammingError, OperationalError, Exception):
-          MouvementStock.objects.create(
-              type_mouvement='ENTREE',
-              objet=produit.objet,
-              produit=produit,
-              quantite=quantite_ajoutee,
-              service='Administration',
-              date_mouvement=request.POST.get('date_entree') or date.today(),
-          )
+          with transaction.atomic():
+            mvt = MouvementStock(
+                type_mouvement='ENTREE',
+                objet=produit.objet,
+                produit=produit,
+                quantite=quantite_ajoutee,
+                service='Administration',
+                date_mouvement=date_mvt,
+            )
+            if hasattr(mvt, 'numero_commande') and num_cmd:
+              setattr(mvt, 'numero_commande', num_cmd)
+            mvt.save()
+        except Exception:
+          try:
+            from django.db import connection
+
+            with connection.cursor() as cursor:
+              cursor.execute(
+                  """
+                                INSERT INTO config_mouvementstock (type_mouvement, objet, quantite, service, date_mouvement, produit_id)
+                                VALUES (%s, %s, %s, %s, %s, %s)
+                            """,
+                  [
+                      'ENTREE',
+                      produit.objet,
+                      quantite_ajoutee,
+                      'Administration',
+                      date_mvt,
+                      produit.id,
+                  ],
+              )
+          except Exception:
+            pass
 
         messages.success(request, 'Quantité ajoutée avec succès')
       except Produit.DoesNotExist:
@@ -891,14 +923,20 @@ def page_gestion_stocks(request):
         if 'verifier_et_envoyer_alerte_papier' in globals():
           verifier_et_envoyer_alerte_papier(produit)
 
-        MouvementStock.objects.create(
-            type_mouvement='SORTIE',
-            objet=produit.objet,
-            produit=produit,
-            quantite=quantite_retiree,
-            service=service_demandeur,
-            date_mouvement=request.POST.get('date_sortie') or date.today(),
-        )
+        date_mvt = request.POST.get('date_sortie') or date.today()
+        try:
+          with transaction.atomic():
+            MouvementStock.objects.create(
+                type_mouvement='SORTIE',
+                objet=produit.objet,
+                produit=produit,
+                quantite=quantite_retiree,
+                service=service_demandeur,
+                date_mouvement=date_mvt,
+            )
+        except Exception:
+          pass
+
         messages.success(request, 'Quantité retirée avec succès')
       except Produit.DoesNotExist:
         pass
