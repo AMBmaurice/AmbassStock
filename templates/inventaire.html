@@ -349,8 +349,8 @@
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
             
-            <!-- **1. RÈGLE ACCÈS STRICTE : SEUL L'ADMIN PEUT AFFICHER LA MODALE AU CLIC / LES SERVICES AJOUTENT DIRECTEMENT AU PANIER** -->
-            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|default_if_none:'' }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
+            <!-- **PRIX FORMATÉ AVEC DÉCIMALES EXACTES TRANSMISE AU JS** -->
+            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|unlocalize|default_if_none:'' }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
                 <span class="product-ref-code">{{ produit.reference }}</span>
                 <span class="product-title">{{ produit.objet }}</span>
             </div> 
@@ -445,6 +445,13 @@
             <span style="font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">Caractéristiques du Produit</span>
             
             <div class="details-grid">
+                <!-- **AJOUT DU CHAMP NOM/DÉSIGNATION ÉDITABLE POUR L'ADMINISTRATEUR** -->
+                <div class="detail-item" style="grid-column: span 2;">
+                    <span class="detail-label">Désignation / Nom du produit</span>
+                    <span class="view-value" id="valNomDisplay">-</span>
+                    <input type="text" id="txtNom" form="editForm" name="objet" class="edit-input" required placeholder="Ex: Stylo Bille Bleu">
+                </div>
+
                 <div class="detail-item">
                     <span class="detail-label">Catégorie</span>
                     <span class="view-value" id="valCategorie">-</span>
@@ -469,14 +476,13 @@
                     <input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required min="0">
                 </div>
 
-                <!-- **2. MODIFICATION DU PRIX UNITOIRE EN ÉDITION ADMIN** -->
+                <!-- **CORRECTION DU PRIX AVEC DÉCIMALES EXACTES ET SUPPRESSION TRONCATURE CENTIMES** -->
                 <div class="detail-item">
                     <span class="detail-label">Prix Unitaire (€)</span>
                     <span class="view-value" id="valPrix">-</span>
-                    <input type="number" step="0.01" id="txtPrix" form="editForm" name="prix" class="edit-input" placeholder="Ex: 12.50">
+                    <input type="number" step="0.01" id="txtPrix" form="editForm" name="prix" class="edit-input" placeholder="Ex: 4.90">
                 </div>
 
-                <!-- **3. MODIFICATION DU QUOTA DE RUPTURE/ALERTE EN ÉDITION ADMIN** -->
                 <div class="detail-item">
                     <span class="detail-label">Quota Alerte Rupture</span>
                     <span class="view-value" id="valQuota">-</span>
@@ -489,7 +495,6 @@
                 <input type="hidden" name="action_type" value="modification">
                 <input type="hidden" name="produit_id" id="hiddenProduitId">
                 <input type="hidden" id="txtReference" name="reference">
-                <input type="hidden" id="txtNom" name="objet">
 
                 <div style="display: flex; gap: 12px; margin-top: 15px;">
                     <button type="button" id="btnEdit" class="btn-add-inline" style="flex-grow:1; height: 46px; justify-content: center;" onclick="activerModeEdition()">
@@ -637,7 +642,7 @@
             emplacement: "{{ produit.emplacement|escapejs }}",
             quota: "{{ produit.quota_minimum|default_if_none:'' }}",
             fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}",
-            prix: "{{ produit.prix|default_if_none:'' }}"
+            prix: "{{ produit.prix|unlocalize|default_if_none:'' }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -930,23 +935,27 @@
     function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
     function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
 
-    /* 🎴 FICHE PRODUIT / ÉDITION (RESERVÉE EXCLUSIVEMENT AUX ADMINS) */
+    /* **🎴 FICHE PRODUIT & ÉDITION COMPLETEMENT CORRIGÉE POUR L'ADMINISTRATEUR** */
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
-        if (!isUserAdmin) return; // Sécurité de verrouillage
+        if (!isUserAdmin) return; 
 
         document.getElementById('lblReference').textContent = ref;
         document.getElementById('valNom').textContent = nom;
         
-        const prixFormatted = prix && !isNaN(parseFloat(prix)) ? (parseFloat(prix).toFixed(2).replace('.', ',') + " €") : "Non défini";
+        // **CONVERSION PROPRE DU PRIX EN FLOATING NUMBER JS SANS PERTE DE CENTIMES**
+        const cleanPrixStr = String(prix || "").replace(',', '.').trim();
+        const prixNum = parseFloat(cleanPrixStr);
+        const prixFormatted = (!isNaN(prixNum) && cleanPrixStr !== "") ? (prixNum.toFixed(2).replace('.', ',') + " €") : "Non défini";
+        
         document.getElementById('valPrixHeader').textContent = prixFormatted;
 
         if (document.getElementById('hiddenProduitId')) document.getElementById('hiddenProduitId').value = id;
+        if (document.getElementById('valNomDisplay')) document.getElementById('valNomDisplay').textContent = nom || "-";
         if (document.getElementById('valCategorie')) document.getElementById('valCategorie').textContent = cat || "-";
         if (document.getElementById('valEmplacement')) document.getElementById('valEmplacement').textContent = emp || "-";
         if (document.getElementById('valFournisseur')) document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
         if (document.getElementById('valStock')) document.getElementById('valStock').textContent = stock;
         
-        // **BINDING PRIX ET QUOTA EN AFFICHAGE / SAISIE**
         if (document.getElementById('valPrix')) document.getElementById('valPrix').textContent = prixFormatted;
         if (document.getElementById('valQuota')) document.getElementById('valQuota').textContent = (quota !== "" && quota !== "None") ? quota : "10 (Par défaut)";
 
@@ -957,7 +966,8 @@
         if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
         if (document.getElementById('txtStock')) document.getElementById('txtStock').value = stock;
         
-        if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = (prix && prix !== "None") ? prix : "";
+        // **AFFECTATION DU PRIX AVEC POINT DÉCIMAL DANS LE CHAMP TYPE NUMBER DE L'ÉDITION**
+        if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = (!isNaN(prixNum) && cleanPrixStr !== "") ? prixNum.toFixed(2) : "";
         if (document.getElementById('txtQuota')) document.getElementById('txtQuota').value = (quota && quota !== "None") ? quota : "10";
 
         desactiverEdition();
