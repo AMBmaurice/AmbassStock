@@ -1,3 +1,4 @@
+{% load l10n %}
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -349,8 +350,8 @@
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
             
-            <!-- **PRIX FORMATÉ AVEC DÉCIMALES EXACTES TRANSMISE AU JS** -->
-            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|unlocalize|default_if_none:'' }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
+            <!-- PRIX FORMATÉ AVEC STRINGFORMAT POUR ÉVITER TOUT ERREUR DE SYNTAXE -->
+            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|stringformat:'s'|default_if_none:'' }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
                 <span class="product-ref-code">{{ produit.reference }}</span>
                 <span class="product-title">{{ produit.objet }}</span>
             </div> 
@@ -445,7 +446,6 @@
             <span style="font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">Caractéristiques du Produit</span>
             
             <div class="details-grid">
-                <!-- **AJOUT DU CHAMP NOM/DÉSIGNATION ÉDITABLE POUR L'ADMINISTRATEUR** -->
                 <div class="detail-item" style="grid-column: span 2;">
                     <span class="detail-label">Désignation / Nom du produit</span>
                     <span class="view-value" id="valNomDisplay">-</span>
@@ -476,7 +476,6 @@
                     <input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required min="0">
                 </div>
 
-                <!-- **CORRECTION DU PRIX AVEC DÉCIMALES EXACTES ET SUPPRESSION TRONCATURE CENTIMES** -->
                 <div class="detail-item">
                     <span class="detail-label">Prix Unitaire (€)</span>
                     <span class="view-value" id="valPrix">-</span>
@@ -642,7 +641,7 @@
             emplacement: "{{ produit.emplacement|escapejs }}",
             quota: "{{ produit.quota_minimum|default_if_none:'' }}",
             fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}",
-            prix: "{{ produit.prix|unlocalize|default_if_none:'' }}"
+            prix: "{{ produit.prix|stringformat:'s'|default_if_none:'' }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -935,14 +934,13 @@
     function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
     function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
 
-    /* **🎴 FICHE PRODUIT & ÉDITION COMPLETEMENT CORRIGÉE POUR L'ADMINISTRATEUR** */
+    /* FICHE PRODUIT & ÉDITION COMPLETEMENT CORRIGÉE POUR L'ADMINISTRATEUR */
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         if (!isUserAdmin) return; 
 
         document.getElementById('lblReference').textContent = ref;
         document.getElementById('valNom').textContent = nom;
         
-        // **CONVERSION PROPRE DU PRIX EN FLOATING NUMBER JS SANS PERTE DE CENTIMES**
         const cleanPrixStr = String(prix || "").replace(',', '.').trim();
         const prixNum = parseFloat(cleanPrixStr);
         const prixFormatted = (!isNaN(prixNum) && cleanPrixStr !== "") ? (prixNum.toFixed(2).replace('.', ',') + " €") : "Non défini";
@@ -966,7 +964,6 @@
         if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
         if (document.getElementById('txtStock')) document.getElementById('txtStock').value = stock;
         
-        // **AFFECTATION DU PRIX AVEC POINT DÉCIMAL DANS LE CHAMP TYPE NUMBER DE L'ÉDITION**
         if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = (!isNaN(prixNum) && cleanPrixStr !== "") ? prixNum.toFixed(2) : "";
         if (document.getElementById('txtQuota')) document.getElementById('txtQuota').value = (quota && quota !== "None") ? quota : "10";
 
