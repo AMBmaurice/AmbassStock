@@ -781,10 +781,12 @@ def page_gestion_stocks(request):
           request.POST.get('objet') or request.POST.get('nom') or ''
       ).strip()
 
+      # **1. EXTRACTION INTELLIGENTE DE LA CATÉGORIE**
       match = re.search(r'\((.*?)\)', categorie_nom)
       if match:
         code_categorie = match.group(1).upper()
       else:
+        # Si la chaîne est "Écriture", on retire les accents et prends les 3 premières lettres ("ECR")
         clean_cat = ''.join(
             c
             for c in unicodedata.normalize('NFD', categorie_nom)
@@ -847,6 +849,7 @@ def page_gestion_stocks(request):
             fournisseur_select if fournisseur_select else 'Divers'
         )
 
+      # **2. CONSERVATION STRICTE DES CENTIMES**
       prix_recu = request.POST.get('prix')
       prix_valeur = None
       if prix_recu and str(prix_recu).strip():
@@ -976,7 +979,7 @@ def page_gestion_stocks(request):
         pass
       return redirect('/gestion-stocks/')
 
-  # **RETOUR OBLIGATOIRE POUR LA MÉTHODE GET (OU SI AUCUN POST NE REDIRIGE)**
+  # **RETOUR RENDU OBLIGATOIRE EN MÉTHODE GET**
   fournisseurs_existants = (
       Produit.objects.exclude(fournisseur__isnull=True)
       .exclude(fournisseur='')
@@ -997,7 +1000,7 @@ def page_gestion_stocks(request):
           'fournisseurs_existants': fournisseurs_existants,
           'date_du_jour': aujourd_hui,
       },
-  ) 
+  )
     
 def page_historique(request):
   if not request.user.is_authenticated:
