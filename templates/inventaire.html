@@ -17,14 +17,14 @@
 
         .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
 
-        /* EN-TÊTE DE PAGE ET PANIER STYLE AMAZON HEADER */
+        /* EN-TÊTE DE PAGE ET PANIER FLOTTANT */
         .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
         .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 750px; }
 
         .header-actions-group { display: flex; align-items: center; gap: 15px; }
 
-        /* 🛒 DOCK PANIER FLOTTANT HAUT-DE-GAMME */
+        /* 🛒 DOCK PANIER FLOTTANT */
         .amazon-cart-dock { 
             display: flex; 
             align-items: center; 
@@ -88,7 +88,7 @@
         .btn-pdf-export { height: 44px; padding: 0 20px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
         .btn-pdf-export:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
 
-        /* 🔔 NOTIFICATIONS TOAST DYNAMIQUES UNIFIÉES EN BAS D'ÉCRAN */
+        /* 🔔 NOTIFICATIONS TOAST EN BAS D'ÉCRAN */
         .toast-container {
             position: fixed;
             bottom: 30px;
@@ -155,7 +155,7 @@
         .btn-add-inline:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; transform: none !important; opacity: 0.8; }
 
         /* PUCES DE STATUT DE STOCK */
-        .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; cursor: pointer; }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
         .status-green { background-color: #2BD14E; box-shadow: 0 0 0 3px rgba(43, 209, 78, 0.2); }
         .status-yellow { background-color: #FFCC00; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2); }
         .status-red { background-color: #FF3B30; animation: elegantPulse 2s infinite ease-in-out; }
@@ -180,11 +180,11 @@
         .checkbox-custom-label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; color: #2C351C; cursor: pointer; user-select: none; }
         .checkbox-custom-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer; }
 
-        /* 🎴 FICHE DÉTAIL PRODUIT ÉPURÉE */
-        .product-hero-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 30px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 16px; text-align: center; align-items: center; }
+        /* FICHE DÉTAIL PRODUIT ÉPURÉE */
+        .product-hero-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 26px; margin-bottom: 22px; display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: center; }
         .hero-ref-tag { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; font-weight: 800; color: #5E6D3E; background: #EBF2E9; padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(94, 109, 62, 0.2); }
-        .hero-product-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; line-height: 1.3; }
-        .hero-price-tag { font-size: 2.1rem; font-weight: 800; color: #5E6D3E; letter-spacing: -0.5px; }
+        .hero-product-title { font-size: 1.5rem; font-weight: 800; color: #2C351C; line-height: 1.3; }
+        .hero-price-tag { font-size: 2rem; font-weight: 800; color: #5E6D3E; letter-spacing: -0.5px; }
 
         /* PANIER MODALE */
         .cart-items-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
@@ -202,12 +202,14 @@
         
         .select-custom, .input-custom { height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; outline: none; background: #FAFBF9; width: 100%; color: #2C351C; font-weight: 500; transition: border-color 0.2s; }
 
-        /* CADRE ADMIN ÉDITION */
-        .admin-edit-panel { background: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 18px; padding: 22px; margin-top: 15px; display: flex; flex-direction: column; gap: 14px; }
-        .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .detail-item { display: flex; flex-direction: column; gap: 4px; }
-        .detail-label { font-size: 0.75rem; color: #7A8278; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .edit-input { padding: 8px 12px; border: 1px solid #D0D6CE; border-radius: 8px; font-size: 0.9rem; outline: none; background: #ffffff; width: 100%; }
+        /* CADRE ADMIN ÉDITION AVEC PRIX ET QUOTA */
+        .admin-edit-panel { background: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 20px; padding: 24px; margin-top: 10px; display: flex; flex-direction: column; gap: 16px; }
+        .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .detail-item { display: flex; flex-direction: column; gap: 6px; }
+        .detail-label { font-size: 0.75rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .view-value { font-size: 0.95rem; font-weight: 700; color: #2C351C; padding: 8px 0; }
+        .edit-input { padding: 10px 14px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.92rem; outline: none; background: #ffffff; width: 100%; font-weight: 600; color: #2C351C; }
+        .edit-input:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
     </style>
 </head>
 <body>
@@ -342,12 +344,12 @@
         </div>
     </div>
             
-    <!-- 🛒 GRILLE D'INVENTAIRE : EXPÉRIENCE CIBLÉE -->
+    <!-- 🛒 GRILLE D'INVENTAIRE : COMPORTEMENT STRICTEMENT SÉPARÉ SERVICES VS ADMIN -->
     <div class="inventory-grid" id="inventoryList">
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
             
-            <!-- **1. COMPORTEMENT DU CLIC SUR LA CARTE : DIRECTEMENT AJOUT AU PANIER POUR LES SERVICES / MODALE POUR ADMINS** -->
+            <!-- **1. RÈGLE ACCÈS STRICTE : SEUL L'ADMIN PEUT AFFICHER LA MODALE AU CLIC / LES SERVICES AJOUTENT DIRECTEMENT AU PANIER** -->
             <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|default_if_none:'' }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
                 <span class="product-ref-code">{{ produit.reference }}</span>
                 <span class="product-title">{{ produit.objet }}</span>
@@ -426,22 +428,21 @@
     </div>
 </div>
 
-<!-- 🎴 MODALE FICHE DÉTAIL & ÉDITION PRODUIT (ADMIN) -->
+<!-- 🎴 MODALE FICHE DÉTAIL & ÉDITION PRODUIT (RÉSERVÉE STRICTEMENT ADMINS) -->
+{% if request.user.is_superuser or is_admin %}
 <div class="modal-overlay" id="productModal" onclick="if(event.target === this) fermerModal('productModal');">
     <div class="modal-box">
         <button class="modal-close" onclick="fermerModal('productModal')">✕</button>
-        <h3 class="modal-title">Fiche Produit</h3>
+        <h3 class="modal-title">Fiche & Paramètres Administration</h3>
                 
         <div class="product-hero-card">
             <span class="hero-ref-tag" id="lblReference">REF-XXX</span>
             <h2 class="hero-product-title" id="valNom">Désignation du produit</h2>
-            <div class="hero-price-tag" id="valPrix">0,00 €</div>
+            <div class="hero-price-tag" id="valPrixHeader">0,00 €</div>
         </div>
 
-        {% if request.user.is_superuser or is_admin %}
-        <!-- VOLET DE MAINTENANCE ADMINISTRATEUR -->
         <div class="admin-edit-panel">
-            <span style="font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase;">Paramètres d'administration de la réserve</span>
+            <span style="font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">Caractéristiques du Produit</span>
             
             <div class="details-grid">
                 <div class="detail-item">
@@ -456,7 +457,6 @@
                     <input type="text" id="txtEmplacement" form="editForm" name="emplacement" class="edit-input">
                 </div>
 
-                <!-- **2. CASE FOURNISSEUR MODIFIABLE AVEC CHAMP DE SAISIE EN ÉDITION** -->
                 <div class="detail-item">
                     <span class="detail-label">Fournisseur</span>
                     <span class="view-value" id="valFournisseur">-</span>
@@ -466,7 +466,21 @@
                 <div class="detail-item">
                     <span class="detail-label">Stock Réel</span>
                     <span class="view-value" id="valStock">-</span>
-                    <input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required>
+                    <input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required min="0">
+                </div>
+
+                <!-- **2. MODIFICATION DU PRIX UNITOIRE EN ÉDITION ADMIN** -->
+                <div class="detail-item">
+                    <span class="detail-label">Prix Unitaire (€)</span>
+                    <span class="view-value" id="valPrix">-</span>
+                    <input type="number" step="0.01" id="txtPrix" form="editForm" name="prix" class="edit-input" placeholder="Ex: 12.50">
+                </div>
+
+                <!-- **3. MODIFICATION DU QUOTA DE RUPTURE/ALERTE EN ÉDITION ADMIN** -->
+                <div class="detail-item">
+                    <span class="detail-label">Quota Alerte Rupture</span>
+                    <span class="view-value" id="valQuota">-</span>
+                    <input type="number" id="txtQuota" form="editForm" name="quota_minimum" class="edit-input" placeholder="Ex: 5" min="0">
                 </div>
             </div>
 
@@ -476,21 +490,22 @@
                 <input type="hidden" name="produit_id" id="hiddenProduitId">
                 <input type="hidden" id="txtReference" name="reference">
                 <input type="hidden" id="txtNom" name="objet">
-                <input type="hidden" id="txtPrix" name="prix">
-                <input type="hidden" id="txtQuota" name="quota_minimum">
 
-                <div style="display: flex; gap: 12px; margin-top: 10px;">
-                    <button type="button" id="btnEdit" class="btn-add-inline" style="flex-grow:1; height: 44px; justify-content: center;" onclick="activerModeEdition()">Modifier</button>
-                    <button type="submit" id="btnSave" class="btn-add-inline" style="flex-grow:1; height: 44px; display:none; background-color:#2C351C; justify-content: center;">Enregistrer les modifications</button>
+                <div style="display: flex; gap: 12px; margin-top: 15px;">
+                    <button type="button" id="btnEdit" class="btn-add-inline" style="flex-grow:1; height: 46px; justify-content: center;" onclick="activerModeEdition()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Modifier les paramètres
+                    </button>
+                    <button type="submit" id="btnSave" class="btn-add-inline" style="flex-grow:1; height: 46px; display:none; background-color:#2C351C; justify-content: center;">Enregistrer les modifications</button>
                     {% if request.user.is_superuser %}
                     <button type="button" style="background:#FAFBF9; border:1px solid #BA3C2A; color:#BA3C2A; padding:0 18px; border-radius:12px; font-weight:700; cursor:pointer;" onclick="supprimerProduit()">Supprimer</button>
                     {% endif %}
                 </div>
             </form>
         </div>
-        {% endif %}
     </div>
 </div>
+{% endif %}
 
 <!-- 🛒 MODALE RÉCAPITULATIF DU PANIER FLOTTANT -->
 <div class="modal-overlay" id="cartModal" onclick="if(event.target === this) fermerModal('cartModal');">
@@ -630,7 +645,6 @@
     let panierLocal = {};
     let articlesTicketUrgent = {};
 
-    /* 🔔 1. NOTIFICATION TOAST FLOTTANTE EN BAS D'ÉCRAN */
     function afficherToast(message, type = 'success') {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -728,7 +742,6 @@
         noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
     }
 
-    /* 🚀 AJOUT AU PANIER AVEC TOAST NOTIFICATION */
     function ajouterAuPanier(id, nom, ref, stock, elementBouton) {
         let max = parseInt(stock) || 999;
         if (panierLocal[id]) {
@@ -748,7 +761,6 @@
         actualiserPanierUI();
     }
 
-    /* 🗑️ RETRAIT DU PANIER AVEC TOAST NOTIFICATION */
     function retirerDuPanier(id) {
         if (panierLocal[id]) {
             delete panierLocal[id];
@@ -918,29 +930,35 @@
     function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
     function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
 
-    /* 🎴 FICHE PRODUIT / ÉDITION (RESERVÉ ADMINS) */
+    /* 🎴 FICHE PRODUIT / ÉDITION (RESERVÉE EXCLUSIVEMENT AUX ADMINS) */
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
+        if (!isUserAdmin) return; // Sécurité de verrouillage
+
         document.getElementById('lblReference').textContent = ref;
         document.getElementById('valNom').textContent = nom;
-        document.getElementById('valPrix').textContent = prix ? (parseFloat(prix).toFixed(2).replace('.', ',') + " €") : "Prix sur devis";
+        
+        const prixFormatted = prix && !isNaN(parseFloat(prix)) ? (parseFloat(prix).toFixed(2).replace('.', ',') + " €") : "Non défini";
+        document.getElementById('valPrixHeader').textContent = prixFormatted;
 
         if (document.getElementById('hiddenProduitId')) document.getElementById('hiddenProduitId').value = id;
-        if (document.getElementById('valCategorie')) document.getElementById('valCategorie').textContent = cat;
+        if (document.getElementById('valCategorie')) document.getElementById('valCategorie').textContent = cat || "-";
         if (document.getElementById('valEmplacement')) document.getElementById('valEmplacement').textContent = emp || "-";
-        
-        // **2. BINDING ET ÉDITION DU FOURNISSEUR DANS LA MODALE ADMIN**
         if (document.getElementById('valFournisseur')) document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
-        if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
-
         if (document.getElementById('valStock')) document.getElementById('valStock').textContent = stock;
+        
+        // **BINDING PRIX ET QUOTA EN AFFICHAGE / SAISIE**
+        if (document.getElementById('valPrix')) document.getElementById('valPrix').textContent = prixFormatted;
+        if (document.getElementById('valQuota')) document.getElementById('valQuota').textContent = (quota !== "" && quota !== "None") ? quota : "10 (Par défaut)";
 
         if (document.getElementById('txtReference')) document.getElementById('txtReference').value = ref;
         if (document.getElementById('txtNom')) document.getElementById('txtNom').value = nom;
         if (document.getElementById('txtCategorie')) document.getElementById('txtCategorie').value = cat;
         if (document.getElementById('txtEmplacement')) document.getElementById('txtEmplacement').value = emp;
-        if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = prix || "";
+        if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
         if (document.getElementById('txtStock')) document.getElementById('txtStock').value = stock;
-        if (document.getElementById('txtQuota')) document.getElementById('txtQuota').value = quota;
+        
+        if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = (prix && prix !== "None") ? prix : "";
+        if (document.getElementById('txtQuota')) document.getElementById('txtQuota').value = (quota && quota !== "None") ? quota : "10";
 
         desactiverEdition();
         document.getElementById('productModal').style.display = 'flex';
@@ -950,13 +968,13 @@
         document.querySelectorAll('.view-value').forEach(v => v.style.display = 'none');
         document.querySelectorAll('.edit-input').forEach(i => i.style.display = 'block');
         if(document.getElementById('btnEdit')) document.getElementById('btnEdit').style.display = 'none';
-        if(document.getElementById('btnSave')) document.getElementById('btnSave').style.display = 'block';
+        if(document.getElementById('btnSave')) document.getElementById('btnSave').style.display = 'flex';
     }
 
     function desactiverEdition() {
         document.querySelectorAll('.view-value').forEach(v => v.style.display = 'block');
         document.querySelectorAll('.edit-input').forEach(i => i.style.display = 'none');
-        if(document.getElementById('btnEdit')) document.getElementById('btnEdit').style.display = 'block';
+        if(document.getElementById('btnEdit')) document.getElementById('btnEdit').style.display = 'flex';
         if(document.getElementById('btnSave')) document.getElementById('btnSave').style.display = 'none';
     }
 
