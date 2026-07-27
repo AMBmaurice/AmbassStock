@@ -44,29 +44,37 @@ class Produit(models.Model):
 
 
 class ProfilUtilisateur(models.Model):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='profil'
-    )
-    nom_complet = models.CharField(max_length=150)
-    
-    # **CHAMP ALIGNÉ SUR LE CODE DES VUES ET DU TEMPLATE**
-    clear_password = models.CharField(
-        max_length=128, blank=True, null=True, default='••••••••', verbose_name="Mot de passe en clair"
-    )
-    
-    acces_inventaire = models.BooleanField(default=True)
-    acces_stocks = models.BooleanField(default=False)
-    acces_historique = models.BooleanField(default=False)
-    acces_statistiques = models.BooleanField(default=False)
-    acces_gestion_demandes = models.BooleanField(default=False)
-    acces_gestion_utilisateurs = models.BooleanField(default=False)
-    acces_factures = models.BooleanField(default=False)
-    acces_panier = models.BooleanField(default=True)
-    type_profil = models.CharField(max_length=20, default='services')
+  user = models.OneToOneField(
+      User, on_delete=models.CASCADE, related_name='profil'
+  )
+  nom_complet = models.CharField(max_length=150)
 
-    def __str__(self):
-        return self.nom_complet or self.user.username
+  # **NOM DE COLONNE COMPATIBLE AVEC VOTRE BASE POSTGRESQL ACTUELLE**
+  mot_de_passe_clair = models.CharField(
+      max_length=128,
+      default='',
+      blank=True,
+      null=True,
+      verbose_name='Mot de passe en clair',
+  )
 
+  acces_inventaire = models.BooleanField(default=True)
+  acces_stocks = models.BooleanField(default=False)
+  acces_historique = models.BooleanField(default=False)
+  acces_statistiques = models.BooleanField(default=False)
+  acces_gestion_demandes = models.BooleanField(default=False)
+  acces_gestion_utilisateurs = models.BooleanField(default=False)
+  acces_factures = models.BooleanField(default=False)
+  acces_panier = models.BooleanField(default=True)
+  type_profil = models.CharField(max_length=20, default='services')
+
+# **ALIASED EN PROPERTY POUR NE JAMAIS FAIRE PLANTER LE CODE OU LES TEMPLATES**
+  @property
+  def clear_password(self):
+    return self.mot_de_passe_clair or '••••••••'
+
+  def __str__(self):
+    return self.nom_complet or self.user.username
 
 class DeclarationHebdomadaire(models.Model):
     CHOIX_SERVICES = [
