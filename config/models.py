@@ -16,10 +16,10 @@ class Produit(models.Model):
     # Pour le quota adaptatif dans le temps
     derniere_activite = models.DateTimeField(default=timezone.now)
     fournisseur = models.CharField(
-        max_length=50, blank=True, null=True, default='Divers'
+        max_length=100, blank=True, null=True, default='Divers'
     )
 
-    # Champ prix optionnel
+    # Champ prix optionnel avec décimales conservées
     prix = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
@@ -48,8 +48,13 @@ class ProfilUtilisateur(models.Model):
         User, on_delete=models.CASCADE, related_name='profil'
     )
     nom_complet = models.CharField(max_length=150)
-    mot_de_passe_clair = models.CharField(max_length=128, default='')
-    acces_inventaire = models.BooleanField(default=False)
+    
+    # **CHAMP ALIGNÉ SUR LE CODE DES VUES ET DU TEMPLATE**
+    clear_password = models.CharField(
+        max_length=128, blank=True, null=True, default='••••••••', verbose_name="Mot de passe en clair"
+    )
+    
+    acces_inventaire = models.BooleanField(default=True)
     acces_stocks = models.BooleanField(default=False)
     acces_historique = models.BooleanField(default=False)
     acces_statistiques = models.BooleanField(default=False)
@@ -60,7 +65,7 @@ class ProfilUtilisateur(models.Model):
     type_profil = models.CharField(max_length=20, default='services')
 
     def __str__(self):
-        return self.nom_complet
+        return self.nom_complet or self.user.username
 
 
 class DeclarationHebdomadaire(models.Model):
@@ -170,6 +175,7 @@ class ArticlePanier(models.Model):
 class Facture(models.Model):
     date_commande = models.DateField()
     montant_total = models.DecimalField(max_digits=10, decimal_places=2)
+    devise = models.CharField(max_length=10, default='EUR')
     fichier_facture = models.FileField(upload_to='factures/')
 
     @property
@@ -181,7 +187,7 @@ class Facture(models.Model):
         return ''
 
     def __str__(self):
-        return f'Facture du {self.date_commande} - {self.montant_total}€'
+        return f'Facture du {self.date_commande} - {self.montant_total} {self.devise}'
 
 
 class MouvementStock(models.Model):
@@ -191,9 +197,11 @@ class MouvementStock(models.Model):
     ]
     type_mouvement = models.CharField(max_length=10, choices=CHOIX_TYPES)
     objet = models.CharField(max_length=200)
+    
+    # **CONSERVATION DE L'HISTORIQUE MÊME SI LE PRODUIT EST SUPPRIMÉ (SET_NULL)**
     produit = models.ForeignKey(
         Produit,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name='mouvements',
         null=True,
         blank=True,
@@ -202,7 +210,7 @@ class MouvementStock(models.Model):
     service = models.CharField(max_length=100, default='Administration')
     date_mouvement = models.DateTimeField(default=timezone.now)
 
-    # NOUVEAU CHAMP : Permet de regrouper les réapprovisionnements par bon/numéro d'arrivage
+    # CHAMP PERMETTANT DE REGROUPER LES ARRIVAGES PAR BON/COMMANDES
     numero_commande = models.CharField(
         max_length=100,
         blank=True,
