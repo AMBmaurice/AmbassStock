@@ -345,13 +345,21 @@
         </div>
     </div>
             
-    <!-- 🛒 GRILLE D'INVENTAIRE : COMPORTEMENT STRICTEMENT SÉPARÉ SERVICES VS ADMIN -->
+    <!-- 🛒 GRILLE D'INVENTAIRE : SÉCURISÉE AVEC LES ATTRIBUTS DE DONNÉES HTML5 DATA-* -->
     <div class="inventory-grid" id="inventoryList">
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
             
-            <!-- **CORRECTION DE LA SYNTAXE ONCLICK : GUILLEMETS DOUBLE ET EVITEMENT CONFLIT JS** -->
-            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:"" }}', '{{ produit.fournisseur|default:"Divers"|escapejs }}', '{{ produit.prix|default_if_none:"" }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
+            <div class="card-details action-card-trigger" 
+                 data-id="{{ produit.id }}" 
+                 data-ref="{{ produit.reference }}" 
+                 data-nom="{{ produit.objet }}" 
+                 data-cat="{{ produit.categorie }}" 
+                 data-stock="{{ produit.quantite }}" 
+                 data-emp="{{ produit.emplacement|default:'' }}" 
+                 data-quota="{{ produit.quota_minimum|default:'' }}" 
+                 data-fournisseur="{{ produit.fournisseur|default:'Divers' }}" 
+                 data-prix="{{ produit.prix|default:'' }}">
                 <span class="product-ref-code">{{ produit.reference }}</span>
                 <span class="product-title">{{ produit.objet }}</span>
             </div> 
@@ -362,7 +370,11 @@
                     Fermé (Option d'urgence)
                 </button>
                 {% else %}
-                <button type="button" class="btn-add-inline" onclick="ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this)">
+                <button type="button" class="btn-add-inline btn-add-cart-trigger" 
+                        data-id="{{ produit.id }}" 
+                        data-nom="{{ produit.objet }}" 
+                        data-ref="{{ produit.reference }}" 
+                        data-stock="{{ produit.quantite }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Ajouter au panier
                 </button>
@@ -630,7 +642,6 @@
     const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
     const isUserAdmin = {% if request.user.is_superuser or is_admin %}true{% else %}false{% endif %};
 
-    /* **NETTOYAGE ET SÉCURISATION DU TABLEAU JS** */
     const fullInventory = [
         {% for produit in tous_les_produits_complets %}
         {
@@ -640,9 +651,9 @@
             categorie: "{{ produit.categorie|escapejs }}",
             stock: "{{ produit.quantite }}",
             emplacement: "{{ produit.emplacement|escapejs }}",
-            quota: "{{ produit.quota_minimum|default_if_none:"" }}",
-            fournisseur: "{{ produit.fournisseur|default:"Divers"|escapejs }}",
-            prix: "{{ produit.prix|default_if_none:"" }}"
+            quota: "{{ produit.quota_minimum|default_if_none:'' }}",
+            fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}",
+            prix: "{{ produit.prix|default_if_none:'' }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -722,21 +733,17 @@
                 let card = document.createElement('div');
                 card.className = 'inventory-card temp-search-card';
 
-                let clickAction = isUserAdmin 
-                    ? `openProductDetails('${p.id}', '${p.reference.replace(/'/g, "\\'")}', '${p.nom.replace(/'/g, "\\'")}', '${p.categorie.replace(/'/g, "\\'")}', '${p.stock}', '${p.emplacement.replace(/'/g, "\\'")}', '${p.quota}', '${p.fournisseur.replace(/'/g, "\\'")}', '${p.prix}')`
-                    : `ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}', this)`;
-
-                let boutonActionHtml = estBloqueSemaine 
+                let btnHtml = estBloqueSemaine 
                     ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le ticket d'urgence.">Fermé (Option d'urgence)</button>`
-                    : `<button type="button" class="btn-add-inline" onclick="ajouterAuPanier('${p.id}', '${p.nom.replace(/'/g, "\\'")}', '${p.reference.replace(/'/g, "\\'")}', '${p.stock}', this)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter au panier</button>`;
+                    : `<button type="button" class="btn-add-inline btn-add-cart-trigger" data-id="${p.id}" data-nom="${p.nom}" data-ref="${p.reference}" data-stock="${p.stock}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter au panier</button>`;
 
                 card.innerHTML = `
-                    <div class="card-details" onclick="${clickAction}">
+                    <div class="card-details action-card-trigger" data-id="${p.id}" data-ref="${p.reference}" data-nom="${p.nom}" data-cat="${p.categorie}" data-stock="${p.stock}" data-emp="${p.emplacement}" data-quota="${p.quota}" data-fournisseur="${p.fournisseur}" data-prix="${p.prix}">
                         <span class="product-ref-code">${p.reference}</span>
                         <span class="product-title">${p.nom}</span>
                     </div>
                     <div onclick="event.stopPropagation();">
-                        ${boutonActionHtml}
+                        ${btnHtml}
                     </div>
                     <div class="status-dot status-${parseInt(p.stock) <= parseInt(p.quota || 0) ? 'red' : 'green'}"></div>
                 `;
@@ -747,7 +754,7 @@
         noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
     }
 
-    function ajouterAuPanier(id, nom, ref, stock, elementBouton) {
+    function ajouterAuPanier(id, nom, ref, stock) {
         let max = parseInt(stock) || 999;
         if (panierLocal[id]) {
             if (panierLocal[id].qty < max) panierLocal[id].qty++;
@@ -994,8 +1001,42 @@
         }
     }
 
+    /* **GESTIONNAIRE ÉTANCHÉ DE DÉLÉGATION D'ÉVÉNEMENTS CLIKS DÉDIÉ** */
     document.addEventListener("DOMContentLoaded", function() {
         verifierServicePanier();
+
+        document.addEventListener('click', function(e) {
+            const cardTrigger = e.target.closest('.action-card-trigger');
+            if (cardTrigger) {
+                const id = cardTrigger.getAttribute('data-id');
+                const ref = cardTrigger.getAttribute('data-ref');
+                const nom = cardTrigger.getAttribute('data-nom');
+                const cat = cardTrigger.getAttribute('data-cat');
+                const stock = cardTrigger.getAttribute('data-stock');
+                const emp = cardTrigger.getAttribute('data-emp');
+                const quota = cardTrigger.getAttribute('data-quota');
+                const fournisseur = cardTrigger.getAttribute('data-fournisseur');
+                const prix = cardTrigger.getAttribute('data-prix');
+
+                if (isUserAdmin) {
+                    openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix);
+                } else {
+                    ajouterAuPanier(id, nom, ref, stock);
+                }
+                return;
+            }
+
+            const btnCartTrigger = e.target.closest('.btn-add-cart-trigger');
+            if (btnCartTrigger) {
+                const id = btnCartTrigger.getAttribute('data-id');
+                const nom = btnCartTrigger.getAttribute('data-nom');
+                const ref = btnCartTrigger.getAttribute('data-ref');
+                const stock = btnCartTrigger.getAttribute('data-stock');
+
+                ajouterAuPanier(id, nom, ref, stock);
+                return;
+            }
+        });
     });
 </script>
 </body>
