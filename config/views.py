@@ -754,253 +754,253 @@ def verifier_et_envoyer_alerte_papier(produit):
     except Exception as e:
       print(f"Erreur lors de l'envoi du mail d'alerte : {e}")
 
-
 def page_gestion_stocks(request):
-  if not request.user.is_authenticated:
-    return redirect('/connexion/')
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
 
-  profil_actif = get_profil_actif(request.user)
+    profil_actif = get_profil_actif(request.user)
 
-  COMPTEURS_DEPART = {
-      'ECR': 26,
-      'BUR': 52,
-      'PAP': 32,
-      'CLA': 40,
-      'CON': 35,
-      'INF': 17,
-      'ENV': 32,
-      'EQU': 18,
-  }
+    COMPTEURS_DEPART = {
+        'ECR': 26,
+        'BUR': 52,
+        'PAP': 32,
+        'CLA': 40,
+        'CON': 35,
+        'INF': 17,
+        'ENV': 32,
+        'EQU': 18,
+    }
 
-  if request.method == 'POST':
-    action_type = request.POST.get('action_type')
+    if request.method == 'POST':
+        action_type = request.POST.get('action_type')
 
-    if action_type in ['creation', 'creation_produit']:
-      categorie_nom = request.POST.get('categorie', '').strip()
-      objet_nom = (
-          request.POST.get('objet') or request.POST.get('nom') or ''
-      ).strip()
+        if action_type in ['creation', 'creation_produit']:
+            categorie_nom = request.POST.get('categorie', '').strip()
+            objet_nom = (
+                request.POST.get('objet') or request.POST.get('nom') or ''
+            ).strip()
 
-      # **1. EXTRACTION INTELLIGENTE DE LA CATÉGORIE**
-      match = re.search(r'\((.*?)\)', categorie_nom)
-      if match:
-        code_categorie = match.group(1).upper()
-      else:
-        # Si la chaîne est "Écriture", on retire les accents et prends les 3 premières lettres ("ECR")
-        clean_cat = ''.join(
-            c
-            for c in unicodedata.normalize('NFD', categorie_nom)
-            if unicodedata.category(c) != 'Mn'
-        )
-        clean_cat = re.sub(r'[^a-zA-Z0-9]', '', clean_cat).upper()
-        code_categorie = (
-            clean_cat[:3].ljust(3, 'X') if clean_cat else 'GEN'
-        )
+            # 1. EXTRACTION INTELLIGENTE DE LA CATÉGORIE
+            match = re.search(r'\((.*?)\)', categorie_nom)
+            if match:
+                code_categorie = match.group(1).upper()
+            else:
+                clean_cat = ''.join(
+                    c
+                    for c in unicodedata.normalize('NFD', categorie_nom)
+                    if unicodedata.category(c) != 'Mn'
+                )
+                clean_cat = re.sub(r'[^a-zA-Z0-9]', '', clean_cat).upper()
+                code_categorie = (
+                    clean_cat[:3].ljust(3, 'X') if clean_cat else 'GEN'
+                )
 
-      depart_historique = COMPTEURS_DEPART.get(code_categorie, 0)
-      nb_existants = Produit.objects.filter(categorie=categorie_nom).count()
+            depart_historique = COMPTEURS_DEPART.get(code_categorie, 0)
+            nb_existants = Produit.objects.filter(
+                categorie=categorie_nom
+            ).count()
 
-      prochain_numero = depart_historique + nb_existants + 1
-      suffixe_numerique = f'{prochain_numero:02d}'
+            prochain_numero = depart_historique + nb_existants + 1
+            suffixe_numerique = f'{prochain_numero:02d}'
 
-      marque_brute = (
-          request.POST.get('marque')
-          or request.POST.get('marque_texte')
-          or 'GEN'
-      )
-      spec_brute = (
-          request.POST.get('specification')
-          or request.POST.get('spec_texte')
-          or 'MAG'
-      )
-
-      def extraire_trigramme(texte):
-        if not texte:
-          return 'XXX'
-        clean = ''.join(
-            c
-            for c in unicodedata.normalize('NFD', texte)
-            if unicodedata.category(c) != 'Mn'
-        )
-        clean = re.sub(r'[^a-zA-Z0-9]', '', clean).upper()
-        return clean[:3].ljust(3, 'X') if len(clean) < 3 else clean[:3]
-
-      code_marque = extraire_trigramme(marque_brute)
-      code_spec = extraire_trigramme(spec_brute)
-
-      reference_finale = (
-          f'{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}'
-      )
-      quantite_initiale = int(
-          request.POST.get('quantite')
-          or request.POST.get('quantite_initiale')
-          or 0
-      )
-
-      fournisseur_select = request.POST.get('fournisseur_select')
-      fournisseur_nouveau = request.POST.get(
-          'fournisseur_nouveau', ''
-      ).strip()
-
-      if fournisseur_select == 'AUTRE' and fournisseur_nouveau:
-        fournisseur_final = fournisseur_nouveau
-      else:
-        fournisseur_final = (
-            fournisseur_select if fournisseur_select else 'Divers'
-        )
-
-      # **2. CONSERVATION STRICTE DES CENTIMES**
-      prix_recu = request.POST.get('prix')
-      prix_valeur = None
-      if prix_recu and str(prix_recu).strip():
-        try:
-          prix_valeur = round(
-              float(str(prix_recu).replace(',', '.').strip()), 2
-          )
-        except ValueError:
-          prix_valeur = None
-
-      donnees_creation = {
-          'reference': reference_finale,
-          'objet': objet_nom,
-          'categorie': categorie_nom,
-          'emplacement': request.POST.get('emplacement') or 'Réserve',
-          'quantite': quantite_initiale,
-          'quota_minimum': int(request.POST.get('quota_minimum', 10)),
-          'fournisseur': fournisseur_final,
-      }
-
-      if hasattr(Produit, 'prix'):
-        donnees_creation['prix'] = prix_valeur
-
-      nouveau_produit = Produit.objects.create(**donnees_creation)
-      num_cmd = request.POST.get('numero_commande', '').strip() or None
-
-      if quantite_initiale > 0:
-        try:
-          with transaction.atomic():
-            mvt = MouvementStock(
-                type_mouvement='ENTREE',
-                objet=objet_nom,
-                produit=nouveau_produit,
-                quantite=quantite_initiale,
-                service='Administration',
+            marque_brute = (
+                request.POST.get('marque')
+                or request.POST.get('marque_texte')
+                or 'GEN'
             )
-            if hasattr(mvt, 'numero_commande') and num_cmd:
-              setattr(mvt, 'numero_commande', num_cmd)
-            mvt.save()
-        except Exception:
-          pass
-
-      messages.success(request, "Nouveau produit ajouté à l'inventaire")
-      return redirect('/gestion-stocks/')
-
-    elif action_type == 'mouvement_entree':
-      ref_produit = request.POST.get('produit')
-      quantite_ajoutee = int(request.POST.get('quantite', 0))
-      num_cmd = request.POST.get('numero_commande', '').strip() or None
-
-      try:
-        with transaction.atomic():
-          produit = Produit.objects.select_for_update().get(
-              reference=ref_produit
-          )
-          produit.quantite = F('quantite') + quantite_ajoutee
-          produit.save(update_fields=['quantite'])
-          produit.refresh_from_db()
-
-        date_mvt = request.POST.get('date_entree') or date.today()
-        try:
-          with transaction.atomic():
-            mvt = MouvementStock(
-                type_mouvement='ENTREE',
-                objet=produit.objet,
-                produit=produit,
-                quantite=quantite_ajoutee,
-                service='Administration',
-                date_mouvement=date_mvt,
+            spec_brute = (
+                request.POST.get('specification')
+                or request.POST.get('spec_texte')
+                or 'MAG'
             )
-            if hasattr(mvt, 'numero_commande') and num_cmd:
-              setattr(mvt, 'numero_commande', num_cmd)
-            mvt.save()
-        except Exception:
-          pass
 
-        messages.success(request, 'Quantité ajoutée avec succès')
-      except Produit.DoesNotExist:
-        pass
-      return redirect('/gestion-stocks/')
+            def extraire_trigramme(texte):
+                if not texte:
+                    return 'XXX'
+                clean = ''.join(
+                    c
+                    for c in unicodedata.normalize('NFD', texte)
+                    if unicodedata.category(c) != 'Mn'
+                )
+                clean = re.sub(r'[^a-zA-Z0-9]', '', clean).upper()
+                return clean[:3].ljust(3, 'X') if len(clean) < 3 else clean[:3]
 
-    elif action_type == 'sortie':
-      ref_produit = request.POST.get('produit')
-      quantite_retiree = int(request.POST.get('quantite', 0))
-      service_demandeur = request.POST.get('service') or 'Administration'
+            code_marque = extraire_trigramme(marque_brute)
+            code_spec = extraire_trigramme(spec_brute)
 
-      try:
-        with transaction.atomic():
-          produit = Produit.objects.select_for_update().get(
-              reference=ref_produit
-          )
+            reference_finale = f'{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}'
+            quantite_initiale = int(
+                request.POST.get('quantite')
+                or request.POST.get('quantite_initiale')
+                or 0
+            )
 
-          if produit.quantite < quantite_retiree:
-            messages.error(request, 'Stock insuffisant.')
+            fournisseur_select = request.POST.get('fournisseur_select')
+            fournisseur_nouveau = request.POST.get(
+                'fournisseur_nouveau', ''
+            ).strip()
+
+            if fournisseur_select == 'AUTRE' and fournisseur_nouveau:
+                fournisseur_final = fournisseur_nouveau
+            else:
+                fournisseur_final = (
+                    fournisseur_select if fournisseur_select else 'Divers'
+                )
+
+            # 2. CONSERVATION STRICTE DES CENTIMES
+            prix_recu = request.POST.get('prix')
+            prix_valeur = None
+            if prix_recu and str(prix_recu).strip():
+                try:
+                    prix_valeur = round(
+                        float(str(prix_recu).replace(',', '.').strip()), 2
+                    )
+                except ValueError:
+                    prix_valeur = None
+
+            donnees_creation = {
+                'reference': reference_finale,
+                'objet': objet_nom,
+                'categorie': categorie_nom,
+                'emplacement': request.POST.get('emplacement') or 'Réserve',
+                'quantite': quantite_initiale,
+                'quota_minimum': int(request.POST.get('quota_minimum', 10)),
+                'fournisseur': fournisseur_final,
+            }
+
+            if hasattr(Produit, 'prix'):
+                donnees_creation['prix'] = prix_valeur
+
+            nouveau_produit = Produit.objects.create(**donnees_creation)
+            num_cmd = request.POST.get('numero_commande', '').strip() or None
+
+            if quantite_initiale > 0:
+                try:
+                    with transaction.atomic():
+                        mvt = MouvementStock(
+                            type_mouvement='ENTREE',
+                            objet=objet_nom,
+                            produit=nouveau_produit,
+                            quantite=quantite_initiale,
+                            service='Administration',
+                        )
+                        if hasattr(mvt, 'numero_commande') and num_cmd:
+                            setattr(mvt, 'numero_commande', num_cmd)
+                        mvt.save()
+                except Exception:
+                    pass
+
+            messages.success(request, "Nouveau produit ajouté à l'inventaire")
             return redirect('/gestion-stocks/')
 
-          produit.quantite = F('quantite') - quantite_retiree
-          produit.save(update_fields=['quantite'])
-          produit.refresh_from_db()
+        elif action_type == 'mouvement_entree':
+            ref_produit = request.POST.get('produit')
+            quantite_ajoutee = int(request.POST.get('quantite', 0))
+            num_cmd = request.POST.get('numero_commande', '').strip() or None
 
-        date_mvt = request.POST.get('date_sortie') or date.today()
-        try:
-          with transaction.atomic():
-            MouvementStock.objects.create(
-                type_mouvement='SORTIE',
-                objet=produit.objet,
-                produit=produit,
-                quantite=quantite_retiree,
-                service=service_demandeur,
-                date_mouvement=date_mvt,
+            try:
+                with transaction.atomic():
+                    produit = Produit.objects.select_for_update().get(
+                        reference=ref_produit
+                    )
+                    produit.quantite = F('quantite') + quantite_ajoutee
+                    produit.save(update_fields=['quantite'])
+                    produit.refresh_from_db()
+
+                date_mvt = request.POST.get('date_entree') or date.today()
+                try:
+                    with transaction.atomic():
+                        mvt = MouvementStock(
+                            type_mouvement='ENTREE',
+                            objet=produit.objet,
+                            produit=produit,
+                            quantite=quantite_ajoutee,
+                            service='Administration',
+                            date_mouvement=date_mvt,
+                        )
+                        if hasattr(mvt, 'numero_commande') and num_cmd:
+                            setattr(mvt, 'numero_commande', num_cmd)
+                        mvt.save()
+                except Exception:
+                    pass
+
+                messages.success(request, 'Quantité ajoutée avec succès')
+            except Produit.DoesNotExist:
+                pass
+            return redirect('/gestion-stocks/')
+
+        elif action_type == 'sortie':
+            ref_produit = request.POST.get('produit')
+            quantite_retiree = int(request.POST.get('quantite', 0))
+            service_demandeur = (
+                request.POST.get('service') or 'Administration'
             )
-        except Exception:
-          pass
 
-        messages.success(request, 'Quantité retirée avec succès')
-      except Produit.DoesNotExist:
-        pass
-      return redirect('/gestion-stocks/')
+            try:
+                with transaction.atomic():
+                    produit = Produit.objects.select_for_update().get(
+                        reference=ref_produit
+                    )
 
-    elif action_type == 'archivage_produit':
-      ref_produit = request.POST.get('produit_a_archiver')
-      try:
-        produit = Produit.objects.get(reference=ref_produit)
-        produit.delete()
-        messages.success(request, "Produit supprimé de l'inventaire")
-      except Produit.DoesNotExist:
-        pass
-      return redirect('/gestion-stocks/')
+                    if produit.quantite < quantite_retiree:
+                        messages.error(request, 'Stock insuffisant.')
+                        return redirect('/gestion-stocks/')
 
-  # **RETOUR RENDU OBLIGATOIRE EN MÉTHODE GET**
-  fournisseurs_existants = (
-      Produit.objects.exclude(fournisseur__isnull=True)
-      .exclude(fournisseur='')
-      .values_list('fournisseur', flat=True)
-      .distinct()
-      .order_by('fournisseur')
-  )
+                    produit.quantite = F('quantite') - quantite_retiree
+                    produit.save(update_fields=['quantite'])
+                    produit.refresh_from_db()
 
-  liste_produits = Produit.objects.all().order_by('objet')
-  aujourd_hui = date.today().strftime('%Y-%m-%d')
+                date_mvt = request.POST.get('date_sortie') or date.today()
+                try:
+                    with transaction.atomic():
+                        MouvementStock.objects.create(
+                            type_mouvement='SORTIE',
+                            objet=produit.objet,
+                            produit=produit,
+                            quantite=quantite_retiree,
+                            service=service_demandeur,
+                            date_mouvement=date_mvt,
+                        )
+                except Exception:
+                    pass
 
-  return render(
-      request,
-      'gestion_stocks.html',
-      {
-          'profil_actif': profil_actif,
-          'produits': liste_produits,
-          'fournisseurs_existants': fournisseurs_existants,
-          'date_du_jour': aujourd_hui,
-      },
-  )
+                messages.success(request, 'Quantité retirée avec succès')
+            except Produit.DoesNotExist:
+                pass
+            return redirect('/gestion-stocks/')
+
+        elif action_type == 'archivage_produit':
+            ref_produit = request.POST.get('produit_a_archiver')
+            try:
+                produit = Produit.objects.get(reference=ref_produit)
+                produit.delete()
+                messages.success(request, "Produit supprimé de l'inventaire")
+            except Produit.DoesNotExist:
+                pass
+            return redirect('/gestion-stocks/')
+
+    # RETOUR OBLIGATOIRE POUR LA MÉTHODE GET
+    fournisseurs_existants = (
+        Produit.objects.exclude(fournisseur__isnull=True)
+        .exclude(fournisseur='')
+        .values_list('fournisseur', flat=True)
+        .distinct()
+        .order_by('fournisseur')
+    )
+
+    liste_produits = Produit.objects.all().order_by('objet')
+    aujourd_hui = date.today().strftime('%Y-%m-%d')
+
+    return render(
+        request,
+        'gestion_stocks.html',
+        {
+            'profil_actif': profil_actif,
+            'produits': liste_produits,
+            'fournisseurs_existants': fournisseurs_existants,
+            'date_du_jour': aujourd_hui,
+        },
+    )
     
 def page_historique(request):
   if not request.user.is_authenticated:
