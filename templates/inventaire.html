@@ -350,8 +350,8 @@
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference }}">
             
-            <!-- PRIX FORMATÉ AVEC STRINGFORMAT POUR ÉVITER TOUT ERREUR DE SYNTAXE -->
-            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:'' }}', '{{ produit.fournisseur|default:'Divers'|escapejs }}', '{{ produit.prix|stringformat:'s'|default_if_none:'' }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
+            <!-- **CORRECTION DE LA SYNTAXE ONCLICK : GUILLEMETS DOUBLE ET EVITEMENT CONFLIT JS** -->
+            <div class="card-details" onclick="{% if request.user.is_superuser or is_admin %}openProductDetails('{{ produit.id }}', '{{ produit.reference|escapejs }}', '{{ produit.objet|escapejs }}', '{{ produit.categorie|escapejs }}', '{{ produit.quantite }}', '{{ produit.emplacement|escapejs }}', '{{ produit.quota_minimum|default_if_none:"" }}', '{{ produit.fournisseur|default:"Divers"|escapejs }}', '{{ produit.prix|default_if_none:"" }}'){% else %}ajouterAuPanier('{{ produit.id }}', '{{ produit.objet|escapejs }}', '{{ produit.reference|escapejs }}', '{{ produit.quantite }}', this){% endif %}">
                 <span class="product-ref-code">{{ produit.reference }}</span>
                 <span class="product-title">{{ produit.objet }}</span>
             </div> 
@@ -630,6 +630,7 @@
     const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
     const isUserAdmin = {% if request.user.is_superuser or is_admin %}true{% else %}false{% endif %};
 
+    /* **NETTOYAGE ET SÉCURISATION DU TABLEAU JS** */
     const fullInventory = [
         {% for produit in tous_les_produits_complets %}
         {
@@ -639,9 +640,9 @@
             categorie: "{{ produit.categorie|escapejs }}",
             stock: "{{ produit.quantite }}",
             emplacement: "{{ produit.emplacement|escapejs }}",
-            quota: "{{ produit.quota_minimum|default_if_none:'' }}",
-            fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}",
-            prix: "{{ produit.prix|stringformat:'s'|default_if_none:'' }}"
+            quota: "{{ produit.quota_minimum|default_if_none:"" }}",
+            fournisseur: "{{ produit.fournisseur|default:"Divers"|escapejs }}",
+            prix: "{{ produit.prix|default_if_none:"" }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -934,7 +935,7 @@
     function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
     function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
 
-    /* FICHE PRODUIT & ÉDITION COMPLETEMENT CORRIGÉE POUR L'ADMINISTRATEUR */
+    /* **FICHE PRODUIT & ÉDITION (SEULEMENT POUR ADMINISTRATEURS)** */
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         if (!isUserAdmin) return; 
 
