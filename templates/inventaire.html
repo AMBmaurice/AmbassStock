@@ -345,7 +345,7 @@
         </div>
     </div>
             
-    <!-- 🛒 **GRILLE D'INVENTAIRE : SÉCURISÉE AVEC ÉCHAPPEMENT D'ATTRIBUTS HTML5** -->
+    <!-- 🛒 GRILLE D'INVENTAIRE AVEC CORRECTION DE LA PROPAGATION DU CLIC -->
     <div class="inventory-grid" id="inventoryList">
         {% for produit in page_obj %}
         <div class="inventory-card django-card" id="card-{{ produit.reference|escape }}">
@@ -364,7 +364,8 @@
                 <span class="product-title">{{ produit.objet }}</span>
             </div> 
 
-            <div onclick="event.stopPropagation();">
+            <!-- **MODIFICATION CORRIGÉE : RETRAIT DE EVENT.STOPPROPAGATION QUI BLOQUAIT LE CLIC** -->
+            <div>
                 {% if panier_bloque and not is_admin %}
                 <button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Cliquez sur 'Créer un ticket d'urgence' dans le bandeau rouge.">
                     Fermé (Option d'urgence)
@@ -372,8 +373,8 @@
                 {% else %}
                 <button type="button" class="btn-add-inline btn-add-cart-trigger" 
                         data-id="{{ produit.id }}" 
-                        data-nom="{{ produit.objet|escape }}" 
-                        data-ref="{{ produit.reference|escape }}" 
+                        data-nom="{{ produit.objet|escapejs }}" 
+                        data-ref="{{ produit.reference|escapejs }}" 
                         data-stock="{{ produit.quantite }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Ajouter au panier
@@ -642,7 +643,6 @@
     const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
     const isUserAdmin = {% if request.user.is_superuser or is_admin %}true{% else %}false{% endif %};
 
-    /* **TABLEAU JS DE SECOURS DE VOYAGE INTÉGRALEMENT ÉCHAPPÉ SANS RISQUE DE BREAK** */
     const fullInventory = [
         {% for produit in tous_les_produits_complets %}
         {
@@ -743,7 +743,7 @@
                         <span class="product-ref-code">${p.reference}</span>
                         <span class="product-title">${p.nom}</span>
                     </div>
-                    <div onclick="event.stopPropagation();">
+                    <div>
                         ${btnHtml}
                     </div>
                     <div class="status-dot status-${parseInt(p.stock) <= parseInt(p.quota || 0) ? 'red' : 'green'}"></div>
@@ -1002,11 +1002,24 @@
         }
     }
 
-    /* **GESTIONNAIRE ÉTANCHÉ DE DÉLÉGATION D'ÉVÉNEMENTS CLIKS DÉDIÉ** */
+    <!-- **MODIFICATION CORRIGÉE : ORDRE DES CLIKS DÉLÉGUÉS POUR DÉTECTER EN PREMIER LE BOUTON PANIER** -->
     document.addEventListener("DOMContentLoaded", function() {
         verifierServicePanier();
 
         document.addEventListener('click', function(e) {
+            /* 1. Détection prioritaire du clic sur le bouton Ajouter au Panier */
+            const btnCartTrigger = e.target.closest('.btn-add-cart-trigger');
+            if (btnCartTrigger) {
+                const id = btnCartTrigger.getAttribute('data-id');
+                const nom = btnCartTrigger.getAttribute('data-nom');
+                const ref = btnCartTrigger.getAttribute('data-ref');
+                const stock = btnCartTrigger.getAttribute('data-stock');
+
+                ajouterAuPanier(id, nom, ref, stock);
+                return;
+            }
+
+            /* 2. Clic secondaire sur la carte entière pour les administrateurs */
             const cardTrigger = e.target.closest('.action-card-trigger');
             if (cardTrigger) {
                 const id = cardTrigger.getAttribute('data-id');
@@ -1024,17 +1037,6 @@
                 } else {
                     ajouterAuPanier(id, nom, ref, stock);
                 }
-                return;
-            }
-
-            const btnCartTrigger = e.target.closest('.btn-add-cart-trigger');
-            if (btnCartTrigger) {
-                const id = btnCartTrigger.getAttribute('data-id');
-                const nom = btnCartTrigger.getAttribute('data-nom');
-                const ref = btnCartTrigger.getAttribute('data-ref');
-                const stock = btnCartTrigger.getAttribute('data-stock');
-
-                ajouterAuPanier(id, nom, ref, stock);
                 return;
             }
         });
