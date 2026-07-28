@@ -1381,8 +1381,8 @@ def page_gestion_utilisateurs(request):
     profil.name = getattr(profil, 'nom_complet', None) or u.get_full_name() or u.username
     profil.username = u.username
     profil.email = u.email
-    profil.clear_password = getattr(profil, 'clear_password', None) or '••••••••'
-
+    profil.clear_password_display = getattr(profil, 'clear_password', None) or '••••••••'
+      
     tous_les_utilisateurs.append(profil)
 
   return render(
