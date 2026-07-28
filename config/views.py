@@ -761,14 +761,8 @@ def page_gestion_stocks(request):
     profil_actif = get_profil_actif(request.user)
 
     COMPTEURS_DEPART = {
-        'ECR': 26,
-        'BUR': 52,
-        'PAP': 32,
-        'CLA': 40,
-        'CON': 35,
-        'INF': 17,
-        'ENV': 32,
-        'EQU': 18,
+        'ECR': 26, 'BUR': 52, 'PAP': 32, 'CLA': 40,
+        'CON': 35, 'INF': 17, 'ENV': 32, 'EQU': 18,
     }
 
     if request.method == 'POST':
@@ -780,46 +774,31 @@ def page_gestion_stocks(request):
                 request.POST.get('objet') or request.POST.get('nom') or ''
             ).strip()
 
-            # 1. EXTRACTION INTELLIGENTE DE LA CATÉGORIE
             match = re.search(r'\((.*?)\)', categorie_nom)
             if match:
                 code_categorie = match.group(1).upper()
             else:
                 clean_cat = ''.join(
-                    c
-                    for c in unicodedata.normalize('NFD', categorie_nom)
+                    c for c in unicodedata.normalize('NFD', categorie_nom)
                     if unicodedata.category(c) != 'Mn'
                 )
                 clean_cat = re.sub(r'[^a-zA-Z0-9]', '', clean_cat).upper()
-                code_categorie = (
-                    clean_cat[:3].ljust(3, 'X') if clean_cat else 'GEN'
-                )
+                code_categorie = clean_cat[:3].ljust(3, 'X') if clean_cat else 'GEN'
 
             depart_historique = COMPTEURS_DEPART.get(code_categorie, 0)
-            nb_existants = Produit.objects.filter(
-                categorie=categorie_nom
-            ).count()
+            nb_existants = Produit.objects.filter(categorie=categorie_nom).count()
 
             prochain_numero = depart_historique + nb_existants + 1
             suffixe_numerique = f'{prochain_numero:02d}'
 
-            marque_brute = (
-                request.POST.get('marque')
-                or request.POST.get('marque_texte')
-                or 'GEN'
-            )
-            spec_brute = (
-                request.POST.get('specification')
-                or request.POST.get('spec_texte')
-                or 'MAG'
-            )
+            marque_brute = request.POST.get('marque') or request.POST.get('marque_texte') or 'GEN'
+            spec_brute = request.POST.get('specification') or request.POST.get('spec_texte') or 'MAG'
 
             def extraire_trigramme(texte):
                 if not texte:
                     return 'XXX'
                 clean = ''.join(
-                    c
-                    for c in unicodedata.normalize('NFD', texte)
+                    c for c in unicodedata.normalize('NFD', texte)
                     if unicodedata.category(c) != 'Mn'
                 )
                 clean = re.sub(r'[^a-zA-Z0-9]', '', clean).upper()
@@ -830,31 +809,22 @@ def page_gestion_stocks(request):
 
             reference_finale = f'{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}'
             quantite_initiale = int(
-                request.POST.get('quantite')
-                or request.POST.get('quantite_initiale')
-                or 0
+                request.POST.get('quantite') or request.POST.get('quantite_initiale') or 0
             )
 
             fournisseur_select = request.POST.get('fournisseur_select')
-            fournisseur_nouveau = request.POST.get(
-                'fournisseur_nouveau', ''
-            ).strip()
+            fournisseur_nouveau = request.POST.get('fournisseur_nouveau', '').strip()
 
             if fournisseur_select == 'AUTRE' and fournisseur_nouveau:
                 fournisseur_final = fournisseur_nouveau
             else:
-                fournisseur_final = (
-                    fournisseur_select if fournisseur_select else 'Divers'
-                )
+                fournisseur_final = fournisseur_select if fournisseur_select else 'Divers'
 
-            # 2. CONSERVATION STRICTE DES CENTIMES
             prix_recu = request.POST.get('prix')
             prix_valeur = None
             if prix_recu and str(prix_recu).strip():
                 try:
-                    prix_valeur = round(
-                        float(str(prix_recu).replace(',', '.').strip()), 2
-                    )
+                    prix_valeur = round(float(str(prix_recu).replace(',', '.').strip()), 2)
                 except ValueError:
                     prix_valeur = None
 
@@ -876,43 +846,44 @@ def page_gestion_stocks(request):
 
             if quantite_initiale > 0:
                 try:
-                    with transaction.atomic():
-                        mvt_data = {
-                            'type_mouvement': 'ENTREE',
-                            'objet': objet_nom,
-                            'produit': nouveau_produit,
-                            'quantite': quantite_initiale,
-                            'service': 'Administration',
-                        }
-                        if hasattr(MouvementStock, 'utilisateur'):
-                            mvt_data['utilisateur'] = request.user
+                    mvt_data = {
+                        'type_mouvement': 'ENTREE',
+                        'objet': objet_nom,
+                        'produit': nouveau_produit,
+                        'quantite': quantite_initiale,
+                        'service': 'Administration',
+                        'date_mouvement': date.today(),
+                    }
+                    if hasattr(MouvementStock, 'utilisateur'):
+                        mvt_data['utilisateur'] = request.user
 
-                        mvt = MouvementStock(**mvt_data)
-                        if hasattr(mvt, 'numero_commande') and num_cmd:
-                            setattr(mvt, 'numero_commande', num_cmd)
-                        mvt.save()
-                except Exception:
-                    pass
+                    mvt = MouvementStock(**mvt_data)
+                    if hasattr(mvt, 'numero_commande') and num_cmd:
+                        setattr(mvt, 'numero_commande', num_cmd)
+                    mvt.save()
+                except Exception as e:
+                    print(f"Erreur création mouvement initial : {e}")
 
             messages.success(request, "Nouveau produit ajouté à l'inventaire")
             return redirect('/gestion-stocks/')
 
         elif action_type == 'mouvement_entree':
-            ref_produit = request.POST.get('produit')
+            valeur_produit = request.POST.get('produit')
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             try:
-                with transaction.atomic():
-                    produit = Produit.objects.select_for_update().get(
-                        reference=ref_produit
-                    )
-                    produit.quantite = F('quantite') + quantite_ajoutee
-                    produit.save(update_fields=['quantite'])
-                    produit.refresh_from_db()
+                # **RECHERCHE HYBRIDE : PAR ID OU PAR RÉFÉRENCE**
+                if str(valeur_produit).isdigit():
+                    produit = Produit.objects.get(id=int(valeur_produit))
+                else:
+                    produit = Produit.objects.get(reference=valeur_produit)
 
-                # **CONVERSION ET VALIDATION SÉCURISÉE DE LA DATE D'ENTRÉE**
-                date_entree_raw = request.POST.get('date_entree')
+                produit.quantite = F('quantite') + quantite_ajoutee
+                produit.save(update_fields=['quantite'])
+                produit.refresh_from_db()
+
+                date_entree_raw = request.POST.get('date_entree') or request.POST.get('date_mouvement')
                 if date_entree_raw and str(date_entree_raw).strip():
                     try:
                         date_mvt = datetime.strptime(str(date_entree_raw).strip(), '%Y-%m-%d').date()
@@ -921,54 +892,54 @@ def page_gestion_stocks(request):
                 else:
                     date_mvt = date.today()
 
-                try:
-                    with transaction.atomic():
-                        mvt_data = {
-                            'type_mouvement': 'ENTREE',
-                            'objet': produit.objet,
-                            'produit': produit,
-                            'quantite': quantite_ajoutee,
-                            'service': 'Administration',
-                            'date_mouvement': date_mvt,
-                        }
-                        if hasattr(MouvementStock, 'utilisateur'):
-                            mvt_data['utilisateur'] = request.user
+                mvt_data = {
+                    'type_mouvement': 'ENTREE',
+                    'objet': produit.objet,
+                    'produit': produit,
+                    'quantite': quantite_ajoutee,
+                    'service': 'Administration',
+                    'date_mouvement': date_mvt,
+                }
+                if hasattr(MouvementStock, 'utilisateur'):
+                    mvt_data['utilisateur'] = request.user
 
-                        mvt = MouvementStock(**mvt_data)
-                        if hasattr(mvt, 'numero_commande') and num_cmd:
-                            setattr(mvt, 'numero_commande', num_cmd)
-                        mvt.save()
-                except Exception as e:
-                    print(f"Erreur création MouvementStock ENTREE : {e}")
+                mvt = MouvementStock(**mvt_data)
+                if hasattr(mvt, 'numero_commande') and num_cmd:
+                    setattr(mvt, 'numero_commande', num_cmd)
+                mvt.save()
 
                 messages.success(request, 'Quantité ajoutée avec succès')
             except Produit.DoesNotExist:
-                messages.error(request, 'Produit introuvable.')
+                messages.error(request, f'Produit introuvable pour la valeur : "{valeur_produit}"')
+            except Exception as e:
+                messages.error(request, f"Erreur lors de l'enregistrement de l'entrée : {e}")
+
             return redirect('/gestion-stocks/')
 
         elif action_type == 'sortie':
-            ref_produit = request.POST.get('produit')
+            valeur_produit = request.POST.get('produit')
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = (
-                request.POST.get('service') or 'Administration'
+                request.POST.get('service') or request.POST.get('service_demandeur') or 'Administration'
             )
 
             try:
-                with transaction.atomic():
-                    produit = Produit.objects.select_for_update().get(
-                        reference=ref_produit
-                    )
+                # **1. RECHERCHE ROBUSTE : RECHERCHE PAR ID OU PAR RÉFÉRENCE**
+                if str(valeur_produit).isdigit():
+                    produit = Produit.objects.get(id=int(valeur_produit))
+                else:
+                    produit = Produit.objects.get(reference=valeur_produit)
 
-                    if produit.quantite < quantite_retiree:
-                        messages.error(request, 'Stock insuffisant.')
-                        return redirect('/gestion-stocks/')
+                if produit.quantite < quantite_retiree:
+                    messages.error(request, f'Stock insuffisant (Disponible : {produit.quantite}).')
+                    return redirect('/gestion-stocks/')
 
-                    produit.quantite = F('quantite') - quantite_retiree
-                    produit.save(update_fields=['quantite'])
-                    produit.refresh_from_db()
+                # **2. DÉDUCTION DU STOCK**
+                produit.quantite = max(0, produit.quantite - quantite_retiree)
+                produit.save()
 
-                # **CONVERSION ET VALIDATION SÉCURISÉE DE LA DATE DE SORTIE**
-                date_sortie_raw = request.POST.get('date_sortie')
+                # **3. RÉCUPÉRATION DU CHAMP DATE DE SORTIE**
+                date_sortie_raw = request.POST.get('date_sortie') or request.POST.get('date_mouvement')
                 if date_sortie_raw and str(date_sortie_raw).strip():
                     try:
                         date_mvt = datetime.strptime(str(date_sortie_raw).strip(), '%Y-%m-%d').date()
@@ -977,7 +948,7 @@ def page_gestion_stocks(request):
                 else:
                     date_mvt = date.today()
 
-                # **CRÉATION GARANTIE DE L'ENTRÉE DANS L'HISTORIQUE MOUVEMENTSTOCK**
+                # **4. CRÉATION GARANTIE DANS LA TABLE MOUVEMENTSTOCK**
                 donnees_mvt = {
                     'type_mouvement': 'SORTIE',
                     'objet': produit.objet,
@@ -986,17 +957,19 @@ def page_gestion_stocks(request):
                     'service': service_demandeur,
                     'date_mouvement': date_mvt,
                 }
-                
+
                 if hasattr(MouvementStock, 'utilisateur'):
                     donnees_mvt['utilisateur'] = request.user
 
                 MouvementStock.objects.create(**donnees_mvt)
 
-                messages.success(request, 'Quantité retirée avec succès')
+                messages.success(request, f'Sortie de {quantite_retiree} x "{produit.objet}" enregistrée dans l\'historique !')
+
             except Produit.DoesNotExist:
-                messages.error(request, 'Produit introuvable.')
+                messages.error(request, f'Impossible d\'effectuer la sortie : le produit "{valeur_produit}" n\'existe pas.')
             except Exception as e:
-                messages.error(request, f"Erreur lors de l'enregistrement de la sortie : {e}")
+                # **AFFICHE EXPLICITEMENT L'ERREUR DANS LE BANDEAU ROUGE SI LA BDD REJETTE L'INSERTION**
+                messages.error(request, f"Erreur de sauvegarde de la sortie dans la BDD : {e}")
 
             return redirect('/gestion-stocks/')
 
@@ -1010,7 +983,7 @@ def page_gestion_stocks(request):
                 pass
             return redirect('/gestion-stocks/')
 
-    # RETOUR OBLIGATOIRE POUR LA MÉTHODE GET
+    # RETOUR GET
     fournisseurs_existants = (
         Produit.objects.exclude(fournisseur__isnull=True)
         .exclude(fournisseur='')
@@ -1032,7 +1005,6 @@ def page_gestion_stocks(request):
             'date_du_jour': aujourd_hui,
         },
     )
-    
 def page_historique(request):
   if not request.user.is_authenticated:
     return redirect('/connexion/')
