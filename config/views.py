@@ -753,7 +753,6 @@ def verifier_et_envoyer_alerte_papier(produit):
       )
     except Exception as e:
       print(f"Erreur lors de l'envoi du mail d'alerte : {e}")
-
 def page_gestion_stocks(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -846,130 +845,112 @@ def page_gestion_stocks(request):
 
             if quantite_initiale > 0:
                 try:
-                    mvt_data = {
-                        'type_mouvement': 'ENTREE',
-                        'objet': objet_nom,
-                        'produit': nouveau_produit,
-                        'quantite': quantite_initiale,
-                        'service': 'Administration',
-                        'date_mouvement': date.today(),
-                    }
-                    if hasattr(MouvementStock, 'utilisateur'):
-                        mvt_data['utilisateur'] = request.user
-
-                    mvt = MouvementStock(**mvt_data)
+                    mvt = MouvementStock(
+                        type_mouvement='ENTREE',
+                        objet=objet_nom,
+                        produit=nouveau_produit,
+                        quantite=quantite_initiale,
+                        service='Administration',
+                        date_mouvement=timezone.now()
+                    )
                     if hasattr(mvt, 'numero_commande') and num_cmd:
                         setattr(mvt, 'numero_commande', num_cmd)
                     mvt.save()
                 except Exception as e:
-                    print(f"Erreur création mouvement initial : {e}")
+                    print(f"Erreur enregistrement entrée initiale : {e}")
 
             messages.success(request, "Nouveau produit ajouté à l'inventaire")
             return redirect('/gestion-stocks/')
 
         elif action_type == 'mouvement_entree':
-            valeur_produit = request.POST.get('produit')
+            ref_produit = request.POST.get('produit')
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             try:
-                # **RECHERCHE HYBRIDE : PAR ID OU PAR RÉFÉRENCE**
-                if str(valeur_produit).isdigit():
-                    produit = Produit.objects.get(id=int(valeur_produit))
+                if str(ref_produit).isdigit():
+                    produit = Produit.objects.get(id=int(ref_produit))
                 else:
-                    produit = Produit.objects.get(reference=valeur_produit)
+                    produit = Produit.objects.get(reference=ref_produit)
 
                 produit.quantite = F('quantite') + quantite_ajoutee
                 produit.save(update_fields=['quantite'])
                 produit.refresh_from_db()
 
-                date_entree_raw = request.POST.get('date_entree') or request.POST.get('date_mouvement')
-                if date_entree_raw and str(date_entree_raw).strip():
+                date_entree_str = request.POST.get('date_entree')
+                if date_entree_str:
                     try:
-                        date_mvt = datetime.strptime(str(date_entree_raw).strip(), '%Y-%m-%d').date()
-                    except ValueError:
-                        date_mvt = date.today()
+                        dt = datetime.strptime(date_entree_str, '%Y-%m-%d')
+                        dt_mvt = timezone.make_aware(datetime.combine(dt.date(), datetime.now().time()))
+                    except Exception:
+                        dt_mvt = timezone.now()
                 else:
-                    date_mvt = date.today()
+                    dt_mvt = timezone.now()
 
-                mvt_data = {
-                    'type_mouvement': 'ENTREE',
-                    'objet': produit.objet,
-                    'produit': produit,
-                    'quantite': quantite_ajoutee,
-                    'service': 'Administration',
-                    'date_mouvement': date_mvt,
-                }
-                if hasattr(MouvementStock, 'utilisateur'):
-                    mvt_data['utilisateur'] = request.user
-
-                mvt = MouvementStock(**mvt_data)
+                mvt = MouvementStock(
+                    type_mouvement='ENTREE',
+                    objet=produit.objet,
+                    produit=produit,
+                    quantite=quantite_ajoutee,
+                    service='Administration',
+                    date_mouvement=dt_mvt,
+                )
                 if hasattr(mvt, 'numero_commande') and num_cmd:
                     setattr(mvt, 'numero_commande', num_cmd)
                 mvt.save()
 
                 messages.success(request, 'Quantité ajoutée avec succès')
             except Produit.DoesNotExist:
-                messages.error(request, f'Produit introuvable pour la valeur : "{valeur_produit}"')
+                messages.error(request, 'Produit introuvable.')
             except Exception as e:
                 messages.error(request, f"Erreur lors de l'enregistrement de l'entrée : {e}")
 
             return redirect('/gestion-stocks/')
 
         elif action_type == 'sortie':
-            valeur_produit = request.POST.get('produit')
+            ref_produit = request.POST.get('produit')
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = (
-                request.POST.get('service') or request.POST.get('service_demandeur') or 'Administration'
+                request.POST.get('service') or 'Administration'
             )
 
             try:
-                # **1. RECHERCHE ROBUSTE : RECHERCHE PAR ID OU PAR RÉFÉRENCE**
-                if str(valeur_produit).isdigit():
-                    produit = Produit.objects.get(id=int(valeur_produit))
+                if str(ref_produit).isdigit():
+                    produit = Produit.objects.get(id=int(ref_produit))
                 else:
-                    produit = Produit.objects.get(reference=valeur_produit)
+                    produit = Produit.objects.get(reference=ref_produit)
 
                 if produit.quantite < quantite_retiree:
-                    messages.error(request, f'Stock insuffisant (Disponible : {produit.quantite}).')
+                    messages.error(request, 'Stock insuffisant.')
                     return redirect('/gestion-stocks/')
 
-                # **2. DÉDUCTION DU STOCK**
                 produit.quantite = max(0, produit.quantite - quantite_retiree)
                 produit.save()
 
-                # **3. RÉCUPÉRATION DU CHAMP DATE DE SORTIE**
-                date_sortie_raw = request.POST.get('date_sortie') or request.POST.get('date_mouvement')
-                if date_sortie_raw and str(date_sortie_raw).strip():
+                date_sortie_str = request.POST.get('date_sortie')
+                if date_sortie_str:
                     try:
-                        date_mvt = datetime.strptime(str(date_sortie_raw).strip(), '%Y-%m-%d').date()
-                    except ValueError:
-                        date_mvt = date.today()
+                        dt = datetime.strptime(date_sortie_str, '%Y-%m-%d')
+                        dt_mvt = timezone.make_aware(datetime.combine(dt.date(), datetime.now().time()))
+                    except Exception:
+                        dt_mvt = timezone.now()
                 else:
-                    date_mvt = date.today()
+                    dt_mvt = timezone.now()
 
-                # **4. CRÉATION GARANTIE DANS LA TABLE MOUVEMENTSTOCK**
-                donnees_mvt = {
-                    'type_mouvement': 'SORTIE',
-                    'objet': produit.objet,
-                    'produit': produit,
-                    'quantite': quantite_retiree,
-                    'service': service_demandeur,
-                    'date_mouvement': date_mvt,
-                }
+                MouvementStock.objects.create(
+                    type_mouvement='SORTIE',
+                    objet=produit.objet,
+                    produit=produit,
+                    quantite=quantite_retiree,
+                    service=service_demandeur,
+                    date_mouvement=dt_mvt,
+                )
 
-                if hasattr(MouvementStock, 'utilisateur'):
-                    donnees_mvt['utilisateur'] = request.user
-
-                MouvementStock.objects.create(**donnees_mvt)
-
-                messages.success(request, f'Sortie de {quantite_retiree} x "{produit.objet}" enregistrée dans l\'historique !')
-
+                messages.success(request, f'Sortie enregistrée pour le service {service_demandeur}.')
             except Produit.DoesNotExist:
-                messages.error(request, f'Impossible d\'effectuer la sortie : le produit "{valeur_produit}" n\'existe pas.')
+                messages.error(request, f'Produit introuvable ({ref_produit}).')
             except Exception as e:
-                # **AFFICHE EXPLICITEMENT L'ERREUR DANS LE BANDEAU ROUGE SI LA BDD REJETTE L'INSERTION**
-                messages.error(request, f"Erreur de sauvegarde de la sortie dans la BDD : {e}")
+                messages.error(request, f"Erreur enregistrement sortie : {e}")
 
             return redirect('/gestion-stocks/')
 
@@ -983,7 +964,6 @@ def page_gestion_stocks(request):
                 pass
             return redirect('/gestion-stocks/')
 
-    # RETOUR GET
     fournisseurs_existants = (
         Produit.objects.exclude(fournisseur__isnull=True)
         .exclude(fournisseur='')
@@ -1005,6 +985,7 @@ def page_gestion_stocks(request):
             'date_du_jour': aujourd_hui,
         },
     )
+    
 def page_historique(request):
   if not request.user.is_authenticated:
     return redirect('/connexion/')
