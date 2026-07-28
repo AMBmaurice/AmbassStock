@@ -345,20 +345,20 @@
         </div>
     </div>
             
-    <!-- 🛒 GRILLE D'INVENTAIRE : SÉCURISÉE AVEC LES ATTRIBUTS DE DONNÉES HTML5 DATA-* -->
+    <!-- 🛒 **GRILLE D'INVENTAIRE : SÉCURISÉE AVEC ÉCHAPPEMENT D'ATTRIBUTS HTML5** -->
     <div class="inventory-grid" id="inventoryList">
         {% for produit in page_obj %}
-        <div class="inventory-card django-card" id="card-{{ produit.reference }}">
+        <div class="inventory-card django-card" id="card-{{ produit.reference|escape }}">
             
             <div class="card-details action-card-trigger" 
                  data-id="{{ produit.id }}" 
-                 data-ref="{{ produit.reference }}" 
-                 data-nom="{{ produit.objet }}" 
-                 data-cat="{{ produit.categorie }}" 
+                 data-ref="{{ produit.reference|escape }}" 
+                 data-nom="{{ produit.objet|escape }}" 
+                 data-cat="{{ produit.categorie|escape }}" 
                  data-stock="{{ produit.quantite }}" 
-                 data-emp="{{ produit.emplacement|default:'' }}" 
+                 data-emp="{{ produit.emplacement|default:''|escape }}" 
                  data-quota="{{ produit.quota_minimum|default:'' }}" 
-                 data-fournisseur="{{ produit.fournisseur|default:'Divers' }}" 
+                 data-fournisseur="{{ produit.fournisseur|default:'Divers'|escape }}" 
                  data-prix="{{ produit.prix|default:'' }}">
                 <span class="product-ref-code">{{ produit.reference }}</span>
                 <span class="product-title">{{ produit.objet }}</span>
@@ -372,8 +372,8 @@
                 {% else %}
                 <button type="button" class="btn-add-inline btn-add-cart-trigger" 
                         data-id="{{ produit.id }}" 
-                        data-nom="{{ produit.objet }}" 
-                        data-ref="{{ produit.reference }}" 
+                        data-nom="{{ produit.objet|escape }}" 
+                        data-ref="{{ produit.reference|escape }}" 
                         data-stock="{{ produit.quantite }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                     Ajouter au panier
@@ -642,6 +642,7 @@
     const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
     const isUserAdmin = {% if request.user.is_superuser or is_admin %}true{% else %}false{% endif %};
 
+    /* **TABLEAU JS DE SECOURS DE VOYAGE INTÉGRALEMENT ÉCHAPPÉ SANS RISQUE DE BREAK** */
     const fullInventory = [
         {% for produit in tous_les_produits_complets %}
         {
@@ -652,7 +653,7 @@
             stock: "{{ produit.quantite }}",
             emplacement: "{{ produit.emplacement|escapejs }}",
             quota: "{{ produit.quota_minimum|default_if_none:'' }}",
-            fournisseur: "{{ produit.fournisseur|default:'Divers'|escapejs }}",
+            fournisseur: "{{ produit.fournisseur|escapejs }}",
             prix: "{{ produit.prix|default_if_none:'' }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
@@ -942,7 +943,7 @@
     function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
     function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
 
-    /* **FICHE PRODUIT & ÉDITION (SEULEMENT POUR ADMINISTRATEURS)** */
+    /* FICHE PRODUIT & ÉDITION (SEULEMENT POUR ADMINISTRATEURS) */
     function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
         if (!isUserAdmin) return; 
 
