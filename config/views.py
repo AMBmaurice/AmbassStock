@@ -1242,7 +1242,6 @@ def page_factures(request):
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
         fichier_facture = request.FILES.get('fichier_facture')
-        devise = request.POST.get('devise', 'EUR')
         
         if not date_commande:
             date_commande = date.today()
@@ -1251,8 +1250,7 @@ def page_factures(request):
             try:
                 nouvelle_facture = Facture(
                     date_commande=date_commande,
-                    montant_total=float(montant_total),
-                    devise=devise
+                    montant_total=float(montant_total)
                 )
                 nouvelle_facture.fichier_facture = fichier_facture
                 nouvelle_facture.save()
@@ -1260,7 +1258,11 @@ def page_factures(request):
                 pass
             return redirect('/factures/')
 
-    tous_les_factures = Facture.objects.all().order_by('-date_commande', '-id')
+    # On ignore le champ 'devise' s'il n'existe pas encore dans la base de données
+    try:
+        tous_les_factures = Facture.objects.defer('devise').order_by('-date_commande', '-id')
+    except Exception:
+        tous_les_factures = Facture.objects.all().order_by('-date_commande', '-id')
     
     return render(request, 'factures.html', {
         'profil_actif': profil_actif,
