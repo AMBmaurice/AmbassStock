@@ -753,6 +753,7 @@ def verifier_et_envoyer_alerte_papier(produit):
       )
     except Exception as e:
       print(f"Erreur lors de l'envoi du mail d'alerte : {e}")
+
 def page_gestion_stocks(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -835,29 +836,22 @@ def page_gestion_stocks(request):
                 'quantite': quantite_initiale,
                 'quota_minimum': int(request.POST.get('quota_minimum', 10)),
                 'fournisseur': fournisseur_final,
+                'prix': prix_valeur,
             }
-
-            if hasattr(Produit, 'prix'):
-                donnees_creation['prix'] = prix_valeur
 
             nouveau_produit = Produit.objects.create(**donnees_creation)
             num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             if quantite_initiale > 0:
-                try:
-                    mvt = MouvementStock(
-                        type_mouvement='ENTREE',
-                        objet=objet_nom,
-                        produit=nouveau_produit,
-                        quantite=quantite_initiale,
-                        service='Administration',
-                        date_mouvement=timezone.now()
-                    )
-                    if hasattr(mvt, 'numero_commande') and num_cmd:
-                        setattr(mvt, 'numero_commande', num_cmd)
-                    mvt.save()
-                except Exception as e:
-                    print(f"Erreur enregistrement entrée initiale : {e}")
+                MouvementStock.objects.create(
+                    type_mouvement='ENTREE',
+                    objet=objet_nom,
+                    produit=nouveau_produit,
+                    quantite=quantite_initiale,
+                    service='Administration',
+                    numero_commande=num_cmd,
+                    date_mouvement=timezone.now(),
+                )
 
             messages.success(request, "Nouveau produit ajouté à l'inventaire")
             return redirect('/gestion-stocks/')
@@ -887,32 +881,27 @@ def page_gestion_stocks(request):
                 else:
                     dt_mvt = timezone.now()
 
-                mvt = MouvementStock(
+                MouvementStock.objects.create(
                     type_mouvement='ENTREE',
                     objet=produit.objet,
                     produit=produit,
                     quantite=quantite_ajoutee,
                     service='Administration',
+                    numero_commande=num_cmd,
                     date_mouvement=dt_mvt,
                 )
-                if hasattr(mvt, 'numero_commande') and num_cmd:
-                    setattr(mvt, 'numero_commande', num_cmd)
-                mvt.save()
-
                 messages.success(request, 'Quantité ajoutée avec succès')
             except Produit.DoesNotExist:
                 messages.error(request, 'Produit introuvable.')
             except Exception as e:
-                messages.error(request, f"Erreur lors de l'enregistrement de l'entrée : {e}")
+                messages.error(request, f"Erreur lors de l'enregistrement : {e}")
 
             return redirect('/gestion-stocks/')
 
         elif action_type == 'sortie':
             ref_produit = request.POST.get('produit')
             quantite_retiree = int(request.POST.get('quantite', 0))
-            service_demandeur = (
-                request.POST.get('service') or 'Administration'
-            )
+            service_demandeur = request.POST.get('service') or 'Administration'
 
             try:
                 if str(ref_produit).isdigit():
@@ -946,9 +935,9 @@ def page_gestion_stocks(request):
                     date_mouvement=dt_mvt,
                 )
 
-                messages.success(request, f'Sortie enregistrée pour le service {service_demandeur}.')
+                messages.success(request, f'Quantité retirée avec succès pour le service {service_demandeur}.')
             except Produit.DoesNotExist:
-                messages.error(request, f'Produit introuvable ({ref_produit}).')
+                messages.error(request, 'Produit introuvable.')
             except Exception as e:
                 messages.error(request, f"Erreur enregistrement sortie : {e}")
 
