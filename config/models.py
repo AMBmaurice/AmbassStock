@@ -134,7 +134,7 @@ class Facture(models.Model):
     fichier_facture = models.FileField(upload_to='factures/')
 
     def __str__(self):
-        return f'Facture du {self.date_commande} - {self.montant_total}€'
+        return f"Facture du {self.date_commande} - {self.montant_total}€"
 
 
 class MouvementStock(models.Model):
