@@ -774,6 +774,10 @@ def page_gestion_stocks(request):
                 request.POST.get('objet') or request.POST.get('nom') or ''
             ).strip()
 
+            if not objet_nom or not categorie_nom:
+                messages.error(request, "Veuillez remplir au moins la désignation et la catégorie.")
+                return redirect('/gestion-stocks/')
+
             match = re.search(r'\((.*?)\)', categorie_nom)
             if match:
                 code_categorie = match.group(1).upper()
@@ -808,6 +812,13 @@ def page_gestion_stocks(request):
             code_spec = extraire_trigramme(spec_brute)
 
             reference_finale = f'{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}'
+            
+            i = 1
+            while Produit.objects.filter(reference=reference_finale).exists():
+                suffixe_numerique = f'{prochain_numero + i:02d}'
+                reference_finale = f'{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}'
+                i += 1
+
             quantite_initiale = int(
                 request.POST.get('quantite') or request.POST.get('quantite_initiale') or 0
             )
@@ -828,38 +839,38 @@ def page_gestion_stocks(request):
                 except ValueError:
                     prix_valeur = None
 
-            donnees_creation = {
-                'reference': reference_finale,
-                'objet': objet_nom,
-                'categorie': categorie_nom,
-                'emplacement': request.POST.get('emplacement') or 'Réserve',
-                'quantite': quantite_initiale,
-                'quota_minimum': int(request.POST.get('quota_minimum', 10)),
-                'fournisseur': fournisseur_final,
-                'prix': prix_valeur,
-            }
-
-            nouveau_produit = Produit.objects.create(**donnees_creation)
-            num_cmd = request.POST.get('numero_commande', '').strip() or None
-
-            if quantite_initiale > 0:
-                MouvementStock.objects.create(
-                    type_mouvement='ENTREE',
+            try:
+                nouveau_produit = Produit.objects.create(
+                    reference=reference_finale,
                     objet=objet_nom,
-                    produit=nouveau_produit,
+                    categorie=categorie_nom,
+                    emplacement=request.POST.get('emplacement') or 'Armoire A',
                     quantite=quantite_initiale,
-                    service='Administration',
-                    numero_commande=num_cmd,
-                    date_mouvement=timezone.now(),
+                    quota_minimum=int(request.POST.get('quota_minimum', 5)),
+                    fournisseur=fournisseur_final[:100],
+                    prix=prix_valeur,
+                    derniere_activite=timezone.now(),
                 )
 
-            messages.success(request, "Nouveau produit ajouté à l'inventaire")
+                if quantite_initiale > 0:
+                    MouvementStock.objects.create(
+                        type_mouvement='ENTREE',
+                        objet=objet_nom,
+                        produit=nouveau_produit,
+                        quantite=quantite_initiale,
+                        service='Administration',
+                        date_mouvement=timezone.now(),
+                    )
+
+                messages.success(request, f'Le produit "{objet_nom}" ({reference_finale}) a été enregistré avec succès !')
+            except Exception as e:
+                messages.error(request, f"Erreur lors de la création du produit : {e}")
+
             return redirect('/gestion-stocks/')
 
         elif action_type == 'mouvement_entree':
             ref_produit = request.POST.get('produit')
             quantite_ajoutee = int(request.POST.get('quantite', 0))
-            num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             try:
                 if str(ref_produit).isdigit():
@@ -868,7 +879,8 @@ def page_gestion_stocks(request):
                     produit = Produit.objects.get(reference=ref_produit)
 
                 produit.quantite = F('quantite') + quantite_ajoutee
-                produit.save(update_fields=['quantite'])
+                produit.derniere_activite = timezone.now()
+                produit.save(update_fields=['quantite', 'derniere_activite'])
                 produit.refresh_from_db()
 
                 date_entree_str = request.POST.get('date_entree')
@@ -887,14 +899,13 @@ def page_gestion_stocks(request):
                     produit=produit,
                     quantite=quantite_ajoutee,
                     service='Administration',
-                    numero_commande=num_cmd,
                     date_mouvement=dt_mvt,
                 )
-                messages.success(request, 'Quantité ajoutée avec succès')
+                messages.success(request, f'Entrée de {quantite_ajoutee} unités enregistrée pour "{produit.objet}".')
             except Produit.DoesNotExist:
-                messages.error(request, 'Produit introuvable.')
+                messages.error(request, 'Produit introuvable en base de données.')
             except Exception as e:
-                messages.error(request, f"Erreur lors de l'enregistrement : {e}")
+                messages.error(request, f"Erreur : {e}")
 
             return redirect('/gestion-stocks/')
 
@@ -903,88 +914,63 @@ def page_gestion_stocks(request):
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = request.POST.get('service') or 'Administration'
 
-            print("\n==========================")
-            print("=== DÉBUT SORTIE STOCK ===")
-            print("==========================")
-            print(f"Produit reçu : {ref_produit}")
-            print(f"Quantité : {quantite_retiree}")
-            print(f"Service : {service_demandeur}")
-
             try:
-        if str(ref_produit).isdigit():
-            produit = Produit.objects.get(id=int(ref_produit))
-        else:
-            produit = Produit.objects.get(reference=ref_produit)
+                if str(ref_produit).isdigit():
+                    produit = Produit.objects.get(id=int(ref_produit))
+                else:
+                    produit = Produit.objects.get(reference=ref_produit)
 
-        print(f"Produit trouvé : {produit.objet}")
-        print(f"Stock actuel : {produit.quantite}")
+                if produit.quantite < quantite_retiree:
+                    messages.error(request, f'Stock insuffisant (disponible : {produit.quantite}).')
+                    return redirect('/gestion-stocks/')
 
-        if produit.quantite < quantite_retiree:
-            print("ERREUR : Stock insuffisant")
-            messages.error(request, 'Stock insuffisant.')
-            return redirect('/gestion-stocks/')
+                produit.quantite = max(0, produit.quantite - quantite_retiree)
+                produit.derniere_activite = timezone.now()
+                produit.save(update_fields=['quantite', 'derniere_activite'])
 
-        produit.quantite = max(0, produit.quantite - quantite_retiree)
-        produit.save()
+                date_sortie_str = request.POST.get('date_sortie')
+                if date_sortie_str:
+                    try:
+                        dt = datetime.strptime(date_sortie_str, '%Y-%m-%d')
+                        dt_mvt = timezone.make_aware(datetime.combine(dt.date(), datetime.now().time()))
+                    except Exception:
+                        dt_mvt = timezone.now()
+                else:
+                    dt_mvt = timezone.now()
 
-        print(f"Nouveau stock : {produit.quantite}")
-
-        date_sortie_str = request.POST.get('date_sortie')
-        if date_sortie_str:
-            
-            try:
-                dt = datetime.strptime(date_sortie_str, '%Y-%m-%d')
-                dt_mvt = timezone.make_aware(
-                    datetime.combine(dt.date(), datetime.now().time())
+                MouvementStock.objects.create(
+                    type_mouvement='SORTIE',
+                    objet=produit.objet,
+                    produit=produit,
+                    quantite=quantite_retiree,
+                    service=service_demandeur,
+                    date_mouvement=dt_mvt,
                 )
-            except Exception:
-                dt_mvt = timezone.now()
-        else:
-            dt_mvt = timezone.now()
 
-        print("Création du mouvement...")
+                messages.success(request, f'Sortie de {quantite_retiree} x "{produit.objet}" enregistrée pour le service {service_demandeur}.')
+            except Produit.DoesNotExist:
+                messages.error(request, 'Produit introuvable en base de données.')
+            except Exception as e:
+                messages.error(request, f"Erreur lors de la sortie : {e}")
 
-        mouvement = MouvementStock.objects.create(
-            type_mouvement='SORTIE',
-            objet=produit.objet,
-            produit=produit,
-            quantite=quantite_retiree,
-            service=service_demandeur,
-            date_mouvement=dt_mvt,
-        )
-
-        print("Mouvement créé")
-        print(f"ID du mouvement : {mouvement.id}")
-        print("==========================\n")
-
-        messages.success(
-            request,
-            f'Quantité retirée avec succès pour le service {service_demandeur}.'
-        )
-
-    except Produit.DoesNotExist:
-        print("ERREUR : Produit introuvable")
-        messages.error(request, 'Produit introuvable.')
-
-    except Exception as e:
-        import traceback
-
-        print("\n########## ERREUR ##########")
-        traceback.print_exc()
-        print("############################\n")
-
-        messages.error(request, f"Erreur enregistrement sortie : {e}")
-
-    return redirect('/gestion-stocks/')
+            return redirect('/gestion-stocks/')
 
         elif action_type == 'archivage_produit':
             ref_produit = request.POST.get('produit_a_archiver')
             try:
-                produit = Produit.objects.get(reference=ref_produit)
+                if str(ref_produit).isdigit():
+                    produit = Produit.objects.get(id=int(ref_produit))
+                else:
+                    produit = Produit.objects.get(reference=ref_produit)
+
+                nom_p = produit.objet
                 produit.delete()
-                messages.success(request, "Produit supprimé de l'inventaire")
+                messages.success(request, f'Le produit "{nom_p}" a été supprimé.')
             except Produit.DoesNotExist:
-                pass
+                messages.error(request, "Produit introuvable.")
+            except Exception as e:
+                messages.error(request, f"Erreur lors de la suppression : {e}")
+
             return redirect('/gestion-stocks/')
 
     fournisseurs_existants = (
@@ -1008,7 +994,6 @@ def page_gestion_stocks(request):
             'date_du_jour': aujourd_hui,
         },
     )
-    
 def page_historique(request):
   if not request.user.is_authenticated:
     return redirect('/connexion/')
