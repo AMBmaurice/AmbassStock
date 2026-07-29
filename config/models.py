@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -17,8 +17,12 @@ class Produit(models.Model):
     derniere_activite = models.DateTimeField(default=timezone.now)
 
     # Champs optionnels pour le fournisseur et le prix
-    fournisseur = models.CharField(max_length=150, blank=True, null=True, default='Divers')
-    prix = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    fournisseur = models.CharField(
+        max_length=150, blank=True, null=True, default='Divers'
+    )
+    prix = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True
+    )
 
     def __str__(self):
         return self.objet
@@ -77,7 +81,9 @@ class DeclarationHebdomadaire(models.Model):
         ('rien', 'Je certifie ne rien avoir pris cette semaine.'),
     ]
 
-    service = models.CharField(max_length=50, choices=CHOIX_SERVICES, unique=True)
+    service = models.CharField(
+        max_length=50, choices=CHOIX_SERVICES, unique=True
+    )
     statut = models.CharField(max_length=20, default='en_attente')
     reponse = models.CharField(
         max_length=10, choices=CHOIX_REPONSES, blank=True, null=True
@@ -150,7 +156,6 @@ class MouvementStock(models.Model):
     )
     quantite = models.IntegerField()
     service = models.CharField(max_length=100, default='Administration')
-    # Conversion explicite en DateField sécurisée
     date_mouvement = models.DateField(default=date.today)
 
     def __str__(self):
