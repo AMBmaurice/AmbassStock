@@ -33,4 +33,5 @@ urlpatterns = [
     path('liste-courses/', views.page_liste_courses, name='liste_courses'),
     path('panier/', views.page_panier, name='panier'),
     path('rattrapage-historique/', views.page_rattrapage_historique, name='rattrapage_historique'),
+    path('migrer-service/', views.migrer_nom_service, name='migrer_service'),
 ]
