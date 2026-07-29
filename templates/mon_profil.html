@@ -34,11 +34,13 @@
             transition: all 0.2s;
         }
         .input-custom:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.06); }
-        .input-readonly { background-color: #ECEFEA; color: #7A8278; cursor: not-allowed; border-color: #E2E6E1; }
         
         .btn-submit { height: 50px; padding: 0 35px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; width: 100%; }
         .btn-submit:hover { background-color: #495430; }
-        .alert-success { background-color: #EBF9EE; border: 1px solid #C2EED0; color: #1E7E34; padding: 16px; border-radius: 12px; margin-bottom: 25px; font-weight: 500; }
+        
+        .alert-container { margin-bottom: 25px; }
+        .alert-success { background-color: #EBF9EE; border: 1px solid #C2EED0; color: #1E7E34; padding: 16px; border-radius: 12px; font-weight: 500; }
+        .alert-error { background-color: #FDE8E8; border: 1px solid #F8B4B4; color: #9B1C1C; padding: 16px; border-radius: 12px; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -110,10 +112,10 @@
         {% endif %}
 
         {% if is_admin or request.user.is_superuser %}
-<li class="sidebar-item" style="margin-bottom: 4px;">
-    <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
-</li>
-{% endif %}
+        <li class="sidebar-item" style="margin-bottom: 4px;">
+            <a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a>
+        </li>
+        {% endif %}
     </ul>
             
     <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
@@ -137,14 +139,12 @@
 </div>
 
 <script>
-
 function toggleSidebar() {
     const sidebar = document.getElementById('appSidebar');
     const openBtn = document.getElementById('sidebarToggleOpen');
     const mainContent = document.querySelector('.main-content');
         
     if (sidebar.style.transform === 'translateX(-290px)') {
-        // Mode Normal (Sidebar Ouverte)
         sidebar.style.transform = 'translateX(0px)';
         sidebar.style.opacity = '1';
         openBtn.style.display = 'none';
@@ -154,7 +154,6 @@ function toggleSidebar() {
             mainContent.style.paddingTop = '0px';
         }
     } else {
-        // Mode Plein Écran (Sidebar Fermée)
         sidebar.style.transform = 'translateX(-290px)';
         sidebar.style.opacity = '0';
         openBtn.style.display = 'flex';
@@ -165,33 +164,51 @@ function toggleSidebar() {
         }
     }
 }
-
 </script>
 
     <div class="main-content">
         <h2 class="page-title">Gestion du profil</h2>
         
-        {% if succes %}
-        <div class="alert-success">Vos informations de profil ont été mises à jour avec succès.</div>
+        {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
         {% endif %}
         
         <div class="card-box">
             <form method="POST" action="">
                 {% csrf_token %}
                 
+                <!-- Action cachée pour le backend Python -->
+                <input type="hidden" name="action" value="update_profile">
+                
                 <div class="form-group">
-                    <label class="form-label">Identifiant utilisateur (non modifiable)</label>
-                    <input type="text" value="{{ request.user.username }}" class="input-custom input-readonly" readonly>
+                    <label class="form-label">Identifiant utilisateur *</label>
+                    <input type="text" name="username" value="{{ request.user.username }}" class="input-custom" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input type="text" name="last_name" value="{{ request.user.last_name }}" placeholder="Non renseigné" class="input-custom">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Prénom</label>
+                    <input type="text" name="first_name" value="{{ request.user.first_name }}" placeholder="Non renseigné" class="input-custom">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Nouveau mot de passe</label>
-                    <input type="password" name="profil_password" placeholder="Laissez vide pour ne pas modifier" class="input-custom">
+                    <input type="password" name="new_password" placeholder="Laissez vide pour conserver l'actuel" class="input-custom">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">Adresse e-mail</label>
-                    <input type="email" name="profil_email" value="{{ request.user.email }}" placeholder="Ex: agent@ambassade.com" class="input-custom" required>
+                    <input type="email" name="email" value="{{ request.user.email }}" placeholder="Ex: agent@ambassade.com" class="input-custom">
                 </div>
                 
                 <button type="submit" class="btn-submit">Enregistrer les modifications</button>
