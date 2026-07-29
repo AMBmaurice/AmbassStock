@@ -416,7 +416,6 @@ def page_gestion_stocks(request):
                 
             reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
             
-            # Sécurité contre les doublons de référence
             i = 1
             while Produit.objects.filter(reference=reference_finale).exists():
                 suffixe_numerique = f"{prochain_numero + i:02d}"
@@ -456,7 +455,6 @@ def page_gestion_stocks(request):
             ref_produit = request.POST.get('produit') 
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             
-            # Conversion de la date texte envoyée par le HTML en date Python
             date_entree_raw = request.POST.get('date_entree')
             try:
                 date_mvt = datetime.strptime(date_entree_raw, '%Y-%m-%d').date() if date_entree_raw else date.today()
@@ -464,7 +462,6 @@ def page_gestion_stocks(request):
                 date_mvt = date.today()
 
             try:
-                # Recherche flexible par ID ou par Référence
                 if str(ref_produit).isdigit():
                     produit = Produit.objects.get(id=int(ref_produit))
                 else:
@@ -495,7 +492,6 @@ def page_gestion_stocks(request):
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = request.POST.get('service') or "Administration"
         
-            # Conversion de la date texte envoyée par le HTML en date Python
             date_sortie_raw = request.POST.get('date_sortie')
             try:
                 date_mvt = datetime.strptime(date_sortie_raw, '%Y-%m-%d').date() if date_sortie_raw else date.today()
@@ -503,7 +499,6 @@ def page_gestion_stocks(request):
                 date_mvt = date.today()
 
             try:
-                # Recherche flexible par ID ou par Référence
                 if str(ref_produit).isdigit():
                     produit = Produit.objects.get(id=int(ref_produit))
                 else:
@@ -641,6 +636,13 @@ def page_gestion_utilisateurs(request):
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
     return render(request, 'gestion_utilisateurs.html', {'profil_actif': profil_actif})
+
+
+def page_mon_profil(request):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+    return render(request, 'mon_profil.html', {'profil_actif': profil_actif})
 
 
 def page_deconnexion(request):
