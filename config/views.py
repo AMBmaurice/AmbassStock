@@ -899,18 +899,18 @@ def page_gestion_stocks(request):
             return redirect('/gestion-stocks/')
 
         elif action_type == 'sortie':
-    ref_produit = request.POST.get('produit')
-    quantite_retiree = int(request.POST.get('quantite', 0))
-    service_demandeur = request.POST.get('service') or 'Administration'
+            ref_produit = request.POST.get('produit')
+            quantite_retiree = int(request.POST.get('quantite', 0))
+            service_demandeur = request.POST.get('service') or 'Administration'
 
-    print("\n==========================")
-    print("=== DÉBUT SORTIE STOCK ===")
-    print("==========================")
-    print(f"Produit reçu : {ref_produit}")
-    print(f"Quantité : {quantite_retiree}")
-    print(f"Service : {service_demandeur}")
+            print("\n==========================")
+            print("=== DÉBUT SORTIE STOCK ===")
+            print("==========================")
+            print(f"Produit reçu : {ref_produit}")
+            print(f"Quantité : {quantite_retiree}")
+            print(f"Service : {service_demandeur}")
 
-    try:
+            try:
         if str(ref_produit).isdigit():
             produit = Produit.objects.get(id=int(ref_produit))
         else:
@@ -931,6 +931,7 @@ def page_gestion_stocks(request):
 
         date_sortie_str = request.POST.get('date_sortie')
         if date_sortie_str:
+            
             try:
                 dt = datetime.strptime(date_sortie_str, '%Y-%m-%d')
                 dt_mvt = timezone.make_aware(
