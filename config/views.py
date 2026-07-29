@@ -2039,3 +2039,32 @@ def generer_pdf_statistiques(request):
         'remarque_sectorielle': remarque_sectorielle,
         'remarque_dormant': remarque_dormant,
     })
+
+@login_required(login_url='/connexion/')
+def page_rattrapage_historique(request):
+    if not request.user.is_superuser:
+        return HttpResponse("Accès réservé aux administrateurs.", status=403)
+
+    produits = Produit.objects.all()
+    compteur = 0
+
+    for p in produits:
+        # Vérification si une entrée existe déjà pour ce produit
+        deja_dans_historique = MouvementStock.objects.filter(
+            produit=p, type_mouvement='ENTREE'
+        ).exists()
+
+        if not deja_dans_historique and p.quantite > 0:
+            MouvementStock.objects.create(
+                produit=p,
+                objet=p.objet,
+                type_mouvement='ENTREE',
+                quantite=p.quantite,
+                service='Administration (Initialisation)',
+                date_mouvement=p.derniere_activite or timezone.now()
+            )
+            compteur += 1
+
+    return HttpResponse(
+        f"<b>Rattrapage terminé avec succès !</b> {compteur} mouvements d'entrée ont été créés dans l'historique."
+    )
