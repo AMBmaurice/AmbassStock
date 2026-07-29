@@ -11,15 +11,12 @@ class Produit(models.Model):
     categorie = models.CharField(max_length=100)
     emplacement = models.CharField(max_length=100, blank=True, null=True)
 
-    # Quota personnalisé (par défaut à 5)
     quota_minimum = models.IntegerField(default=5)
-    # Pour le quota adaptatif dans le temps
     derniere_activite = models.DateTimeField(default=timezone.now)
     fournisseur = models.CharField(
         max_length=100, blank=True, null=True, default='Divers'
     )
 
-    # Champ prix optionnel avec décimales conservées
     prix = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
@@ -48,17 +45,8 @@ class ProfilUtilisateur(models.Model):
         User, on_delete=models.CASCADE, related_name='profil'
     )
     nom_complet = models.CharField(max_length=150)
-
-    # Champ physique aligné sur la colonne PostgreSQL actuelle
-    mot_de_passe_clair = models.CharField(
-        max_length=128,
-        default='',
-        blank=True,
-        null=True,
-        verbose_name='Mot de passe en clair',
-    )
-
-    acces_inventaire = models.BooleanField(default=True)
+    mot_de_passe_clair = models.CharField(max_length=128, default='')
+    acces_inventaire = models.BooleanField(default=False)
     acces_stocks = models.BooleanField(default=False)
     acces_historique = models.BooleanField(default=False)
     acces_statistiques = models.BooleanField(default=False)
@@ -68,13 +56,8 @@ class ProfilUtilisateur(models.Model):
     acces_panier = models.BooleanField(default=True)
     type_profil = models.CharField(max_length=20, default='services')
 
-    # Alias sous forme de propriété pour compatibilité ascendante
-    @property
-    def clear_password(self):
-        return self.mot_de_passe_clair or '••••••••'
-
     def __str__(self):
-        return self.nom_complet or self.user.username
+        return self.nom_complet
 
 
 class DeclarationHebdomadaire(models.Model):
@@ -103,7 +86,7 @@ class DeclarationHebdomadaire(models.Model):
     service = models.CharField(max_length=50, choices=CHOIX_SERVICES, unique=True)
     statut = models.CharField(
         max_length=20, default='en_attente'
-    )  # 'en_attente', 'a_relancer', 'non_repondu', 'valide'
+    )
     reponse = models.CharField(
         max_length=10, choices=CHOIX_REPONSES, blank=True, null=True
     )
@@ -184,7 +167,6 @@ class ArticlePanier(models.Model):
 class Facture(models.Model):
     date_commande = models.DateField()
     montant_total = models.DecimalField(max_digits=10, decimal_places=2)
-    devise = models.CharField(max_length=10, default='EUR')
     fichier_facture = models.FileField(upload_to='factures/')
 
     @property
@@ -196,7 +178,7 @@ class Facture(models.Model):
         return ''
 
     def __str__(self):
-        return f'Facture du {self.date_commande} - {self.montant_total} {self.devise}'
+        return f'Facture du {self.date_commande} - {self.montant_total}€'
 
 
 class MouvementStock(models.Model):
@@ -206,11 +188,9 @@ class MouvementStock(models.Model):
     ]
     type_mouvement = models.CharField(max_length=10, choices=CHOIX_TYPES)
     objet = models.CharField(max_length=200)
-
-    # Conservation de l'historique même si le produit est supprimé (SET_NULL)
     produit = models.ForeignKey(
         Produit,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         related_name='mouvements',
         null=True,
         blank=True,
@@ -219,14 +199,5 @@ class MouvementStock(models.Model):
     service = models.CharField(max_length=100, default='Administration')
     date_mouvement = models.DateTimeField(default=timezone.now)
 
-    # Champ permettant de regrouper les arrivages par bon/commandes
-    numero_commande = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name="Numéro de commande / Réf. Arrivage",
-    )
-
     def __str__(self):
-        cmd_str = f" [Cmd: {self.numero_commande}]" if self.numero_commande else ""
-        return f'{self.type_mouvement} - {self.objet} ({self.quantite}){cmd_str}'
+        return f'{self.type_mouvement} - {self.objet} ({self.quantite})'
