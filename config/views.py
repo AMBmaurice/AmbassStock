@@ -24,6 +24,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from .models import (
+    ArticleListeCourses,
     ArticlePanier,
     DeclarationHebdomadaire,
     DemandeService,
@@ -255,6 +256,7 @@ def page_accueil(request):
             'alertes_admin_recidive': [],
         },
     )
+
 def page_inventaire(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -738,6 +740,7 @@ def verifier_et_envoyer_alerte_papier(produit):
             )
         except Exception as e:
             print(f"Erreur lors de l'envoi du mail d'alerte : {e}")
+
 def page_gestion_stocks(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -1354,7 +1357,7 @@ def page_gestion_utilisateurs(request):
         profil.username = u.username
         profil.email = u.email
         profil.clear_password_display = getattr(profil, 'clear_password', None) or '••••••••'
-          
+        
         tous_les_utilisateurs.append(profil)
 
     return render(
@@ -1404,17 +1407,15 @@ def page_panier(request):
                 prod.quantite = max(0, prod.quantite - nouvelle_quantite)
                 prod.save()
 
-                try:
-                    MouvementStock.objects.create(
-                        produit=prod,
-                        objet=prod.objet,
-                        quantite=nouvelle_quantite,
-                        type_mouvement='SORTIE',
-                        service=service_nom,
-                        utilisateur=request.user,
-                    )
-                except Exception:
-                    pass
+                # CORRECTION : Création propre du MouvementStock sans le paramètre inexistant 'utilisateur'
+                MouvementStock.objects.create(
+                    produit=prod,
+                    objet=prod.objet,
+                    quantite=nouvelle_quantite,
+                    type_mouvement='SORTIE',
+                    service=service_nom,
+                    date_mouvement=timezone.now(),
+                )
 
                 item.delete()
                 messages.success(
@@ -1424,6 +1425,8 @@ def page_panier(request):
                 )
             except ArticlePanier.DoesNotExist:
                 messages.error(request, 'Article introuvable.')
+            except Exception as e:
+                messages.error(request, f"Erreur lors de la validation : {e}")
 
             return redirect('/panier/')
 
@@ -1478,24 +1481,22 @@ def page_panier(request):
                     prod.quantite = max(0, prod.quantite - qty)
                     prod.save()
 
-                    try:
-                        MouvementStock.objects.create(
-                            produit=prod,
-                            objet=prod.objet,
-                            quantite=qty,
-                            type_mouvement='SORTIE',
-                            service=service_nom,
-                            utilisateur=request.user,
-                        )
-                    except Exception:
-                        pass
+                    # CORRECTION : Création propre du MouvementStock sans le paramètre 'utilisateur'
+                    MouvementStock.objects.create(
+                        produit=prod,
+                        objet=prod.objet,
+                        quantite=qty,
+                        type_mouvement='SORTIE',
+                        service=service_nom,
+                        date_mouvement=timezone.now(),
+                    )
                     count += 1
 
                 articles_service.delete()
                 messages.success(
                     request,
                     f'Toutes les demandes du service {service_nom} ({count} articles)'
-                    " ont été validées et déduites de l'inventaire !",
+                    " ont été validées, déduites de l'inventaire et enregistrées dans l'historique !",
                 )
             else:
                 messages.warning(
@@ -1591,13 +1592,14 @@ def page_liste_courses(request):
                     prod.save()
                     prod.refresh_from_db()
 
+                    # CORRECTION : Retrait de 'utilisateur=request.user'
                     MouvementStock.objects.create(
                         produit=prod,
                         objet=prod.objet,
                         quantite=quantite_recue,
                         type_mouvement='ENTREE',
                         service='Administration (Réception commande)',
-                        utilisateur=request.user,
+                        date_mouvement=timezone.now(),
                     )
 
                     prix_attendu_total = float(item.produit.prix or 0.0) * float(
@@ -1806,6 +1808,7 @@ def page_liste_courses(request):
             'commandes_en_cours': commandes_en_cours,
         },
     )
+
 @login_required(login_url='/connexion/')
 def page_mon_profil(request):
     profil_actif = get_profil_actif(request.user)
