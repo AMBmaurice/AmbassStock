@@ -5,7 +5,8 @@ import unicodedata
 import zoneinfo
 from datetime import date, datetime, timedelta
 from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.core.paginator import Paginator
@@ -16,8 +17,6 @@ from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.decorators import login_required
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -870,7 +869,6 @@ def page_gestion_stocks(request):
             num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             try:
-                # Recherche flexible par ID ou par Référence
                 if str(ref_produit).isdigit():
                     produit = Produit.objects.get(id=int(ref_produit))
                 else:
@@ -914,7 +912,6 @@ def page_gestion_stocks(request):
             service_demandeur = request.POST.get('service') or 'Administration'
 
             try:
-                # Recherche flexible par ID ou par Référence
                 if str(ref_produit).isdigit():
                     produit = Produit.objects.get(id=int(ref_produit))
                 else:
