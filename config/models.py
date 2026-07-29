@@ -11,12 +11,9 @@ class Produit(models.Model):
     categorie = models.CharField(max_length=100)
     emplacement = models.CharField(max_length=100, blank=True, null=True)
 
-    # Quota personnalisé (par défaut à 5)
     quota_minimum = models.IntegerField(default=5)
-    # Pour le quota adaptatif dans le temps
     derniere_activite = models.DateTimeField(default=timezone.now)
 
-    # Champs optionnels pour le fournisseur et le prix
     fournisseur = models.CharField(
         max_length=150, blank=True, null=True, default='Divers'
     )
@@ -156,7 +153,23 @@ class MouvementStock(models.Model):
     )
     quantite = models.IntegerField()
     service = models.CharField(max_length=100, default='Administration')
-    date_mouvement = models.DateField(default=date.today)
+    date_mouvement = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f'{self.type_mouvement} - {self.objet} ({self.quantite})'
+
+
+class ArticlePanier(models.Model):
+    produit = models.ForeignKey(
+        Produit, on_delete=models.CASCADE, related_name='articles_panier'
+    )
+    service = models.CharField(max_length=100)
+    quantite_demandee = models.IntegerField(default=1)
+    est_urgente = models.BooleanField(default=False)
+    motif_urgence = models.TextField(blank=True, null=True)
+    date_ajout = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return (
+            f"{self.service} - {self.produit.objet} ({self.quantite_demandee})"
+        )
