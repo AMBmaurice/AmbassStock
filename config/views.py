@@ -659,3 +659,10 @@ def page_deconnexion(request):
     logout(request)
     messages.success(request, "Vous avez été déconnecté avec succès.")
     return redirect('/connexion/')
+
+def test_database(request):
+    try:
+        count = Produit.objects.count()
+        return HttpResponse(f"Connexion BDD Cloud OK. Nombre de produits : {count}")
+    except Exception as e:
+        return HttpResponse(f"Erreur de connexion BDD : {e}", status=500)
