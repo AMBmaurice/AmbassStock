@@ -16,6 +16,8 @@ from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -1799,17 +1801,113 @@ def page_liste_courses(request):
         },
     )
 
+@login_required(login_url='/connexion/')
 def page_mon_profil(request):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
+    user = request.user
+    profil_actif = get_profil_actif(user)
 
-    profil_actif = get_profil_actif(request.user)
+    # Vérification des droits administrateur (comme le can_manage du registre)
+    can_manage = user.is_superuser or (
+        profil_actif
+        and getattr(profil_actif, 'type_profil', '') in ['admin', 'administrateur']
+    )
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        # 1. MISE À JOUR DU PROFIL PERSO & MOT DE PASSE
+        if action == 'update_profile':
+            user.username = request.POST.get('username')
+            user.email = request.POST.get('email')
+            user.first_name = request.POST.get('first_name')
+            user.last_name = request.POST.get('last_name')
+
+            new_pass = request.POST.get('new_password')
+            if new_pass and new_pass.strip():
+                user.set_password(new_pass)
+
+                # Synchronisation du mot de passe en clair sur ProfilUtilisateur
+                try:
+                    profil = ProfilUtilisateur.objects.get(user=user)
+                    profil.mot_de_passe_clair = new_pass
+                    profil.save()
+                except ProfilUtilisateur.DoesNotExist:
+                    pass
+
+            user.save()
+
+            # Maintient la session active si le mot de passe a changé
+            if new_pass and new_pass.strip():
+                update_session_auth_hash(request, user)
+
+            messages.success(request, 'Votre profil a été mis à jour avec succès.')
+            return redirect('/mon-profil/')
+
+        # 2. CRÉATION D'UN UTILISATEUR PAR L'ADMIN
+        elif action == 'create_user' and can_manage:
+            u_name = request.POST.get('new_username')
+            p_word = request.POST.get('temp_password')
+
+            if u_name and p_word:
+                if User.objects.filter(username=u_name).exists():
+                    messages.error(
+                        request, f"L'utilisateur '{u_name}' existe déjà."
+                    )
+                else:
+                    new_user = User.objects.create_user(
+                        username=u_name, password=p_word
+                    )
+
+                    # Création du ProfilUtilisateur AmbassStock avec les permissions cochées
+                    ProfilUtilisateur.objects.create(
+                        user=new_user,
+                        nom_complet=u_name.capitalize(),
+                        mot_de_passe_clair=p_word,
+                        acces_inventaire=request.POST.get('has_registre')
+                        == 'on',
+                        acces_stocks=request.POST.get('has_add_dossier')
+                        == 'on',
+                        acces_historique=request.POST.get('has_archivage')
+                        == 'on',
+                        acces_statistiques=request.POST.get('has_notes') == 'on',
+                        acces_gestion_utilisateurs=request.POST.get(
+                            'has_manage_users'
+                        )
+                        == 'on',
+                    )
+                    messages.success(
+                        request, f"Compte '{u_name}' créé avec succès."
+                    )
+
+            return redirect('/mon-profil/')
+
+        # 3. SUPPRESSION / DESACTIVATION D'UN UTILISATEUR
+        elif action == 'delete_user' and can_manage:
+            target_id = request.POST.get('user_id')
+            try:
+                target_user = User.objects.get(id=target_id)
+                if target_user != user:
+                    target_user.is_active = False  # Masque le compte comme dans le registre
+                    target_user.save()
+                    messages.success(request, 'Utilisateur désactivé.')
+                else:
+                    messages.error(
+                        request,
+                        'Vous ne pouvez pas désactiver votre propre compte.',
+                    )
+            except User.DoesNotExist:
+                pass
+            return redirect('/mon-profil/')
+
+    active_users = User.objects.filter(is_active=True) if can_manage else []
 
     return render(
         request,
         'mon_profil.html',
         {
             'profil_actif': profil_actif,
+            'active_users': active_users,
+            'can_manage': can_manage,
         },
     )
 
