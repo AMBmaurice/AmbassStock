@@ -411,7 +411,6 @@ def page_gestion_stocks(request):
                 
             reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
             
-            # Gestion d'unicité de la référence
             i = 1
             while Produit.objects.filter(reference=reference_finale).exists():
                 suffixe_numerique = f"{prochain_numero + i:02d}"
@@ -627,34 +626,6 @@ def page_gestion_utilisateurs(request):
     profil_actif = get_profil_actif(request.user)
     return render(request, 'gestion_utilisateurs.html', {'profil_actif': profil_actif})
 
-def page_mon_profil(request):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
-    profil_actif = get_profil_actif(request.user)
-    return render(request, 'mon_profil.html', {'profil_actif': profil_actif})
-
-def afficher_facture(request, facture_id):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
-    facture = get_object_or_404(Facture, id=facture_id)
-    if facture.fichier_facture:
-        response = HttpResponse(
-            facture.fichier_facture, content_type='application/pdf'
-        )
-        response['Content-Disposition'] = (
-            f'inline; filename="{facture.fichier_facture.name}"'
-        )
-        return response
-    return HttpResponse('Fichier introuvable', status=404)
-
-def supprimer_facture(request, facture_id):
-    if not request.user.is_authenticated:
-        return redirect('/connexion/')
-    facture = get_object_or_404(Facture, id=facture_id)
-    facture.delete()
-    messages.success(request, 'Facture supprimée.')
-    return redirect('/factures/')
-
 def page_deconnexion(request):
     logout(request)
     messages.success(request, "Vous avez été déconnecté avec succès.")
@@ -663,6 +634,14 @@ def page_deconnexion(request):
 def test_database(request):
     try:
         count = Produit.objects.count()
-        return HttpResponse(f"Connexion BDD Cloud OK. Nombre de produits : {count}")
+        return HttpResponse(
+            f'Connexion BDD Cloud OK. Nombre de produits : {count}'
+        )
     except Exception as e:
-        return HttpResponse(f"Erreur de connexion BDD : {e}", status=500)
+        return HttpResponse(f'Erreur de connexion BDD : {e}', status=500)
+
+def page_mon_profil(request):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    profil_actif = get_profil_actif(request.user)
+    return render(request, 'mon_profil.html', {'profil_actif': profil_actif})
