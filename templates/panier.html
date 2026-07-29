@@ -49,7 +49,7 @@
         .btn-action-refuse { background-color: #FAFBF9; color: #BA3C2A; border: 1px solid rgba(186, 60, 42, 0.4); padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-action-refuse:hover { background-color: #BA3C2A; color: #ffffff; border-color: #BA3C2A; }
 
-        /* **CHAMP DE QUANTITÉ ÉPURÉ SANS BOUTON PARASITE** */
+        /* CHAMP DE QUANTITÉ ÉPURÉ SANS BOUTON PARASITE */
         .qty-input-edit { width: 80px; height: 40px; padding: 0 10px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 1rem; font-weight: 800; color: #2C351C; text-align: center; background: #ffffff; outline: none; transition: all 0.2s; }
         .qty-input-edit:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.12); }
 
@@ -122,7 +122,7 @@
     </div>
 </div>
 
-<div class="main-content">
+<div class="main-content" style="margin-left: 290px !important; width: calc(100% - 290px) !important;">
     <div class="page-header">
         <h1 class="page-title">Traitement des Commandes Interne</h1>
         <p class="welcome-text">Validez les demandes de fournitures par service, ajustez directement les quantités accordées et enregistrez les sorties effectives de la réserve.</p>
@@ -172,7 +172,7 @@
                         <td><em style="color: #7A2417; font-weight: 600;">"{{ item.motif_urgence|default:"Non spécifié" }}"</em></td>
                         <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
                         
-                        <!-- **SAISIE DE QUANTITÉ DIRECTEMENT RELIÉE AU FORMULAIRE SANS BOUTON PARASITE** -->
+                        <!-- SAISIE DE QUANTITÉ DIRECTEMENT RELIÉE AU FORMULAIRE SANS BOUTON PARASITE -->
                         <td>
                             <input type="number" 
                                    id="input-qty-urg-{{ item.id }}" 
@@ -252,7 +252,7 @@
                         <td>{{ item.produit.emplacement|default:"Réserve Principale" }}</td>
                         <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
                         
-                        <!-- **CHAMP INTUITIF DÉLIVRANT LA QUANTITÉ DIRECTEMENT AU FORMULAIRE** -->
+                        <!-- CHAMP INTUITIF DÉLIVRANT LA QUANTITÉ DIRECTEMENT AU FORMULAIRE -->
                         <td>
                             <input type="number" 
                                    id="input-qty-{{ item.id }}" 
@@ -266,7 +266,7 @@
 
                         <td style="text-align: right;">
                             <div style="display: inline-flex; gap: 8px;">
-                                <!-- **FORMULAIRE SOUROUMETANT DIRECTEMENT LA QUANTITÉ DU CHAMP SANS BOUTON AJUSTER** -->
+                                <!-- FORMULAIRE SOUMETTANT DIRECTEMENT LA QUANTITÉ DU CHAMP SANS BOUTON AJUSTER -->
                                 <form id="form-validate-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir faire sortir cet article du stock de l\'inventaire ?');" style="display: inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action_type" value="valider_item">
@@ -312,14 +312,14 @@
             sidebar.style.opacity = '1';
             openBtn.style.display = 'none';
             if (mainContent) {
-                mainContent.style.marginLeft = '290px';
+                mainContent.style.marginLeft = '290px !important';
             }
         } else {
             sidebar.style.transform = 'translateX(-290px)';
             sidebar.style.opacity = '0';
             openBtn.style.display = 'flex';
             if (mainContent) {
-                mainContent.style.marginLeft = '15px';
+                mainContent.style.marginLeft = '15px !important';
             }
         }
     }
