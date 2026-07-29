@@ -1,330 +1,328 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AmbassStock - Panier & Commandes</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
-        
-        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
-        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
-        .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 4px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Panier & Commandes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
+        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; padding-top: 25px; z-index: 998; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
+        .sidebar-menu { list-style: none; padding: 0 15px; }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
+        .main-content { margin-left: 290px; flex-grow: 1; padding: 40px; width: calc(100% - 290px); transition: all 0.4s ease; position: relative; }
 
-        /* EN-TÊTE DE PAGE */
-        .page-header { margin-bottom: 30px; }
-        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
-        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
+        /* EN-TÊTE DE PAGE */
+        .page-header { margin-bottom: 30px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
 
-        /* CARTES ET BLOCS DE GESTION */
-        .card-panel { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 35px; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.2s, box-shadow 0.2s; }
-        .card-panel:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
+        /* CARTES ET BLOCS DE GESTION */
+        .card-panel { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 24px; padding: 35px; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.2s, box-shadow 0.2s; }
+        .card-panel:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
 
-        .card-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ECEFEA; padding-bottom: 18px; margin-bottom: 22px; flex-wrap: wrap; gap: 15px; }
-        .card-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; display: flex; align-items: center; gap: 10px; }
+        .card-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ECEFEA; padding-bottom: 18px; margin-bottom: 22px; flex-wrap: wrap; gap: 15px; }
+        .card-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; display: flex; align-items: center; gap: 10px; }
 
-        /* TABLEAUX ULTRA-PRÉCIS */
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 14px; }
-        .panier-table { width: 100%; border-collapse: collapse; text-align: left; }
-        .panier-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.6px; color: #7A8278; padding: 14px 16px; border-bottom: 1px solid #E2E6E1; background: #FAFBF9; font-weight: 700; }
-        .panier-table td { padding: 16px; border-bottom: 1px solid #F1F3F0; font-size: 0.95rem; vertical-align: middle; color: #333333; }
-        .panier-table tbody tr { transition: background-color 0.15s ease; }
-        .panier-table tbody tr:hover { background-color: #F7FAF6; }
+        /* TABLEAUX ULTRA-PRÉCIS */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 14px; }
+        .panier-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .panier-table th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.6px; color: #7A8278; padding: 14px 16px; border-bottom: 1px solid #E2E6E1; background: #FAFBF9; font-weight: 700; }
+        .panier-table td { padding: 16px; border-bottom: 1px solid #F1F3F0; font-size: 0.95rem; vertical-align: middle; color: #333333; }
+        .panier-table tbody tr { transition: background-color 0.15s ease; }
+        .panier-table tbody tr:hover { background-color: #F7FAF6; }
 
-        .ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.82rem; font-weight: 700; color: #5E6D3E; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(94, 109, 62, 0.15); }
+        .ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.82rem; font-weight: 700; color: #5E6D3E; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(94, 109, 62, 0.15); }
 
-        /* BOUTONS D'ACTION ÉPURÉS */
-        .btn-submit-all { height: 42px; padding: 0 22px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
-        .btn-submit-all:hover { background-color: #495430; transform: translateY(-1px); }
+        /* BOUTONS D'ACTION ÉPURÉS */
+        .btn-submit-all { height: 42px; padding: 0 22px; background-color: #5E6D3E; color: white; border: none; border-radius: 12px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
+        .btn-submit-all:hover { background-color: #495430; transform: translateY(-1px); }
 
-        .btn-action-out { background-color: #5E6D3E; color: #ffffff; border: none; padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.15); }
-        .btn-action-out:hover { background-color: #495430; transform: translateY(-1px); }
+        .btn-action-out { background-color: #5E6D3E; color: #ffffff; border: none; padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.15); }
+        .btn-action-out:hover { background-color: #495430; transform: translateY(-1px); }
 
-        .btn-action-refuse { background-color: #FAFBF9; color: #BA3C2A; border: 1px solid rgba(186, 60, 42, 0.4); padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-action-refuse:hover { background-color: #BA3C2A; color: #ffffff; border-color: #BA3C2A; }
+        .btn-action-refuse { background-color: #FAFBF9; color: #BA3C2A; border: 1px solid rgba(186, 60, 42, 0.4); padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-action-refuse:hover { background-color: #BA3C2A; color: #ffffff; border-color: #BA3C2A; }
 
-        /* **CHAMP DE QUANTITÉ ÉPURÉ SANS BOUTON PARASITE** */
-        .qty-input-edit { width: 80px; height: 40px; padding: 0 10px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 1rem; font-weight: 800; color: #2C351C; text-align: center; background: #ffffff; outline: none; transition: all 0.2s; }
-        .qty-input-edit:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.12); }
+        /* **CHAMP DE QUANTITÉ ÉPURÉ SANS BOUTON PARASITE** */
+        .qty-input-edit { width: 80px; height: 40px; padding: 0 10px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 1rem; font-weight: 800; color: #2C351C; text-align: center; background: #ffffff; outline: none; transition: all 0.2s; }
+        .qty-input-edit:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.12); }
 
-        /* BLOC D'URGENCE VIBRANT */
-        .urgent-card-panel {
-            border: 1.5px solid rgba(186, 60, 42, 0.4) !important;
-            background-color: #FFFBFB !important;
-            box-shadow: 0 12px 35px rgba(186, 60, 42, 0.08) !important;
-            animation: urgentPulse 2s infinite ease-in-out;
-        }
+        /* BLOC D'URGENCE VIBRANT */
+        .urgent-card-panel {
+            border: 1.5px solid rgba(186, 60, 42, 0.4) !important;
+            background-color: #FFFBFB !important;
+            box-shadow: 0 12px 35px rgba(186, 60, 42, 0.08) !important;
+            animation: urgentPulse 2s infinite ease-in-out;
+        }
 
-        @keyframes urgentPulse {
-            0% { box-shadow: 0 0 0 0 rgba(186, 60, 42, 0.4); }
-            70% { box-shadow: 0 0 0 14px rgba(186, 60, 42, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(186, 60, 42, 0); }
-        }
+        @keyframes urgentPulse {
+            0% { box-shadow: 0 0 0 0 rgba(186, 60, 42, 0.4); }
+            70% { box-shadow: 0 0 0 14px rgba(186, 60, 42, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(186, 60, 42, 0); }
+        }
 
-        .badge-urgent-tag { background: #BA3C2A; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; letter-spacing: 0.4px; text-transform: uppercase; }
+        .badge-urgent-tag { background: #BA3C2A; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; letter-spacing: 0.4px; text-transform: uppercase; }
 
-        .empty-state-card { text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: #ffffff; border-radius: 24px; border: 1px dashed #D0D6CE; font-size: 0.98rem; }
-    </style>
+        .empty-state-card { text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: #ffffff; border-radius: 24px; border: 1px dashed #D0D6CE; font-size: 0.98rem; }
+    </style>
 </head>
 <body>
 
 <button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
-        
-<div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
-        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
-        <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-    </div>
-        
-    <ul class="sidebar-menu">
-        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
-        <li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>
-        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
-        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
-        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
-        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        
+<div class="sidebar" id="appSidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
+        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
+        <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+    </div>
+        
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        <li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
 
-        {% if is_admin or request.user.is_superuser %}
-        <li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>
-        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
-        {% endif %}
-    </ul>
-            
-    <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">
-            <a href="/mon-profil/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; flex-grow: 1;">
-                <div style="width: 36px; height: 36px; background-color: #FAFBF9; color: #495430; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
-                    {{ request.user.username|slice:":1"|upper }}
-                </div>
-                <div style="display: flex; flex-direction: column;">
-                    <span style="color: #ffffff; font-size: 0.88rem; font-weight: 600; line-height: 1.2;">{{ request.user.username }}</span>
-                    <span style="color: {% if request.path == '/mon-profil/' %}#ffffff{% else %}rgba(255, 255, 255, 0.5){% endif %}; font-size: 0.75rem;">Mon Profil</span>
-                </div>
-            </a>
-        </div>
+        {% if is_admin or request.user.is_superuser %}
+        <li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
+        {% endif %}
+    </ul>
+            
+    <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">
+            <a href="/mon-profil/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; flex-grow: 1;">
+                <div style="width: 36px; height: 36px; background-color: #FAFBF9; color: #495430; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="color: #ffffff; font-size: 0.88rem; font-weight: 600; line-height: 1.2;">{{ request.user.username }}</span>
+                    <span style="color: {% if request.path == '/mon-profil/' %}#ffffff{% else %}rgba(255, 255, 255, 0.5){% endif %}; font-size: 0.75rem;">Mon Profil</span>
+                </div>
+            </a>
+        </div>
 
-        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 82, 82, 0.15)'" onmouseout="this.style.background='transparent'">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Déconnexion
-        </a>
-    </div>
+        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 82, 82, 0.15)'" onmouseout="this.style.background='transparent'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Déconnexion
+        </a>
+    </div>
 </div>
 
 <div class="main-content">
-    <div class="page-header">
-        <h1 class="page-title">Traitement des Commandes Interne</h1>
-        <p class="welcome-text">Validez les demandes de fournitures par service, ajustez directement les quantités accordées et enregistrez les sorties effectives de la réserve.</p>
-    </div>
+    <div class="page-header">
+        <h1 class="page-title">Traitement des Commandes Interne</h1>
+        <p class="welcome-text">Validez les demandes de fournitures par service, ajustez directement les quantités accordées et enregistrez les sorties effectives de la réserve.</p>
+    </div>
 
-    {% if messages %}
-        <div style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px;">
-            {% for message in messages %}
-                <div style="padding: 16px 20px; border-radius: 14px; background-color: #EBF9EE; color: #1E7E34; border: 1px solid #C2EED0; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03);">
-                    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+    {% if messages %}
+        <div style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px;">
+            {% for message in messages %}
+                <div style="padding: 16px 20px; border-radius: 14px; background-color: #EBF9EE; color: #1E7E34; border: 1px solid #C2EED0; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03);">
+                    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-    <!-- 🚨 BLOC DÉDIÉ AUX DEMANDES URGENTES -->
-    {% if urgences_liste %}
-    <div class="card-panel urgent-card-panel">
-        <div class="card-header-flex" style="border-bottom-color: rgba(186, 60, 42, 0.3);">
-            <h2 class="card-title" style="color: #BA3C2A;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Demandes Urgentes Prioritaires (À Traiter)
-            </h2>
-        </div>
+    <!-- 🚨 BLOC DÉDIÉ AUX DEMANDES URGENTES -->
+    {% if urgences_liste %}
+    <div class="card-panel urgent-card-panel">
+        <div class="card-header-flex" style="border-bottom-color: rgba(186, 60, 42, 0.3);">
+            <h2 class="card-title" style="color: #BA3C2A;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Demandes Urgentes Prioritaires (À Traiter)
+            </h2>
+        </div>
 
-        <div class="table-responsive">
-            <table class="panier-table">
-                <thead>
-                    <tr style="background-color: #FCEAE8;">
-                        <th>Service</th>
-                        <th>Désignation de l'article</th>
-                        <th>Motif de l'urgence</th>
-                        <th>Stock Actuel</th>
-                        <th>Quantité accordée</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in urgences_liste %}
-                    <tr>
-                        <td><span class="badge-urgent-tag">{{ item.service }}</span></td>
-                        <td>
-                            <strong style="font-size: 1.02rem; color: #2C351C;">{{ item.produit.objet }}</strong><br>
-                            <span class="ref-code">{{ item.produit.reference }}</span>
-                        </td>
-                        <td><em style="color: #7A2417; font-weight: 600;">"{{ item.motif_urgence|default:"Non spécifié" }}"</em></td>
-                        <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
-                        
-                        <!-- **SAISIE DE QUANTITÉ DIRECTEMENT RELIÉE AU FORMULAIRE SANS BOUTON PARASITE** -->
-                        <td>
-                            <input type="number" 
-                                   id="input-qty-urg-{{ item.id }}" 
-                                   name="quantite_demandee" 
-                                   value="{{ item.quantite_demandee }}" 
-                                   min="1" 
-                                   max="{{ item.produit.quantite }}"
-                                   class="qty-input-edit" 
-                                   form="form-validate-urg-{{ item.id }}">
-                        </td>
-                        
-                        <td style="text-align: right;">
-                            <div style="display: inline-flex; gap: 8px;">
-                                <form id="form-validate-urg-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir valider la sortie URGENTE de cet article ?');" style="display: inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action_type" value="valider_item">
-                                    <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <button type="submit" class="btn-action-out" style="background-color: #BA3C2A;">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                                        Faire sortir
-                                    </button>
-                                </form>
+        <div class="table-responsive">
+            <table class="panier-table">
+                <thead>
+                    <tr style="background-color: #FCEAE8;">
+                        <th>Service</th>
+                        <th>Désignation de l'article</th>
+                        <th>Motif de l'urgence</th>
+                        <th>Stock Actuel</th>
+                        <th>Quantité accordée</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in urgences_liste %}
+                    <tr>
+                        <td><span class="badge-urgent-tag">{{ item.service }}</span></td>
+                        <td>
+                            <strong style="font-size: 1.02rem; color: #2C351C;">{{ item.produit.objet }}</strong><br>
+                            <span class="ref-code">{{ item.produit.reference }}</span>
+                        </td>
+                        <td><em style="color: #7A2417; font-weight: 600;">"{{ item.motif_urgence|default:"Non spécifié" }}"</em></td>
+                        <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
+                        
+                        <!-- **SAISIE DE QUANTITÉ DIRECTEMENT RELIÉE AU FORMULAIRE SANS BOUTON PARASITE** -->
+                        <td>
+                            <input type="number" 
+                                   id="input-qty-urg-{{ item.id }}" 
+                                   name="quantite_demandee" 
+                                   value="{{ item.quantite_demandee }}" 
+                                   min="1" 
+                                   max="{{ item.produit.quantite }}"
+                                   class="qty-input-edit" 
+                                   form="form-validate-urg-{{ item.id }}">
+                        </td>
+                        
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 8px;">
+                                <form id="form-validate-urg-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir valider la sortie URGENTE de cet article ?');" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="valider_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-action-out" style="background-color: #BA3C2A;">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                        Faire sortir
+                                    </button>
+                                </form>
 
-                                <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cette demande urgente ?');" style="display: inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action_type" value="refuser_item">
-                                    <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <button type="submit" class="btn-action-refuse">Refuser & Supprimer</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
+                                <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cette demande urgente ?');" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="refuser_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-action-refuse">Refuser & Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
 
-    <!-- 📦 COMMANDES STANDARDS GROUPÉES PAR SERVICE INTERNE -->
-    {% for service_nom, items in panier_par_service.items %}
-    <div class="card-panel">
-        <div class="card-header-flex">
-            <h2 class="card-title">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Commande du Service : <strong style="color: #5E6D3E; margin-left: 6px;">{{ service_nom }}</strong>
-            </h2>
-            
-            <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir tout valider pour le service {{ service_nom|escapejs }} ? Tous les articles ci-dessous feront sortir les quantités correspondantes du stock et seront enregistrés dans l\'historique.');">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="valider_livraison_service">
-                <input type="hidden" name="service" value="{{ service_nom }}">
-                <button type="submit" class="btn-submit-all">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Tout valider pour ce service
-                </button>
-            </form>
-        </div>
+    <!-- 📦 COMMANDES STANDARDS GROUPÉES PAR SERVICE INTERNE -->
+    {% for service_nom, items in panier_par_service.items %}
+    <div class="card-panel">
+        <div class="card-header-flex">
+            <h2 class="card-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Commande du Service : <strong style="color: #5E6D3E; margin-left: 6px;">{{ service_nom }}</strong>
+            </h2>
+            
+            <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir tout valider pour le service {{ service_nom|escapejs }} ? Tous les articles ci-dessous feront sortir les quantités correspondantes du stock et seront enregistrés dans l\'historique.');">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="valider_livraison_service">
+                <input type="hidden" name="service" value="{{ service_nom }}">
+                <button type="submit" class="btn-submit-all">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Tout valider pour ce service
+                </button>
+            </form>
+        </div>
 
-        <div class="table-responsive">
-            <table class="panier-table">
-                <thead>
-                    <tr>
-                        <th>Référence</th>
-                        <th>Désignation de l'article</th>
-                        <th>Emplacement</th>
-                        <th>Stock Actuel</th>
-                        <th>Quantité accordée</th>
-                        <th style="text-align: right;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in items %}
-                    <tr>
-                        <td><span class="ref-code">{{ item.produit.reference }}</span></td>
-                        <td><strong style="font-size: 1.02rem; color: #2C351C;">{{ item.produit.objet }}</strong></td>
-                        <td>{{ item.produit.emplacement|default:"Réserve Principale" }}</td>
-                        <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
-                        
-                        <!-- **CHAMP INTUITIF DÉLIVRANT LA QUANTITÉ DIRECTEMENT AU FORMULAIRE** -->
-                        <td>
-                            <input type="number" 
-                                   id="input-qty-{{ item.id }}" 
-                                   name="quantite_demandee" 
-                                   value="{{ item.quantite_demandee }}" 
-                                   min="1" 
-                                   max="{{ item.produit.quantite }}"
-                                   class="qty-input-edit" 
-                                   form="form-validate-{{ item.id }}">
-                        </td>
+        <div class="table-responsive">
+            <table class="panier-table">
+                <thead>
+                    <tr>
+                        <th>Référence</th>
+                        <th>Désignation de l'article</th>
+                        <th>Emplacement</th>
+                        <th>Stock Actuel</th>
+                        <th>Quantité accordée</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><span class="ref-code">{{ item.produit.reference }}</span></td>
+                        <td><strong style="font-size: 1.02rem; color: #2C351C;">{{ item.produit.objet }}</strong></td>
+                        <td>{{ item.produit.emplacement|default:"Réserve Principale" }}</td>
+                        <td><strong style="color:#5E6D3E; font-size: 1.05rem;">{{ item.produit.quantite }}</strong></td>
+                        
+                        <!-- **CHAMP INTUITIF DÉLIVRANT LA QUANTITÉ DIRECTEMENT AU FORMULAIRE** -->
+                        <td>
+                            <input type="number" 
+                                   id="input-qty-{{ item.id }}" 
+                                   name="quantite_demandee" 
+                                   value="{{ item.quantite_demandee }}" 
+                                   min="1" 
+                                   max="{{ item.produit.quantite }}"
+                                   class="qty-input-edit" 
+                                   form="form-validate-{{ item.id }}">
+                        </td>
 
-                        <td style="text-align: right;">
-                            <div style="display: inline-flex; gap: 8px;">
-                                <!-- **FORMULAIRE SOUROUMETANT DIRECTEMENT LA QUANTITÉ DU CHAMP SANS BOUTON AJUSTER** -->
-                                <form id="form-validate-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir faire sortir cet article du stock de l\'inventaire ?');" style="display: inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action_type" value="valider_item">
-                                    <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <button type="submit" class="btn-action-out">
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                        Faire sortir
-                                    </button>
-                                </form>
+                        <td style="text-align: right;">
+                            <div style="display: inline-flex; gap: 8px;">
+                                <!-- **FORMULAIRE SOUROUMETANT DIRECTEMENT LA QUANTITÉ DU CHAMP SANS BOUTON AJUSTER** -->
+                                <form id="form-validate-{{ item.id }}" method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir faire sortir cet article du stock de l\'inventaire ?');" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="valider_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-action-out">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Faire sortir
+                                    </button>
+                                </form>
 
-                                <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cet article ? Il sera retiré de la demande sans modifier le stock.');" style="display: inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="action_type" value="refuser_item">
-                                    <input type="hidden" name="item_id" value="{{ item.id }}">
-                                    <button type="submit" class="btn-action-refuse">Refuser & Supprimer</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% empty %}
-    {% if not urgences_liste %}
-    <div class="empty-state-card">
-        Le panier de commandes est actuellement vide.<br>
-        Aucun service n'a enregistré de demande de fournitures pour le moment.
-    </div>
-    {% endif %}
-    {% endfor %}
+                                <form method="POST" action="" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cet article ? Il sera retiré de la demande sans modifier le stock.');" style="display: inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action_type" value="refuser_item">
+                                    <input type="hidden" name="item_id" value="{{ item.id }}">
+                                    <button type="submit" class="btn-action-refuse">Refuser & Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% empty %}
+    {% if not urgences_liste %}
+    <div class="empty-state-card">
+        Le panier de commandes est actuellement vide.<br>
+        Aucun service n'a enregistré de demande de fournitures pour le moment.
+    </div>
+    {% endif %}
+    {% endfor %}
 </div>
 
 <script>
-    function toggleSidebar() {
-        const sidebar = document.getElementById('appSidebar');
-        const openBtn = document.getElementById('sidebarToggleOpen');
-        const mainContent = document.querySelector('.main-content');
-            
-        if (sidebar.style.transform === 'translateX(-290px)') {
-            sidebar.style.transform = 'translateX(0px)';
-            sidebar.style.opacity = '1';
-            openBtn.style.display = 'none';
-            if (mainContent) {
-                mainContent.style.marginLeft = '260px';
-                mainContent.style.paddingLeft = '40px';
-            }
-        } else {
-            sidebar.style.transform = 'translateX(-290px)';
-            sidebar.style.opacity = '0';
-            openBtn.style.display = 'flex';
-            if (mainContent) {
-                mainContent.style.marginLeft = '15px';
-                mainContent.style.paddingLeft = '65px';
-            }
-        }
-    }
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const openBtn = document.getElementById('sidebarToggleOpen');
+        const mainContent = document.querySelector('.main-content');
+            
+        if (sidebar.style.transform === 'translateX(-290px)') {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.opacity = '1';
+            openBtn.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.marginLeft = '290px';
+            }
+        } else {
+            sidebar.style.transform = 'translateX(-290px)';
+            sidebar.style.opacity = '0';
+            openBtn.style.display = 'flex';
+            if (mainContent) {
+                mainContent.style.marginLeft = '15px';
+            }
+        }
+    }
 </script>
 
 </body>
