@@ -39,6 +39,9 @@
         .btn-secondary-action { padding: 12px 20px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; }
         .btn-secondary-action:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
 
+        /* CARTE D'AJOUT RAPIDE D'UN BESOIN LIBRE */
+        .free-need-card { background: #ffffff; border: 1px solid #E2E6E1; border-radius: 20px; padding: 22px 26px; margin-bottom: 35px; box-shadow: 0 8px 25px rgba(73, 84, 48, 0.02); }
+
         /* CARTES DE FOURNISSEURS DYNAMIQUES */
         .supplier-card { background: #ffffff; border-radius: 24px; border: 1px solid #E2E6E1; padding: 28px 32px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); transition: transform 0.2s, box-shadow 0.2s; }
         .supplier-card:hover { box-shadow: 0 15px 35px rgba(73, 84, 48, 0.05); }
@@ -56,6 +59,7 @@
         .items-table tbody tr:hover { background-color: #F7FAF6; }
 
         .ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.85rem; font-weight: 700; color: #5E6D3E; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(94, 109, 62, 0.15); }
+        .free-tag { font-size: 0.75rem; font-weight: 800; background: #FFF4E5; color: #B7791F; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(183, 121, 31, 0.2); text-transform: uppercase; }
 
         .qty-controls { display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 4px 8px; border-radius: 10px; border: 1px solid #D0D6CE; width: fit-content; }
         .btn-qty-mini { width: 30px; height: 30px; border-radius: 8px; border: none; background: #FAFBF9; font-weight: 700; cursor: pointer; color: #2C351C; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
@@ -148,7 +152,7 @@
 <div class="main-content">
     <div class="page-header">
         <h1 class="page-title">Liste de courses (Administration)</h1>
-        <p class="welcome-text">Préparez vos commandes fournisseurs, gérez vos réapprovisionnements et géférez directement vos bons de commande.</p>
+        <p class="welcome-text">Préparez vos commandes fournisseurs, gérez vos réapprovisionnements et pilotez directement vos bons de commande.</p>
     </div>
 
     <!-- BARRE DE PILOTAGE SUPÉRIEURE -->
@@ -176,11 +180,42 @@
         </div>
     </div>
 
+    <!-- ✍️ CARTE D'AJOUT D'UN BESOIN LIBRE (SAISIE MANUELLE) -->
+    <div class="free-need-card">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: #2C351C; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            Ajouter un besoin personnalisé (Saisie libre)
+        </h3>
+        
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+            <div style="flex-grow: 2; min-width: 240px;">
+                <label style="font-size: 0.75rem; color: #7A8278; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; display: block;">Désignation / Besoin *</label>
+                <input type="text" id="freeNom" class="catalog-search" placeholder="Ex: Café capsules, Produits d'entretien spécifiques..." style="margin-bottom: 0;">
+            </div>
+
+            <div style="width: 150px;">
+                <label style="font-size: 0.75rem; color: #7A8278; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; display: block;">Fournisseur</label>
+                <input type="text" id="freeFournisseur" class="catalog-search" value="Divers" placeholder="Ex: Le Voltigeur..." style="margin-bottom: 0;">
+            </div>
+
+            <div style="width: 100px;">
+                <label style="font-size: 0.75rem; color: #7A8278; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; display: block;">Quantité</label>
+                <input type="number" id="freeQty" value="1" min="1" class="catalog-search" style="margin-bottom: 0; text-align: center; font-weight: 700;">
+            </div>
+
+            <div>
+                <button type="button" class="btn-add-item" style="height: 48px;" onclick="ajouterBesoinLibre()">
+                    Ajouter à la liste
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- CONTENEUR DES LISTES PAR FOURNISSEUR -->
     <div id="supplierSectionsContainer">
         <div class="empty-state-box" id="emptyCourseMsg">
             Votre liste de courses est actuellement vide.<br>
-            Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
+            Utilisez la saisie libre ci-dessus ou cliquez sur <strong>"Importer les alertes"</strong> pour commencer.
         </div>
     </div>
 </div>
@@ -329,6 +364,40 @@
         closeModal('catalogModal');
     }
 
+    // ✍️ AJOUT D'UN BESOIN LIBRE (SAISIE MANUELLE)
+    function ajouterBesoinLibre() {
+        let nomInput = document.getElementById('freeNom');
+        let fournInput = document.getElementById('freeFournisseur');
+        let qtyInput = document.getElementById('freeQty');
+
+        let nom = nomInput.value.trim();
+        let fournisseur = fournInput.value.trim() || 'Divers';
+        let qty = parseInt(qtyInput.value) || 1;
+
+        if (!nom) {
+            alert("Veuillez renseigner la désignation du besoin.");
+            nomInput.focus();
+            return;
+        }
+
+        // Génération d'un ID unique textuel pour le besoin libre
+        let idLibre = 'libre_' + Date.now();
+
+        listeCourse[idLibre] = {
+            id: idLibre,
+            ref: 'LIBRE',
+            nom: nom,
+            fournisseur: fournisseur,
+            prix: 0,
+            qty: qty,
+            estLibre: true
+        };
+
+        nomInput.value = '';
+        qtyInput.value = '1';
+        sauvegarderCourse();
+    }
+
     function modifierQty(id, delta) {
         if (!listeCourse[id]) return;
         let newQty = listeCourse[id].qty + delta;
@@ -367,7 +436,7 @@
             container.innerHTML = `
                 <div class="empty-state-box" id="emptyCourseMsg">
                     Votre liste de courses est actuellement vide.<br>
-                    Cliquez sur <strong>"Importer les alertes"</strong> ou <strong>"Ajouter un produit"</strong> pour commencer.
+                    Utilisez la saisie libre ci-dessus ou cliquez sur <strong>"Importer les alertes"</strong> pour commencer.
                 </div>`;
             document.getElementById('lblGrandTotal').textContent = '0,00 €';
             return;
@@ -393,9 +462,11 @@
                 let totalLigne = item.prix * item.qty;
                 sousTotal += totalLigne;
 
+                let refHtml = item.estLibre ? '<span class="free-tag">Besoin libre</span>' : `<span class="ref-code">${item.ref}</span>`;
+
                 rowsHtml += `
                     <tr>
-                        <td><span class="ref-code">${item.ref}</span></td>
+                        <td>${refHtml}</td>
                         <td><strong>${item.nom}</strong></td>
                         <td>${item.prix > 0 ? item.prix.toFixed(2) + ' €' : '<span style="color:#7A8278;">N/C</span>'}</td>
                         <td>
