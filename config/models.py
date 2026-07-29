@@ -173,3 +173,18 @@ class ArticlePanier(models.Model):
         return (
             f"{self.service} - {self.produit.objet} ({self.quantite_demandee})"
         )
+
+
+class ArticleListeCourses(models.Model):
+    produit = models.ForeignKey(
+        Produit, on_delete=models.CASCADE, null=True, blank=True
+    )
+    nom_personnalise = models.CharField(max_length=200, blank=True, null=True)
+    quantite = models.IntegerField(default=1)
+    statut = models.CharField(max_length=20, default='a_acheter')
+    date_ajout = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.nom_personnalise or (
+            self.produit.objet if self.produit else 'Article'
+        )
