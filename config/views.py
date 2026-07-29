@@ -738,7 +738,6 @@ def verifier_et_envoyer_alerte_papier(produit):
             )
         except Exception as e:
             print(f"Erreur lors de l'envoi du mail d'alerte : {e}")
-
 def page_gestion_stocks(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
@@ -835,30 +834,28 @@ def page_gestion_stocks(request):
                 quota_minimum=int(request.POST.get('quota_minimum', 10)),
                 fournisseur=fournisseur_final,
                 prix=prix_valeur,
-                derniere_activite=timezone.now(),
             )
 
-            num_cmd = request.POST.get('numero_commande', '').strip() or None
-
             if quantite_initiale > 0:
-                MouvementStock.objects.create(
-                    type_mouvement='ENTREE',
-                    objet=objet_nom,
-                    produit=nouveau_produit,
-                    quantite=quantite_initiale,
-                    service='Administration',
-                    numero_commande=num_cmd,
-                    date_mouvement=timezone.now(),
-                )
+                try:
+                    MouvementStock.objects.create(
+                        type_mouvement='ENTREE',
+                        objet=objet_nom,
+                        produit=nouveau_produit,
+                        quantite=quantite_initiale,
+                        service='Administration',
+                        date_mouvement=timezone.now(),
+                    )
+                except Exception:
+                    pass
 
-            messages.success(request, f"Nouveau produit '{objet_nom}' ajouté à l'inventaire.")
+            messages.success(request, f"Nouveau produit '{objet_nom}' ajouté à l'inventaire avec succès.")
             return redirect('/gestion-stocks/')
 
         # 2. MOUVEMENT D'ENTRÉE
         elif action_type == 'mouvement_entree':
             ref_produit = request.POST.get('produit')
             quantite_ajoutee = int(request.POST.get('quantite', 0))
-            num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             try:
                 if str(ref_produit).isdigit():
@@ -867,7 +864,6 @@ def page_gestion_stocks(request):
                     produit = Produit.objects.get(reference=ref_produit)
 
                 produit.quantite += quantite_ajoutee
-                produit.derniere_activite = timezone.now()
                 produit.save()
 
                 date_entree_str = request.POST.get('date_entree')
@@ -886,7 +882,6 @@ def page_gestion_stocks(request):
                     produit=produit,
                     quantite=quantite_ajoutee,
                     service='Administration',
-                    numero_commande=num_cmd,
                     date_mouvement=dt_mvt,
                 )
                 messages.success(request, f"Entrée de {quantite_ajoutee} unit. enregistrée pour '{produit.objet}'.")
@@ -917,7 +912,6 @@ def page_gestion_stocks(request):
                     return redirect('/gestion-stocks/')
 
                 produit.quantite -= quantite_retiree
-                produit.derniere_activite = timezone.now()
                 produit.save()
 
                 date_sortie_str = request.POST.get('date_sortie')
