@@ -114,7 +114,7 @@ def page_accueil(request):
     liste_des_services = [
         'Consulaire',
         'Secrétaire',
-        'Secrétaire AMB',
+        'Assistant(e) AMB',
         '1ère Secrétaire',
         '2ème Secrétaire',
         'Diplomate',
@@ -139,7 +139,7 @@ def page_accueil(request):
         statut='en_attente',
         reponse=None,
         date_validation=None,
-        force_valide_par_admin=False
+        force_valide_par_admin=False,
     )
 
     est_periode_relance = (
@@ -205,18 +205,19 @@ def page_accueil(request):
         jour == 4 and heure < 12
     )) and len(services_retardataires) > 0
 
+    # NOUVEAUX ARRIVAGES ACTUALISÉS EN TEMPS RÉEL (Basé sur les produits)
     nouveaux_arrivages = []
     try:
-        mouvements_entrees = MouvementStock.objects.filter(
-            type_mouvement='ENTREE'
-        ).order_by('-id')[:10]
+        derniers_produits = Produit.objects.all().order_by('-id')[:10]
+        for prod in derniers_produits:
+            dernier_mvt = MouvementStock.objects.filter(
+                produit=prod, type_mouvement='ENTREE'
+            ).order_by('-date_mouvement', '-id').first()
 
-        for mvt in mouvements_entrees:
-            autres_entrees = MouvementStock.objects.filter(
-                produit=mvt.produit, type_mouvement='ENTREE', id__lt=mvt.id
-            ).exists()
-            mvt.est_nouveau = not autres_entrees
-            nouveaux_arrivages.append(mvt)
+            prod.quantite_recue = dernier_mvt.quantite if dernier_mvt else prod.quantite
+            prod.date_mouvement = dernier_mvt.date_mouvement if dernier_mvt else None
+            prod.est_nouveau = True
+            nouveaux_arrivages.append(prod)
     except (ProgrammingError, OperationalError):
         nouveaux_arrivages = []
 
@@ -254,7 +255,6 @@ def page_accueil(request):
             'alertes_admin_recidive': [],
         },
     )
-
 def page_inventaire(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
