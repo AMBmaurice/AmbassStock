@@ -899,49 +899,82 @@ def page_gestion_stocks(request):
             return redirect('/gestion-stocks/')
 
         elif action_type == 'sortie':
-            ref_produit = request.POST.get('produit')
-            quantite_retiree = int(request.POST.get('quantite', 0))
-            service_demandeur = request.POST.get('service') or 'Administration'
+    ref_produit = request.POST.get('produit')
+    quantite_retiree = int(request.POST.get('quantite', 0))
+    service_demandeur = request.POST.get('service') or 'Administration'
 
-            try:
-                if str(ref_produit).isdigit():
-                    produit = Produit.objects.get(id=int(ref_produit))
-                else:
-                    produit = Produit.objects.get(reference=ref_produit)
+    print("\n==========================")
+    print("=== DÉBUT SORTIE STOCK ===")
+    print("==========================")
+    print(f"Produit reçu : {ref_produit}")
+    print(f"Quantité : {quantite_retiree}")
+    print(f"Service : {service_demandeur}")
 
-                if produit.quantite < quantite_retiree:
-                    messages.error(request, 'Stock insuffisant.')
-                    return redirect('/gestion-stocks/')
+    try:
+        if str(ref_produit).isdigit():
+            produit = Produit.objects.get(id=int(ref_produit))
+        else:
+            produit = Produit.objects.get(reference=ref_produit)
 
-                produit.quantite = max(0, produit.quantite - quantite_retiree)
-                produit.save()
+        print(f"Produit trouvé : {produit.objet}")
+        print(f"Stock actuel : {produit.quantite}")
 
-                date_sortie_str = request.POST.get('date_sortie')
-                if date_sortie_str:
-                    try:
-                        dt = datetime.strptime(date_sortie_str, '%Y-%m-%d')
-                        dt_mvt = timezone.make_aware(datetime.combine(dt.date(), datetime.now().time()))
-                    except Exception:
-                        dt_mvt = timezone.now()
-                else:
-                    dt_mvt = timezone.now()
-
-                MouvementStock.objects.create(
-                    type_mouvement='SORTIE',
-                    objet=produit.objet,
-                    produit=produit,
-                    quantite=quantite_retiree,
-                    service=service_demandeur,
-                    date_mouvement=dt_mvt,
-                )
-
-                messages.success(request, f'Quantité retirée avec succès pour le service {service_demandeur}.')
-            except Produit.DoesNotExist:
-                messages.error(request, 'Produit introuvable.')
-            except Exception as e:
-                messages.error(request, f"Erreur enregistrement sortie : {e}")
-
+        if produit.quantite < quantite_retiree:
+            print("ERREUR : Stock insuffisant")
+            messages.error(request, 'Stock insuffisant.')
             return redirect('/gestion-stocks/')
+
+        produit.quantite = max(0, produit.quantite - quantite_retiree)
+        produit.save()
+
+        print(f"Nouveau stock : {produit.quantite}")
+
+        date_sortie_str = request.POST.get('date_sortie')
+        if date_sortie_str:
+            try:
+                dt = datetime.strptime(date_sortie_str, '%Y-%m-%d')
+                dt_mvt = timezone.make_aware(
+                    datetime.combine(dt.date(), datetime.now().time())
+                )
+            except Exception:
+                dt_mvt = timezone.now()
+        else:
+            dt_mvt = timezone.now()
+
+        print("Création du mouvement...")
+
+        mouvement = MouvementStock.objects.create(
+            type_mouvement='SORTIE',
+            objet=produit.objet,
+            produit=produit,
+            quantite=quantite_retiree,
+            service=service_demandeur,
+            date_mouvement=dt_mvt,
+        )
+
+        print("Mouvement créé")
+        print(f"ID du mouvement : {mouvement.id}")
+        print("==========================\n")
+
+        messages.success(
+            request,
+            f'Quantité retirée avec succès pour le service {service_demandeur}.'
+        )
+
+    except Produit.DoesNotExist:
+        print("ERREUR : Produit introuvable")
+        messages.error(request, 'Produit introuvable.')
+
+    except Exception as e:
+        import traceback
+
+        print("\n########## ERREUR ##########")
+        traceback.print_exc()
+        print("############################\n")
+
+        messages.error(request, f"Erreur enregistrement sortie : {e}")
+
+    return redirect('/gestion-stocks/')
 
         elif action_type == 'archivage_produit':
             ref_produit = request.POST.get('produit_a_archiver')
