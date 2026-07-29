@@ -2062,22 +2062,3 @@ def page_rattrapage_historique(request):
     return HttpResponse(
         f"<b>Rattrapage terminé avec succès !</b> {compteur} mouvements d'entrée ont été créés dans l'historique."
     )
-
-@login_required(login_url='/connexion/')
-def migrer_nom_service(request):
-    if not request.user.is_superuser:
-        return HttpResponse("Accès réservé à l'administrateur.", status=403)
-
-    # Remplacement direct dans toutes les tables concernées
-    nb_dec = DeclarationHebdomadaire.objects.filter(service='Secrétaire AMB').update(service='Assistant(e) AMB')
-    nb_mvt = MouvementStock.objects.filter(service='Secrétaire AMB').update(service='Assistant(e) AMB')
-    nb_pan = ArticlePanier.objects.filter(service='Secrétaire AMB').update(service='Assistant(e) AMB')
-    nb_dem = DemandeService.objects.filter(service='Secrétaire AMB').update(service='Assistant(e) AMB')
-
-    return HttpResponse(
-        f"<b>Migration réussie !</b><br>"
-        f"- Déclarations modifiées : {nb_dec}<br>"
-        f"- Mouvements de stock modifiés : {nb_mvt}<br>"
-        f"- Paniers modifiés : {nb_pan}<br>"
-        f"- Demandes modifiées : {nb_dem}"
-    )
