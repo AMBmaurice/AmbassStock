@@ -760,11 +760,16 @@ def page_gestion_stocks(request):
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
 
+        # 1. CRÉATION D'UN PRODUIT
         if action_type in ['creation', 'creation_produit']:
             categorie_nom = request.POST.get('categorie', '').strip()
             objet_nom = (
                 request.POST.get('objet') or request.POST.get('nom') or ''
             ).strip()
+
+            if not objet_nom:
+                messages.error(request, "Veuillez renseigner un nom de produit.")
+                return redirect('/gestion-stocks/')
 
             match = re.search(r'\((.*?)\)', categorie_nom)
             if match:
@@ -800,6 +805,14 @@ def page_gestion_stocks(request):
             code_spec = extraire_trigramme(spec_brute)
 
             reference_finale = f'{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}'
+            
+            # Garantir l'unicité de la référence
+            i = 1
+            while Produit.objects.filter(reference=reference_finale).exists():
+                suffixe_numerique = f'{prochain_numero + i:02d}'
+                reference_finale = f'{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}'
+                i += 1
+
             quantite_initiale = int(
                 request.POST.get('quantite') or request.POST.get('quantite_initiale') or 0
             )
@@ -820,18 +833,18 @@ def page_gestion_stocks(request):
                 except ValueError:
                     prix_valeur = None
 
-            donnees_creation = {
-                'reference': reference_finale,
-                'objet': objet_nom,
-                'categorie': categorie_nom,
-                'emplacement': request.POST.get('emplacement') or 'Réserve',
-                'quantite': quantite_initiale,
-                'quota_minimum': int(request.POST.get('quota_minimum', 10)),
-                'fournisseur': fournisseur_final,
-                'prix': prix_valeur,
-            }
+            nouveau_produit = Produit.objects.create(
+                reference=reference_finale,
+                objet=objet_nom,
+                categorie=categorie_nom,
+                emplacement=request.POST.get('emplacement') or 'Réserve',
+                quantite=quantite_initiale,
+                quota_minimum=int(request.POST.get('quota_minimum', 10)),
+                fournisseur=fournisseur_final,
+                prix=prix_valeur,
+                derniere_activite=timezone.now(),
+            )
 
-            nouveau_produit = Produit.objects.create(**donnees_creation)
             num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             if quantite_initiale > 0:
@@ -845,23 +858,25 @@ def page_gestion_stocks(request):
                     date_mouvement=timezone.now(),
                 )
 
-            messages.success(request, "Nouveau produit ajouté à l'inventaire")
+            messages.success(request, f"Nouveau produit '{objet_nom}' ajouté à l'inventaire.")
             return redirect('/gestion-stocks/')
 
+        # 2. MOUVEMENT D'ENTRÉE
         elif action_type == 'mouvement_entree':
             ref_produit = request.POST.get('produit')
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             num_cmd = request.POST.get('numero_commande', '').strip() or None
 
             try:
+                # Recherche flexible par ID ou par Référence
                 if str(ref_produit).isdigit():
                     produit = Produit.objects.get(id=int(ref_produit))
                 else:
                     produit = Produit.objects.get(reference=ref_produit)
 
-                produit.quantite = F('quantite') + quantite_ajoutee
-                produit.save(update_fields=['quantite'])
-                produit.refresh_from_db()
+                produit.quantite += quantite_ajoutee
+                produit.derniere_activite = timezone.now()
+                produit.save()
 
                 date_entree_str = request.POST.get('date_entree')
                 if date_entree_str:
@@ -882,30 +897,36 @@ def page_gestion_stocks(request):
                     numero_commande=num_cmd,
                     date_mouvement=dt_mvt,
                 )
-                messages.success(request, 'Quantité ajoutée avec succès')
+                messages.success(request, f"Entrée de {quantite_ajoutee} unit. enregistrée pour '{produit.objet}'.")
             except Produit.DoesNotExist:
-                messages.error(request, 'Produit introuvable.')
+                messages.error(request, "Erreur : Produit introuvable dans la base.")
             except Exception as e:
-                messages.error(request, f"Erreur lors de l'enregistrement : {e}")
+                messages.error(request, f"Erreur lors de l'enregistrement de l'entrée : {e}")
 
             return redirect('/gestion-stocks/')
 
+        # 3. MOUVEMENT DE SORTIE
         elif action_type == 'sortie':
             ref_produit = request.POST.get('produit')
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = request.POST.get('service') or 'Administration'
 
             try:
+                # Recherche flexible par ID ou par Référence
                 if str(ref_produit).isdigit():
                     produit = Produit.objects.get(id=int(ref_produit))
                 else:
                     produit = Produit.objects.get(reference=ref_produit)
 
                 if produit.quantite < quantite_retiree:
-                    messages.error(request, 'Stock insuffisant.')
+                    messages.error(
+                        request,
+                        f"Stock insuffisant pour '{produit.objet}' (Disponible : {produit.quantite}, Demande : {quantite_retiree})."
+                    )
                     return redirect('/gestion-stocks/')
 
-                produit.quantite = max(0, produit.quantite - quantite_retiree)
+                produit.quantite -= quantite_retiree
+                produit.derniere_activite = timezone.now()
                 produit.save()
 
                 date_sortie_str = request.POST.get('date_sortie')
@@ -927,14 +948,15 @@ def page_gestion_stocks(request):
                     date_mouvement=dt_mvt,
                 )
 
-                messages.success(request, f'Quantité retirée avec succès pour le service {service_demandeur}.')
+                messages.success(request, f"Sortie de {quantite_retiree} unit. de '{produit.objet}' pour le service {service_demandeur}.")
             except Produit.DoesNotExist:
-                messages.error(request, 'Produit introuvable.')
+                messages.error(request, "Erreur : Produit introuvable dans la base.")
             except Exception as e:
-                messages.error(request, f"Erreur enregistrement sortie : {e}")
+                messages.error(request, f"Erreur lors de la sortie : {e}")
 
             return redirect('/gestion-stocks/')
 
+        # 4. ARCHIVAGE / SUPPRESSION
         elif action_type == 'archivage_produit':
             ref_produit = request.POST.get('produit_a_archiver')
             try:
@@ -942,10 +964,14 @@ def page_gestion_stocks(request):
                     produit = Produit.objects.get(id=int(ref_produit))
                 else:
                     produit = Produit.objects.get(reference=ref_produit)
+                nom_objet = produit.objet
                 produit.delete()
-                messages.success(request, "Produit supprimé de l'inventaire")
+                messages.success(request, f"Produit '{nom_objet}' supprimé de l'inventaire.")
             except Produit.DoesNotExist:
-                pass
+                messages.error(request, "Produit introuvable pour la suppression.")
+            except Exception as e:
+                messages.error(request, f"Erreur lors de la suppression : {e}")
+
             return redirect('/gestion-stocks/')
 
     fournisseurs_existants = (
