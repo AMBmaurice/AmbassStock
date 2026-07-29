@@ -1,846 +1,844 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AmbassStock - Mouvements & Création</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
-        
-        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
-        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
-        .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 4px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Mouvements & Création</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
+        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; padding-top: 25px; z-index: 998; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
+        .sidebar-menu { list-style: none; padding: 0 15px; }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
+        .main-content { margin-left: 290px; flex-grow: 1; padding: 40px; width: calc(100% - 290px); transition: all 0.4s ease; position: relative; }
 
-        /* EN-TÊTE DE PAGE */
-        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
-        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
-        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
+        /* EN-TÊTE DE PAGE */
+        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 850px; }
 
-        /* CONTENEURS GLASSMORPHIC */
-        .form-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 28px; padding: 36px 40px; width: 100%; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .form-container-box:hover { box-shadow: 0 18px 40px rgba(73, 84, 48, 0.06); }
+        /* CONTENEURS GLASSMORPHIC */
+        .form-container-box { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 28px; padding: 36px 40px; width: 100%; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 35px; transition: transform 0.25s ease, box-shadow 0.25s ease; }
+        .form-container-box:hover { box-shadow: 0 18px 40px rgba(73, 84, 48, 0.06); }
 
-        .section-title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #ECEFEA; padding-bottom: 18px; }
-        .section-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; display: flex; align-items: center; gap: 12px; }
+        .section-title-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #ECEFEA; padding-bottom: 18px; }
+        .section-title { font-size: 1.35rem; font-weight: 800; color: #2C351C; display: flex; align-items: center; gap: 12px; }
 
-        /* BOUTONS D'ACTION HAUT DE GAMME */
-        .btn-primary-highlight { padding: 12px 24px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.22); }
-        .btn-primary-highlight:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
+        /* BOUTONS D'ACTION HAUT DE GAMME */
+        .btn-primary-highlight { padding: 12px 24px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.22); }
+        .btn-primary-highlight:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
 
-        .btn-danger-highlight { padding: 12px 24px; background-color: #BA3C2A; color: #ffffff; border: none; border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(186, 60, 42, 0.22); }
-        .btn-danger-highlight:hover { background-color: #962F20; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(186, 60, 42, 0.3); }
+        .btn-danger-highlight { padding: 12px 24px; background-color: #BA3C2A; color: #ffffff; border: none; border-radius: 14px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(186, 60, 42, 0.22); }
+        .btn-danger-highlight:hover { background-color: #962F20; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(186, 60, 42, 0.3); }
 
-        /* FORMULAIRES & INPUTS */
-        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; position: relative; }
-        .form-label { font-size: 0.78rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; }
-        .form-hint { font-size: 0.8rem; color: #7A8278; font-weight: 500; margin-top: -2px; }
+        /* FORMULAIRES & INPUTS */
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; position: relative; }
+        .form-label { font-size: 0.78rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; }
+        .form-hint { font-size: 0.8rem; color: #7A8278; font-weight: 500; margin-top: -2px; }
 
-        .form-input { width: 100%; height: 48px; padding: 0 18px; border: 1px solid #D0D6CE; border-radius: 14px; font-size: 0.95rem; color: #2C351C; background-color: #FAFBF9; outline: none; font-weight: 500; transition: all 0.2s ease; }
-        .form-input:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
-        .form-input-disabled { background-color: #F1F3F0; color: #7A8278; cursor: not-allowed; font-weight: 700; border-color: #E2E6E1; }
+        .form-input { width: 100%; height: 48px; padding: 0 18px; border: 1px solid #D0D6CE; border-radius: 14px; font-size: 0.95rem; color: #2C351C; background-color: #FAFBF9; outline: none; font-weight: 500; transition: all 0.2s ease; }
+        .form-input:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+        .form-input-disabled { background-color: #F1F3F0; color: #7A8278; cursor: not-allowed; font-weight: 700; border-color: #E2E6E1; }
 
-        /* 👑 MENUS DÉROULANTS LUXE (CUSTOM SELECT ENGINE) */
-        select.form-select, select.select-custom { display: none !important; }
+        /* 👑 MENUS DÉROULANTS LUXE (CUSTOM SELECT ENGINE) */
+        select.form-select, select.select-custom { display: none !important; }
 
-        .custom-select-wrapper { position: relative; width: 100%; user-select: none; }
-        .custom-select-trigger {
-            height: 48px;
-            padding: 0 18px;
-            border: 1px solid #D0D6CE;
-            border-radius: 14px;
-            font-size: 0.95rem;
-            color: #2C351C;
-            background-color: #FAFBF9;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.25s ease;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-        }
-        .custom-select-trigger:hover { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.12); }
-        .custom-select-wrapper.open .custom-select-trigger { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.12); }
+        .custom-select-wrapper { position: relative; width: 100%; user-select: none; }
+        .custom-select-trigger {
+            height: 48px;
+            padding: 0 18px;
+            border: 1px solid #D0D6CE;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            color: #2C351C;
+            background-color: #FAFBF9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .custom-select-trigger:hover { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.12); }
+        .custom-select-wrapper.open .custom-select-trigger { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.12); }
 
-        .custom-select-arrow { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); stroke: #5E6D3E; flex-shrink: 0; }
-        .custom-select-wrapper.open .custom-select-arrow { transform: rotate(180deg); }
+        .custom-select-arrow { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); stroke: #5E6D3E; flex-shrink: 0; }
+        .custom-select-wrapper.open .custom-select-arrow { transform: rotate(180deg); }
 
-        .custom-select-menu {
-            display: none;
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            right: 0;
-            background: #ffffff;
-            border: 1px solid #E2E6E1;
-            border-radius: 18px;
-            padding: 8px;
-            z-index: 500;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(94, 109, 62, 0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            max-height: 280px;
-            overflow-y: auto;
-            animation: dropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes dropdownFade { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .custom-select-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #E2E6E1;
+            border-radius: 18px;
+            padding: 8px;
+            z-index: 500;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(94, 109, 62, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            max-height: 280px;
+            overflow-y: auto;
+            animation: dropdownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes dropdownFade { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-        .custom-select-option {
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 0.92rem;
-            font-weight: 600;
-            color: #2C351C;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.15s ease;
-        }
-        .custom-select-option:hover { background-color: #EBF2E9; color: #5E6D3E; }
-        .custom-select-option.selected { background-color: #5E6D3E; color: #ffffff; }
+        .custom-select-option {
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #2C351C;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.15s ease;
+        }
+        .custom-select-option:hover { background-color: #EBF2E9; color: #5E6D3E; }
+        .custom-select-option.selected { background-color: #5E6D3E; color: #ffffff; }
 
-        /* SEARCHABLE INPUTS AVEC POPUP DROPDOWN */
-        .search-select-input { width: 100%; height: 48px; padding: 0 18px; border: 1px solid #D0D6CE; border-radius: 14px; font-size: 0.95rem; color: #2C351C; background-color: #FAFBF9; outline: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .search-select-input:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+        /* SEARCHABLE INPUTS AVEC POPUP DROPDOWN */
+        .search-select-input { width: 100%; height: 48px; padding: 0 18px; border: 1px solid #D0D6CE; border-radius: 14px; font-size: 0.95rem; color: #2C351C; background-color: #FAFBF9; outline: none; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .search-select-input:focus { border-color: #5E6D3E; background-color: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
 
-        .select-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #ffffff; border: 1px solid #E2E6E1; border-radius: 18px; max-height: 240px; overflow-y: auto; z-index: 500; box-shadow: 0 20px 40px rgba(0,0,0,0.12); padding: 8px; }
-        .select-option { padding: 12px 16px; cursor: pointer; border-radius: 12px; font-size: 0.92rem; font-weight: 600; transition: all 0.15s; color: #2C351C; display: flex; justify-content: space-between; align-items: center; }
-        .select-option:hover { background-color: #EBF2E9; color: #5E6D3E; }
-        .option-ref { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.8rem; color: #5E6D3E; font-weight: 700; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(94, 109, 62, 0.15); }
+        .select-dropdown { display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #ffffff; border: 1px solid #E2E6E1; border-radius: 18px; max-height: 240px; overflow-y: auto; z-index: 500; box-shadow: 0 20px 40px rgba(0,0,0,0.12); padding: 8px; }
+        .select-option { padding: 12px 16px; cursor: pointer; border-radius: 12px; font-size: 0.92rem; font-weight: 600; transition: all 0.15s; color: #2C351C; display: flex; justify-content: space-between; align-items: center; }
+        .select-option:hover { background-color: #EBF2E9; color: #5E6D3E; }
+        .option-ref { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.8rem; color: #5E6D3E; font-weight: 700; background: #EBF2E9; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(94, 109, 62, 0.15); }
 
-        /* BOUTONS DE SOUMISSION */
-        .btn-submit { width: 100%; height: 50px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 14px; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.22); display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-submit:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
+        /* BOUTONS DE SOUMISSION */
+        .btn-submit { width: 100%; height: 50px; background-color: #5E6D3E; color: #ffffff; border: none; border-radius: 14px; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.22); display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-submit:hover { background-color: #495430; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(73, 84, 48, 0.3); }
 
-        .btn-submit-output { background-color: #BA3C2A; box-shadow: 0 4px 15px rgba(186, 60, 42, 0.22); }
-        .btn-submit-output:hover { background-color: #962F20; box-shadow: 0 6px 20px rgba(186, 60, 42, 0.3); }
+        .btn-submit-output { background-color: #BA3C2A; box-shadow: 0 4px 15px rgba(186, 60, 42, 0.22); }
+        .btn-submit-output:hover { background-color: #962F20; box-shadow: 0 6px 20px rgba(186, 60, 42, 0.3); }
 
-        /* BOÎTES DE PRÉDICTION PRÉVISIONNELLE */
-        .prediction-box { background-color: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 18px; padding: 18px 22px; margin-bottom: 22px; display: none; }
-        .prediction-box-output { background-color: #FFFBFB; border-color: rgba(186, 60, 42, 0.25); }
-        .prediction-text { color: #5E6D3E; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        .prediction-text-output { color: #BA3C2A; }
-        .prediction-highlight { font-weight: 800; color: #2C351C; background-color: #EBF2E9; padding: 2px 8px; border-radius: 6px; }
-        .prediction-highlight-output { color: #BA3C2A; background-color: #FCEAE8; }
+        /* BOÎTES DE PRÉDICTION PRÉVISIONNELLE */
+        .prediction-box { background-color: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 18px; padding: 18px 22px; margin-bottom: 22px; display: none; }
+        .prediction-box-output { background-color: #FFFBFB; border-color: rgba(186, 60, 42, 0.25); }
+        .prediction-text { color: #5E6D3E; font-size: 0.95rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .prediction-text-output { color: #BA3C2A; }
+        .prediction-highlight { font-weight: 800; color: #2C351C; background-color: #EBF2E9; padding: 2px 8px; border-radius: 6px; }
+        .prediction-highlight-output { color: #BA3C2A; background-color: #FCEAE8; }
 
-        .alert-success { background-color: #EBF9EE; border: 1px solid #C2EED0; color: #1E7E34; padding: 16px 20px; border-radius: 14px; margin-bottom: 25px; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03); }
+        .alert-success { background-color: #EBF9EE; border: 1px solid #C2EED0; color: #1E7E34; padding: 16px 20px; border-radius: 14px; margin-bottom: 25px; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(30,126,52,0.03); }
 
-        /* MODALES UNIFIÉES GLASSMORPHISM */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(44, 53, 28, 0.55); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 20px; }
-        .modal-card { background-color: #ffffff; border-radius: 28px; width: 100%; max-width: 720px; padding: 40px; box-shadow: 0 25px 60px rgba(0,0,0,0.22); border: 1px solid #E2E6E1; animation: scaleUp 0.25s ease-out; max-height: 88vh; overflow-y: auto; }
+        /* MODALES UNIFIÉES GLASSMORPHISM */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(44, 53, 28, 0.55); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 20px; }
+        .modal-card { background-color: #ffffff; border-radius: 28px; width: 100%; max-width: 720px; padding: 40px; box-shadow: 0 25px 60px rgba(0,0,0,0.22); border: 1px solid #E2E6E1; animation: scaleUp 0.25s ease-out; max-height: 88vh; overflow-y: auto; }
 
-        /* 🎴 VIRTUAL PRODUCT CARD INÉDITE (LIVE CREATION PREVIEW) */
-        .live-preview-container {
-            background: linear-gradient(135deg, #FAFBF9 0%, #EBF2E9 100%);
-            border: 1px solid rgba(94, 109, 62, 0.25);
-            border-radius: 22px;
-            padding: 24px;
-            margin-bottom: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 8px 20px rgba(73, 84, 48, 0.05);
-        }
-        .live-preview-header { display: flex; justify-content: space-between; align-items: center; }
-        .live-preview-badge { font-size: 0.72rem; font-weight: 800; color: #5E6D3E; text-transform: uppercase; letter-spacing: 1px; }
-        .live-preview-ref { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 1rem; font-weight: 800; color: #ffffff; background: #5E6D3E; padding: 4px 12px; border-radius: 8px; box-shadow: 0 2px 8px rgba(94, 109, 62, 0.25); }
+        /* 🎴 VIRTUAL PRODUCT CARD INÉDITE (LIVE CREATION PREVIEW) */
+        .live-preview-container {
+            background: linear-gradient(135deg, #FAFBF9 0%, #EBF2E9 100%);
+            border: 1px solid rgba(94, 109, 62, 0.25);
+            border-radius: 22px;
+            padding: 24px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(73, 84, 48, 0.05);
+        }
+        .live-preview-header { display: flex; justify-content: space-between; align-items: center; }
+        .live-preview-badge { font-size: 0.72rem; font-weight: 800; color: #5E6D3E; text-transform: uppercase; letter-spacing: 1px; }
+        .live-preview-ref { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 1rem; font-weight: 800; color: #ffffff; background: #5E6D3E; padding: 4px 12px; border-radius: 8px; box-shadow: 0 2px 8px rgba(94, 109, 62, 0.25); }
 
-        .live-preview-title { font-size: 1.4rem; font-weight: 800; color: #2C351C; line-height: 1.2; }
-        .live-preview-details { display: flex; gap: 15px; font-size: 0.88rem; font-weight: 600; color: #7A8278; flex-wrap: wrap; }
-        .live-preview-price { font-size: 1.5rem; font-weight: 800; color: #5E6D3E; margin-left: auto; }
+        .live-preview-title { font-size: 1.4rem; font-weight: 800; color: #2C351C; line-height: 1.2; }
+        .live-preview-details { display: flex; gap: 15px; font-size: 0.88rem; font-weight: 600; color: #7A8278; flex-wrap: wrap; }
+        .live-preview-price { font-size: 1.5rem; font-weight: 800; color: #5E6D3E; margin-left: auto; }
 
-        .mini-modal-card { max-width: 440px; text-align: center; padding: 35px; }
-        .mini-modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
-        .btn-modal-cancel { flex: 1; height: 46px; background: #FAFBF9; color: #7A8278; border: 1px solid #D0D6CE; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .btn-modal-cancel:hover { background: #EBF2E9; color: #2C351C; }
-        
-        .btn-modal-confirm-danger { flex: 1; height: 46px; background: #BA3C2A; color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .btn-modal-confirm-danger:hover { background: #962F20; }
+        .mini-modal-card { max-width: 440px; text-align: center; padding: 35px; }
+        .mini-modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
+        .btn-modal-cancel { flex: 1; height: 46px; background: #FAFBF9; color: #7A8278; border: 1px solid #D0D6CE; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-modal-cancel:hover { background: #EBF2E9; color: #2C351C; }
+        
+        .btn-modal-confirm-danger { flex: 1; height: 46px; background: #BA3C2A; color: #fff; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-modal-confirm-danger:hover { background: #962F20; }
 
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #ECEFEA; padding-bottom: 15px; }
-        .modal-title { font-size: 1.5rem; font-weight: 800; color: #2C351C; }
-        .modal-close { font-size: 1.6rem; color: #7A8278; cursor: pointer; background: none; border: none; transition: color 0.2s; }
-        .modal-close:hover { color: #2C351C; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #ECEFEA; padding-bottom: 15px; }
+        .modal-title { font-size: 1.5rem; font-weight: 800; color: #2C351C; }
+        .modal-close { font-size: 1.6rem; color: #7A8278; cursor: pointer; background: none; border: none; transition: color 0.2s; }
+        .modal-close:hover { color: #2C351C; }
 
-        .location-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 6px; }
-        .location-tile { border: 1px solid #D0D6CE; padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; color: #495430; cursor: pointer; transition: all 0.2s; background-color: #FAFBF9; font-size: 0.9rem; }
-        .location-tile:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
-        .location-tile.selected { background-color: #5E6D3E; color: #ffffff; border-color: #5E6D3E; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.25); }
+        .location-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 6px; }
+        .location-tile { border: 1px solid #D0D6CE; padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; color: #495430; cursor: pointer; transition: all 0.2s; background-color: #FAFBF9; font-size: 0.9rem; }
+        .location-tile:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
+        .location-tile.selected { background-color: #5E6D3E; color: #ffffff; border-color: #5E6D3E; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.25); }
 
-        @keyframes scaleUp { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    </style>
+        @keyframes scaleUp { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
 </head>
 <body>
 
 <button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
-        
-<div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
-        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
-        <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-    </div>
-        
-    <ul class="sidebar-menu">
-        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
-        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
-        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
-        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
-        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
-        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
-        {% if profil_actif.acces_panier %}<li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>{% endif %}
-        {% if is_admin or request.user.is_superuser %}
-        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
-        {% endif %}
-    </ul>
-            
-    <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">
-            <a href="/mon-profil/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; flex-grow: 1;">
-                <div style="width: 36px; height: 36px; background-color: #FAFBF9; color: #495430; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
-                    {{ request.user.username|slice:":1"|upper }}
-                </div>
-                <div style="display: flex; flex-direction: column;">
-                    <span style="color: #ffffff; font-size: 0.88rem; font-weight: 600; line-height: 1.2;">{{ request.user.username }}</span>
-                    <span style="color: {% if request.path == '/mon-profil/' %}#ffffff{% else %}rgba(255, 255, 255, 0.5){% endif %}; font-size: 0.75rem;">Mon Profil</span>
-                </div>
-            </a>
-        </div>
+        
+<div class="sidebar" id="appSidebar">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
+        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
+        <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+    </div>
+        
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        {% if profil_actif.acces_inventaire %}<li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>{% endif %}
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        {% if profil_actif.acces_panier %}<li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>{% endif %}
+        {% if is_admin or request.user.is_superuser %}
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
+        {% endif %}
+    </ul>
+            
+    <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">
+            <a href="/mon-profil/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; flex-grow: 1;">
+                <div style="width: 36px; height: 36px; background-color: #FAFBF9; color: #495430; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="color: #ffffff; font-size: 0.88rem; font-weight: 600; line-height: 1.2;">{{ request.user.username }}</span>
+                    <span style="color: {% if request.path == '/mon-profil/' %}#ffffff{% else %}rgba(255, 255, 255, 0.5){% endif %}; font-size: 0.75rem;">Mon Profil</span>
+                </div>
+            </a>
+        </div>
 
-        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 82, 82, 0.15)'" onmouseout="this.style.background='transparent'">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Déconnexion
-        </a>
-    </div>
+        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 82, 82, 0.15)'" onmouseout="this.style.background='transparent'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Déconnexion
+        </a>
+    </div>
 </div>
 
 <div class="main-content">
-    <div class="page-header">
-        <h1 class="page-title">Gestion des Mouvements de Stock</h1>
-        <p class="welcome-text">Enregistrez les approvisionnements récents, validez les prélèvements des services et gérez les articles du catalogue.</p>
-    </div>
+    <div class="page-header">
+        <h1 class="page-title">Gestion des Mouvements de Stock</h1>
+        <p class="welcome-text">Enregistrez les approvisionnements récents, validez les prélèvements des services et gérez les articles du catalogue.</p>
+    </div>
 
-    {% if messages %}
-        <div id="djangoMessagesContainer" style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
-            {% for message in messages %}
-                <div class="flash-message-box alert-success">
-                    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    <strong>{{ message }}</strong>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+    {% if messages %}
+        <div id="djangoMessagesContainer" style="margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px; width: 100%;">
+            {% for message in messages %}
+                <div class="flash-message-box alert-success">
+                    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <strong>{{ message }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-    {% if request.user.is_superuser %}
-    <!-- 🟢 BLOC ENREGISTREMENT DES ENTRÉES -->
-    <div class="form-container-box">
-        <div class="section-title-container">
-            <h2 class="section-title">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                Enregistrement des Réceptions / Entrées
-            </h2>
-            <button type="button" class="btn-primary-highlight" onclick="openModal('productModal')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <strong>Studio de Création Produit</strong>
-            </button>
-        </div>
+    {% if request.user.is_superuser %}
+    <!-- 🟢 BLOC ENREGISTREMENT DES ENTRÉES -->
+    <div class="form-container-box">
+        <div class="section-title-container">
+            <h2 class="section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                Enregistrement des Réceptions / Entrées
+            </h2>
+            <button type="button" class="btn-primary-highlight" onclick="openModal('productModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <strong>Studio de Création Produit</strong>
+            </button>
+        </div>
 
-        <form method="POST" action="" onsubmit="prepareSubmitInput(event)">
-            {% csrf_token %}
-            <input type="hidden" name="action_type" value="mouvement_entree">
+        <form method="POST" action="" onsubmit="prepareSubmitInput(event)">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="mouvement_entree">
 
-            <div class="form-group">
-                <label class="form-label">Type de Mouvement Logistique</label>
-                <input type="text" class="form-input form-input-disabled" value="ENTRÉE EN RÉSERVE" readonly>
-            </div>
+            <div class="form-group">
+                <label class="form-label">Type de Mouvement Logistique</label>
+                <input type="text" class="form-input form-input-disabled" value="ENTRÉE EN RÉSERVE" readonly>
+            </div>
 
-            <div class="form-group">
-                <label class="form-label">Sélectionner le Produit *</label>
-                <div class="custom-select-wrapper">
-                    <input type="text" id="searchSelectInput" class="search-select-input" placeholder="Rechercher par désignation ou par référence..." autocomplete="off" onfocus="showDropdown('Input')" oninput="filterOptions('Input')">
-                    <input type="hidden" name="produit" id="hiddenProductInput" required>
+            <div class="form-group">
+                <label class="form-label">Sélectionner le Produit *</label>
+                <div class="custom-select-wrapper">
+                    <input type="text" id="searchSelectInput" class="search-select-input" placeholder="Rechercher par désignation ou par référence..." autocomplete="off" onfocus="showDropdown('Input')" oninput="filterOptions('Input')">
+                    <input type="hidden" name="produit" id="hiddenProductInput" required>
 
-                    <div class="select-dropdown" id="selectDropdownInput">
-                        {% for p in produits %}
-                            <div class="select-option" data-value="{{ p.reference }}" data-stock="{{ p.quantite }}" data-name="{{ p.objet }}" onclick="selectOption(this, 'Input')">
-                                <span><strong>{{ p.objet }}</strong></span>
-                                <span class="option-ref">{{ p.reference }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Quantité Ajoutée *</label>
-                <input type="number" name="quantite" id="quantiteInput" class="form-input" min="1" placeholder="Nombre d'unités reçues..." required oninput="calculatePredictionInput()">
-            </div>
+                    <div class="select-dropdown" id="selectDropdownInput">
+                        {% for p in produits %}
+                            <div class="select-option" data-value="{{ p.reference }}" data-stock="{{ p.quantite }}" data-name="{{ p.objet }}" onclick="selectOption(this, 'Input')">
+                                <span><strong>{{ p.objet }}</strong></span>
+                                <span class="option-ref">{{ p.reference }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Quantité Ajoutée *</label>
+                <input type="number" name="quantite" id="quantiteInput" class="form-input" min="1" placeholder="Nombre d'unités reçues..." required oninput="calculatePredictionInput()">
+            </div>
 
-            <div class="form-group">
-                <label class="form-label">Numéro de Commande / Réf. Arrivage (Optionnel)</label>
-                <input type="text" name="numero_commande" class="form-input" placeholder="Ex: CMD-2026-07 ou Bon de livraison..." >
-                <span class="form-hint">Permet d'associer cet arrivage à une commande sur l'écran d'accueil.</span>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Date de la Réception *</label>
-                <input type="date" name="date_entree" class="form-input" value="{{ date_du_jour }}" required>
-            </div>
-            
-            <div class="prediction-box" id="predictionBoxInput">
-                <div class="prediction-text">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                    <span id="predictionMessageInput">Stock prévisionnel en attente de calcul...</span>
-                </div>
-            </div>
+            <div class="form-group">
+                <label class="form-label">Numéro de Commande / Réf. Arrivage (Optionnel)</label>
+                <input type="text" name="numero_commande" class="form-input" placeholder="Ex: CMD-2026-07 ou Bon de livraison..." >
+                <span class="form-hint">Permet d'associer cet arrivage à une commande sur l'écran d'accueil.</span>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Date de la Réception *</label>
+                <input type="date" name="date_entree" class="form-input" value="{{ date_du_jour }}" required>
+            </div>
+            
+            <div class="prediction-box" id="predictionBoxInput">
+                <div class="prediction-text">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span id="predictionMessageInput">Stock prévisionnel en attente de calcul...</span>
+                </div>
+            </div>
 
-            <button type="submit" class="btn-submit">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <strong>Valider l'entrée en réserve</strong>
-            </button>
-        </form>
-    </div>
-    {% endif %}
+            <button type="submit" class="btn-submit">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Valider l'entrée en réserve</strong>
+            </button>
+        </form>
+    </div>
+    {% endif %}
 
-    <!-- 🔴 BLOC ENREGISTREMENT DES SORTIES -->
-    <div class="form-container-box">
-        <div class="section-title-container">
-            <h2 class="section-title">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 18 10.5 8.5 15.5 13.5 23 6"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                Enregistrement des Prélèvements / Sorties
-            </h2>
-            {% if request.user.is_superuser %}
-            <button type="button" class="btn-danger-highlight" onclick="openModal('deleteProductModal')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                <strong>Archiver un produit</strong>
-            </button>
-            {% endif %}
-        </div>
-            
-        <form method="POST" action="" id="outputProductForm" onsubmit="prepareSubmitOutput(event)">
-            {% csrf_token %}
-            <input type="hidden" name="action_type" value="sortie">
+    <!-- 🔴 BLOC ENREGISTREMENT DES SORTIES -->
+    <div class="form-container-box">
+        <div class="section-title-container">
+            <h2 class="section-title">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 18 10.5 8.5 15.5 13.5 23 6"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                Enregistrement des Prélèvements / Sorties
+            </h2>
+            {% if request.user.is_superuser %}
+            <button type="button" class="btn-danger-highlight" onclick="openModal('deleteProductModal')">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <strong>Archiver un produit</strong>
+            </button>
+            {% endif %}
+        </div>
+            
+        <form method="POST" action="" id="outputProductForm" onsubmit="prepareSubmitOutput(event)">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="sortie">
 
-            <div class="form-group">
-                <label class="form-label">Sélectionner le Produit à Retirer *</label>
-                <div class="custom-select-wrapper">
-                    <input type="text" id="searchSelectOutput" class="search-select-input" placeholder="Rechercher par désignation ou référence..." autocomplete="off" onfocus="showDropdown('Output')" oninput="filterOptions('Output')">
-                    <input type="hidden" name="produit" id="hiddenProductOutput" required>
-                    
-                    <div class="select-dropdown" id="selectDropdownOutput">
-                        {% for p in produits %}
-                            <div class="select-option" data-value="{{ p.reference }}" data-stock="{{ p.quantite }}" data-name="{{ p.objet }}" onclick="selectOption(this, 'Output')">
-                                <span><strong>{{ p.objet }}</strong></span>
-                                <span class="option-ref">{{ p.reference }}</span>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
+            <div class="form-group">
+                <label class="form-label">Sélectionner le Produit à Retirer *</label>
+                <div class="custom-select-wrapper">
+                    <input type="text" id="searchSelectOutput" class="search-select-input" placeholder="Rechercher par désignation ou référence..." autocomplete="off" onfocus="showDropdown('Output')" oninput="filterOptions('Output')">
+                    <input type="hidden" name="produit" id="hiddenProductOutput" required>
+                    
+                    <div class="select-dropdown" id="selectDropdownOutput">
+                        {% for p in produits %}
+                            <div class="select-option" data-value="{{ p.reference }}" data-stock="{{ p.quantite }}" data-name="{{ p.objet }}" onclick="selectOption(this, 'Output')">
+                                <span><strong>{{ p.objet }}</strong></span>
+                                <span class="option-ref">{{ p.reference }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
 
-            <!-- 👑 MENU DÉROULANT DU SERVICE SUR-MESURE -->
-            <div class="form-group">
-                <label for="id_service_sortie" class="form-label">Service Demandeur *</label>
-                <select name="service" id="id_service_sortie" class="select-custom" required>
-                    <option value="" disabled selected>Sélectionner le service bénéficiaire...</option>
-                    <option value="Consulaire">Consulaire</option>
-                    <option value="Ambassadeur">Ambassadeur</option>
-                    <option value="Secrétaire">Secrétaire</option>
-                    <option value="Assistant(e) AMB">Assistant(e) AMB</option>
-                    <option value="1ère Secrétaire">1ère Secrétaire</option>
-                    <option value="2ème Secrétaire">2ème Secrétaire</option>
-                    <option value="Sécurité">Sécurité</option>
-                    <option value="Diplomate">Diplomate</option>
-                    <option value="Administration">Administration</option>
-                </select>
-            </div>
-        
-            <div class="form-group">
-                <label class="form-label">Quantité Retirée *</label>
-                <input type="number" name="quantite" id="quantiteOutput" class="form-input" min="1" placeholder="Nombre d'unités prélevées..." required oninput="calculatePredictionOutput()">
-            </div>
-                                                            
-            <div class="form-group">
-                <label class="form-label">Date du Prélèvement *</label>
-                <input type="date" name="date_sortie" class="form-input" value="{{ date_du_jour }}" required>
-            </div>
-            
-            <div class="prediction-box prediction-box-output" id="predictionBoxOutput">
-                <div class="prediction-text prediction-text-output">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                    <span id="predictionMessageOutput">Stock restant prévisionnel en attente...</span>
-                </div>
-            </div>
-                                                            
-            <button type="submit" class="btn-submit btn-submit-output">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <strong>Valider la sortie du stock</strong>
-            </button>
-        </form>
-    </div>
+            <!-- 👑 MENU DÉROULANT DU SERVICE SUR-MESURE -->
+            <div class="form-group">
+                <label for="id_service_sortie" class="form-label">Service Demandeur *</label>
+                <select name="service" id="id_service_sortie" class="select-custom" required>
+                    <option value="" disabled selected>Sélectionner le service bénéficiaire...</option>
+                    <option value="Consulaire">Consulaire</option>
+                    <option value="Ambassadeur">Ambassadeur</option>
+                    <option value="Secrétaire">Secrétaire</option>
+                    <option value="Secrétaire AMB">Secrétaire AMB</option>
+                    <option value="1ère Secrétaire">1ère Secrétaire</option>
+                    <option value="2ème Secrétaire">2ème Secrétaire</option>
+                    <option value="Sécurité">Sécurité</option>
+                    <option value="Diplomate">Diplomate</option>
+                    <option value="Administration">Administration</option>
+                </select>
+            </div>
+        
+            <div class="form-group">
+                <label class="form-label">Quantité Retirée *</label>
+                <input type="number" name="quantite" id="quantiteOutput" class="form-input" min="1" placeholder="Nombre d'unités prélevées..." required oninput="calculatePredictionOutput()">
+            </div>
+                                                                
+            <div class="form-group">
+                <label class="form-label">Date du Prélèvement *</label>
+                <input type="date" name="date_sortie" class="form-input" value="{{ date_du_jour }}" required>
+            </div>
+            
+            <div class="prediction-box prediction-box-output" id="predictionBoxOutput">
+                <div class="prediction-text prediction-text-output">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    <span id="predictionMessageOutput">Stock restant prévisionnel en attente...</span>
+                </div>
+            </div>
+                                                                
+            <button type="submit" class="btn-submit btn-submit-output">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <strong>Valider la sortie du stock</strong>
+            </button>
+        </form>
+    </div>
 </div>
 
 <!-- 📦 MODALE STUDIO DE CRÉATION PRODUIT HAUTE-COUTURE (AVEC LIVE PREVIEW 3D) -->
 <div class="modal-overlay" id="productModal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 class="modal-title">Studio de Création Produit</h3>
-            <button type="button" class="modal-close" onclick="closeModal('productModal')">✕</button>
-        </div>  
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 class="modal-title">Studio de Création Produit</h3>
+            <button type="button" class="modal-close" onclick="closeModal('productModal')">✕</button>
+        </div>  
 
-        <!-- 🎴 VIRTUAL LIVE CARD PREVIEW INÉDITE -->
-        <div class="live-preview-container">
-            <div class="live-preview-header">
-                <span class="live-preview-badge">Aperçu Catalogue en Direct</span>
-                <span class="live-preview-ref" id="refPreview">ECR-GEN-MAG-01</span>
-            </div>
-            <div class="live-preview-title" id="previewTitle">Nouveau Produit</div>
-            <div class="live-preview-details">
-                <span id="previewCategory">Catégorie : Non définie</span> • 
-                <span id="previewSupplier">Fournisseur : Divers</span> • 
-                <span id="previewLocation">Stock : 0 | Armoire A</span>
-                <div class="live-preview-price" id="previewPrice">0,00 €</div>
-            </div>
-        </div>
+        <!-- 🎴 VIRTUAL LIVE CARD PREVIEW INÉDITE -->
+        <div class="live-preview-container">
+            <div class="live-preview-header">
+                <span class="live-preview-badge">Aperçu Catalogue en Direct</span>
+                <span class="live-preview-ref" id="refPreview">ECR-GEN-MAG-01</span>
+            </div>
+            <div class="live-preview-title" id="previewTitle">Nouveau Produit</div>
+            <div class="live-preview-details">
+                <span id="previewCategory">Catégorie : Non définie</span> • 
+                <span id="previewSupplier">Fournisseur : Divers</span> • 
+                <span id="previewLocation">Stock : 0 | Armoire A</span>
+                <div class="live-preview-price" id="previewPrice">0,00 €</div>
+            </div>
+        </div>
 
-        <form method="POST" action="">
-            {% csrf_token %}
-            <input type="hidden" name="action_type" value="creation_produit">
-                
-            <div class="form-group">
-                <label for="id_categorie" class="form-label">Catégorie de l'Article *</label>
-                <select name="categorie" id="id_categorie" class="select-custom" required onchange="liveRefGen();">
-                    <option value="" disabled selected>Sélectionner une catégorie...</option>
-                    <option value="Écriture">Écriture (ECR)</option>
-                    <option value="Bureau">Bureau (BUR)</option>
-                    <option value="Papeterie">Papeterie (PAP)</option>
-                    <option value="Classement">Classement (CLA)</option>
-                    <option value="Consommable">Consommable (CON)</option>
-                    <option value="Informatique">Informatique (INF)</option>
-                    <option value="Enveloppe">Enveloppe (ENV)</option>
-                    <option value="Équipement">Équipement (EQU)</option>
-                </select>
-            </div>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="creation_produit">
+                
+            <div class="form-group">
+                <label for="id_categorie" class="form-label">Catégorie de l'Article *</label>
+                <select name="categorie" id="id_categorie" class="select-custom" required onchange="liveRefGen();">
+                    <option value="" disabled selected>Sélectionner une catégorie...</option>
+                    <option value="Écriture">Écriture (ECR)</option>
+                    <option value="Bureau">Bureau (BUR)</option>
+                    <option value="Papeterie">Papeterie (PAP)</option>
+                    <option value="Classement">Classement (CLA)</option>
+                    <option value="Consommable">Consommable (CON)</option>
+                    <option value="Informatique">Informatique (INF)</option>
+                    <option value="Enveloppe">Enveloppe (ENV)</option>
+                    <option value="Équipement">Équipement (EQU)</option>
+                </select>
+            </div>
 
-            <div class="form-group">
-                <label class="form-label">Désignation / Nom de l'objet *</label>
-                <input type="text" id="inputNom" name="nom" class="form-input" placeholder="Ex: Ramette de papier A4 80g..." required oninput="liveRefGen()">
-            </div>
-                                                                                                                        
-            <div class="form-group">
-                <label class="form-label">Marque *</label>
-                <input type="text" id="inputMarque" name="marque_texte" class="form-input" placeholder="Ex: CLAIRFONTAINE, BIC..." required oninput="liveRefGen()">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Spécificité / Caractéristique *</label>
-                <input type="text" id="inputSpec" name="spec_texte" class="form-input" placeholder="Ex: ROUGE, BLEU, A4..." required oninput="liveRefGen()">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Fournisseur Attribué *</label>
-                <select name="fournisseur_select" id="id_fournisseur_select" class="select-custom" onchange="gererAffichageNouveauFournisseur(this.value)" required>
-                    <option value="Le Voltigeur">Le Voltigeur</option>
-                    <option value="All Office">All Office</option>
-                    <option value="Divers" selected>Divers</option>
-                    {% for f in fournisseurs_existants %}
-                        {% if f != "Le Voltigeur" and f != "All Office" and f != "Divers" %}
-                            <option value="{{ f }}">{{ f }}</option>
-                        {% endif %}
-                    {% endfor %}
-                    <option value="AUTRE">+ Saisir un nouveau fournisseur...</option>
-                </select>
-            </div>
+            <div class="form-group">
+                <label class="form-label">Désignation / Nom de l'objet *</label>
+                <input type="text" id="inputNom" name="nom" class="form-input" placeholder="Ex: Ramette de papier A4 80g..." required oninput="liveRefGen()">
+            </div>
+                                                                        
+            <div class="form-group">
+                <label class="form-label">Marque *</label>
+                <input type="text" id="inputMarque" name="marque_texte" class="form-input" placeholder="Ex: CLAIRFONTAINE, BIC..." required oninput="liveRefGen()">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Spécificité / Caractéristique *</label>
+                <input type="text" id="inputSpec" name="spec_texte" class="form-input" placeholder="Ex: ROUGE, BLEU, A4..." required oninput="liveRefGen()">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Fournisseur Attribué *</label>
+                <select name="fournisseur_select" id="id_fournisseur_select" class="select-custom" onchange="gererAffichageNouveauFournisseur(this.value)" required>
+                    <option value="Le Voltigeur">Le Voltigeur</option>
+                    <option value="All Office">All Office</option>
+                    <option value="Divers" selected>Divers</option>
+                    {% for f in fournisseurs_existants %}
+                        {% if f != "Le Voltigeur" and f != "All Office" and f != "Divers" %}
+                            <option value="{{ f }}">{{ f }}</option>
+                        {% endif %}
+                    {% endfor %}
+                    <option value="AUTRE">+ Saisir un nouveau fournisseur...</option>
+                </select>
+            </div>
 
-            <div class="form-group" id="blocNouveauFournisseur" style="display: none;">
-                <label class="form-label" style="color: #BA3C2A;">Nom du Nouveau Fournisseur *</label>
-                <input type="text" name="fournisseur_nouveau" id="id_fournisseur_nouveau" class="form-input" placeholder="Ex: Lyreco, Kalamazoo..." style="border-color: #BA3C2A;" oninput="liveRefGen()">
-            </div>
+            <div class="form-group" id="blocNouveauFournisseur" style="display: none;">
+                <label class="form-label" style="color: #BA3C2A;">Nom du Nouveau Fournisseur *</label>
+                <input type="text" name="fournisseur_nouveau" id="id_fournisseur_nouveau" class="form-input" placeholder="Ex: Lyreco, Kalamazoo..." style="border-color: #BA3C2A;" oninput="liveRefGen()">
+            </div>
 
-            <div class="form-group">
-                <label class="form-label">Prix Unitaire Estimé (€)</label>
-                <input type="number" step="0.01" min="0" id="inputPrix" name="prix" class="form-input" placeholder="Ex: 12.50 (Optionnel)" oninput="liveRefGen()">
-            </div>
+            <div class="form-group">
+                <label class="form-label">Prix Unitaire Estimé (€)</label>
+                <input type="number" step="0.01" min="0" id="inputPrix" name="prix" class="form-input" placeholder="Ex: 12.50 (Optionnel)" oninput="liveRefGen()">
+            </div>
 
-            <div class="form-group">
-                <label class="form-label">Quantité Initiale en Réserve *</label>
-                <input type="number" id="inputQuantiteInit" name="quantite_initiale" class="form-input" min="0" placeholder="Ex: 50" required oninput="liveRefGen()">
-            </div>
-                    
-            <div class="form-group">
-                <label class="form-label">Emplacement Physique *</label>
-                <input type="hidden" name="emplacement" id="selectedLocation" value="Armoire A" required>
-                <div class="location-grid">
-                    <div class="location-tile selected" data-value="Armoire A" onclick="selectLocationTile(this)">Armoire A</div>
-                    <div class="location-tile" data-value="Armoire B" onclick="selectLocationTile(this)">Armoire B</div>
-                    <div class="location-tile" data-value="Armoire C" onclick="selectLocationTile(this)">Armoire C</div>
-                    <div class="location-tile" data-value="Armoire D" onclick="selectLocationTile(this)">Armoire D</div>
-                    <div class="location-tile" data-value="Armoire E" onclick="selectLocationTile(this)">Armoire E</div>
-                    <div class="location-tile" data-value="Armoire F" onclick="selectLocationTile(this)">Armoire F</div>
-                    <div class="location-tile" data-value="Armoire G" onclick="selectLocationTile(this)">Armoire G</div>
-                </div>
-            </div>
-                
-            <button type="submit" class="btn-submit" style="margin-top: 10px;">
-                <strong>Enregistrer et ajouter au catalogue</strong>
-            </button>
-        </form>                  
-    </div>
+            <div class="form-group">
+                <label class="form-label">Quantité Initiale en Réserve *</label>
+                <input type="number" id="inputQuantiteInit" name="quantite_initiale" class="form-input" min="0" placeholder="Ex: 50" required oninput="liveRefGen()">
+            </div>
+                    
+            <div class="form-group">
+                <label class="form-label">Emplacement Physique *</label>
+                <input type="hidden" name="emplacement" id="selectedLocation" value="Armoire A" required>
+                <div class="location-grid">
+                    <div class="location-tile selected" data-value="Armoire A" onclick="selectLocationTile(this)">Armoire A</div>
+                    <div class="location-tile" data-value="Armoire B" onclick="selectLocationTile(this)">Armoire B</div>
+                    <div class="location-tile" data-value="Armoire C" onclick="selectLocationTile(this)">Armoire C</div>
+                    <div class="location-tile" data-value="Armoire D" onclick="selectLocationTile(this)">Armoire D</div>
+                    <div class="location-tile" data-value="Armoire E" onclick="selectLocationTile(this)">Armoire E</div>
+                    <div class="location-tile" data-value="Armoire F" onclick="selectLocationTile(this)">Armoire F</div>
+                    <div class="location-tile" data-value="Armoire G" onclick="selectLocationTile(this)">Armoire G</div>
+                </div>
+            </div>
+                
+            <button type="submit" class="btn-submit" style="margin-top: 10px;">
+                <strong>Enregistrer et ajouter au catalogue</strong>
+            </button>
+        </form>                
+    </div>
 </div>
 
 <!-- 🗑️ MODALE DE SUPPRESSION DE PRODUIT -->
 <div class="modal-overlay" id="deleteProductModal">
-    <div class="modal-card">
-        <div class="modal-header"> 
-            <h3 class="modal-title" style="color: #BA3C2A;">Archiver / Supprimer un Produit</h3>
-            <button type="button" class="modal-close" onclick="closeModal('deleteProductModal')">✕</button>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Sélectionner l'article à retirer du catalogue</label>
-            <div class="custom-select-wrapper">
-                <input type="text" id="searchSelectDelete" class="search-select-input" placeholder="Rechercher par désignation ou code..." autocomplete="off" onfocus="showDropdown('Delete')" oninput="filterOptions('Delete')">
-                <input type="hidden" id="hiddenProductDelete">
-                    
-                <div class="select-dropdown" id="selectDropdownDelete">
-                    {% for p in produits %}
-                        <div class="select-option" data-value="{{ p.reference }}" data-name="{{ p.objet }}" onclick="selectOption(this, 'Delete')">
-                            <span><strong>{{ p.objet }}</strong></span>
-                            <span class="option-ref">{{ p.reference }}</span>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-        <button type="button" class="btn-submit btn-submit-output" onclick="triggerDoubleConfirmation()" style="margin-top: 15px;">
-            <strong>Poursuivre la suppression</strong>
-        </button>
-    </div>
+    <div class="modal-card">
+        <div class="modal-header"> 
+            <h3 class="modal-title" style="color: #BA3C2A;">Archiver / Supprimer un Produit</h3>
+            <button type="button" class="modal-close" onclick="closeModal('deleteProductModal')">✕</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Sélectionner l'article à retirer du catalogue</label>
+            <div class="custom-select-wrapper">
+                <input type="text" id="searchSelectDelete" class="search-select-input" placeholder="Rechercher par désignation ou code..." autocomplete="off" onfocus="showDropdown('Delete')" oninput="filterOptions('Delete')">
+                <input type="hidden" id="hiddenProductDelete">
+                    
+                <div class="select-dropdown" id="selectDropdownDelete">
+                    {% for p in produits %}
+                        <div class="select-option" data-value="{{ p.reference }}" data-name="{{ p.objet }}" onclick="selectOption(this, 'Delete')">
+                            <span><strong>{{ p.objet }}</strong></span>
+                            <span class="option-ref">{{ p.reference }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn-submit btn-submit-output" onclick="triggerDoubleConfirmation()" style="margin-top: 15px;">
+            <strong>Poursuivre la suppression</strong>
+        </button>
+    </div>
 </div>
 
 <!-- ⚠️ DOUBLE CONFIRMATION MODALE -->
 <div class="modal-overlay" id="doubleConfirmModal" style="z-index: 1100;">
-    <div class="modal-card mini-modal-card">
-        <div style="width: 56px; height: 56px; background: rgba(186, 60, 42, 0.12); color: #BA3C2A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px auto;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        </div>
-        <h3 style="font-size: 1.3rem; margin-bottom: 10px; color: #2C351C; font-weight: 800;">Confirmation Requise</h3>
-        <p style="color: #7A8278; font-size: 0.95rem; line-height: 1.5;">
-            Êtes-vous absolument sûr de vouloir supprimer <strong id="confirmProductName" style="color: #2C351C;">ce produit</strong> ? Il sera masqué du catalogue actif.
-        </p>
-        <form method="POST" action="">
-            {% csrf_token %}
-            <input type="hidden" name="action_type" value="archivage_produit">
-            <input type="hidden" name="produit_a_archiver" id="finalProductDeleteInput">
-            
-            <div class="mini-modal-buttons">
-                <button type="button" class="btn-modal-cancel" onclick="closeModal('doubleConfirmModal')">Annuler</button>
-                <button type="submit" class="btn-modal-confirm-danger">Confirmer la suppression</button>
-            </div>
-        </form>
-    </div>
+    <div class="modal-card mini-modal-card">
+        <div style="width: 56px; height: 56px; background: rgba(186, 60, 42, 0.12); color: #BA3C2A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px auto;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </div>
+        <h3 style="font-size: 1.3rem; margin-bottom: 10px; color: #2C351C; font-weight: 800;">Confirmation Requise</h3>
+        <p style="color: #7A8278; font-size: 0.95rem; line-height: 1.5;">
+            Êtes-vous absolument sûr de vouloir supprimer <strong id="confirmProductName" style="color: #2C351C;">ce produit</strong> ? Il sera masqué du catalogue actif.
+        </p>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="archivage_produit">
+            <input type="hidden" name="produit_a_archiver" id="finalProductDeleteInput">
+            
+            <div class="mini-modal-buttons">
+                <button type="button" class="btn-modal-cancel" onclick="closeModal('doubleConfirmModal')">Annuler</button>
+                <button type="submit" class="btn-modal-confirm-danger">Confirmer la suppression</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
-    /* ------------------------------------------------------------- */
-    /* 👑 MOTEUR DE MENUS DÉROULANTS SUR-MESURE GLASSMORPHISM JS     */
-    /* ------------------------------------------------------------- */
-    function buildCustomDropdowns() {
-        document.querySelectorAll('select.select-custom, select.form-select').forEach(selectEl => {
-            if (selectEl.parentElement.classList.contains('custom-select-wrapper')) return;
+    /* ------------------------------------------------------------- */
+    /* 👑 MOTEUR DE MENUS DÉROULANTS SUR-MESURE GLASSMORPHISM JS    */
+    /* ------------------------------------------------------------- */
+    function buildCustomDropdowns() {
+        document.querySelectorAll('select.select-custom, select.form-select').forEach(selectEl => {
+            if (selectEl.parentElement.classList.contains('custom-select-wrapper')) return;
 
-            const wrapper = document.createElement('div');
-            wrapper.className = 'custom-select-wrapper';
+            const wrapper = document.createElement('div');
+            wrapper.className = 'custom-select-wrapper';
 
-            const trigger = document.createElement('div');
-            trigger.className = 'custom-select-trigger';
+            const trigger = document.createElement('div');
+            trigger.className = 'custom-select-trigger';
 
-            const selectedOption = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
-            const selectedText = document.createElement('span');
-            selectedText.innerHTML = selectedOption ? `<strong>${selectedOption.text}</strong>` : '';
+            const selectedOption = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+            const selectedText = document.createElement('span');
+            selectedText.innerHTML = selectedOption ? `<strong>${selectedOption.text}</strong>` : '';
 
-            const arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            arrowSvg.setAttribute("class", "custom-select-arrow");
-            arrowSvg.setAttribute("width", "16");
-            arrowSvg.setAttribute("height", "16");
-            arrowSvg.setAttribute("viewBox", "0 0 24 24");
-            arrowSvg.setAttribute("fill", "none");
-            arrowSvg.setAttribute("stroke-width", "2.5");
-            arrowSvg.setAttribute("stroke-linecap", "round");
-            arrowSvg.setAttribute("stroke-linejoin", "round");
-            arrowSvg.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+            const arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            arrowSvg.setAttribute("class", "custom-select-arrow");
+            arrowSvg.setAttribute("width", "16");
+            arrowSvg.setAttribute("height", "16");
+            arrowSvg.setAttribute("viewBox", "0 0 24 24");
+            arrowSvg.setAttribute("fill", "none");
+            arrowSvg.setAttribute("stroke-width", "2.5");
+            arrowSvg.setAttribute("stroke-linecap", "round");
+            arrowSvg.setAttribute("stroke-linejoin", "round");
+            arrowSvg.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
 
-            trigger.appendChild(selectedText);
-            trigger.appendChild(arrowSvg);
+            trigger.appendChild(selectedText);
+            trigger.appendChild(arrowSvg);
 
-            const menu = document.createElement('div');
-            menu.className = 'custom-select-menu';
+            const menu = document.createElement('div');
+            menu.className = 'custom-select-menu';
 
-            Array.from(selectEl.options).forEach((opt, index) => {
-                if (opt.style.display === 'none') return;
-                const item = document.createElement('div');
-                item.className = `custom-select-option ${selectEl.selectedIndex === index ? 'selected' : ''}`;
-                item.textContent = opt.text;
+            Array.from(selectEl.options).forEach((opt, index) => {
+                if (opt.style.display === 'none') return;
+                const item = document.createElement('div');
+                item.className = `custom-select-option ${selectEl.selectedIndex === index ? 'selected' : ''}`;
+                item.textContent = opt.text;
 
-                item.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    selectEl.selectedIndex = index;
-                    selectedText.innerHTML = `<strong>${opt.text}</strong>`;
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectEl.selectedIndex = index;
+                    selectedText.innerHTML = `<strong>${opt.text}</strong>`;
 
-                    menu.querySelectorAll('.custom-select-option').forEach(i => i.classList.remove('selected'));
-                    item.classList.add('selected');
+                    menu.querySelectorAll('.custom-select-option').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
 
-                    wrapper.classList.remove('open');
-                    menu.style.display = 'none';
+                    wrapper.classList.remove('open');
+                    menu.style.display = 'none';
 
-                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-                });
+                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                });
 
-                menu.appendChild(item);
-            });
+                menu.appendChild(item);
+            });
 
-            trigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
-                    if (w !== wrapper) {
-                        w.classList.remove('open');
-                        const m = w.querySelector('.custom-select-menu');
-                        if (m) m.style.display = 'none';
-                    }
-                });
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+                    if (w !== wrapper) {
+                        w.classList.remove('open');
+                        const m = w.querySelector('.custom-select-menu');
+                        if (m) m.style.display = 'none';
+                    }
+                });
 
-                const isOpen = wrapper.classList.toggle('open');
-                menu.style.display = isOpen ? 'block' : 'none';
-            });
+                const isOpen = wrapper.classList.toggle('open');
+                menu.style.display = isOpen ? 'block' : 'none';
+            });
 
-            selectEl.parentNode.insertBefore(wrapper, selectEl);
-            wrapper.appendChild(selectEl);
-            wrapper.appendChild(trigger);
-            wrapper.appendChild(menu);
-        });
-    }
+            selectEl.parentNode.insertBefore(wrapper, selectEl);
+            wrapper.appendChild(selectEl);
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(menu);
+        });
+    }
 
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.custom-select-wrapper').forEach(w => {
-            w.classList.remove('open');
-            const m = w.querySelector('.custom-select-menu');
-            if (m) m.style.display = 'none';
-        });
-    });
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+            w.classList.remove('open');
+            const m = w.querySelector('.custom-select-menu');
+            if (m) m.style.display = 'none';
+        });
+    });
 
-    let selectedStockInput = null;
-    let selectedStockOutput = null;
-            
-    function toggleSidebar() {
-        const sidebar = document.getElementById('appSidebar');
-        const openBtn = document.getElementById('sidebarToggleOpen');
-        const mainContent = document.querySelector('.main-content');
-        
-        if (sidebar.style.transform === 'translateX(-290px)') {
-            sidebar.style.transform = 'translateX(0px)';
-            sidebar.style.opacity = '1';
-            openBtn.style.display = 'none';
-            if (mainContent) {
-                mainContent.style.marginLeft = '260px';
-                mainContent.style.paddingLeft = '40px';
-            }
-        } else {
-            sidebar.style.transform = 'translateX(-290px)';
-            sidebar.style.opacity = '0';
-            openBtn.style.display = 'flex';
-            if (mainContent) {
-                mainContent.style.marginLeft = '15px';
-                mainContent.style.paddingLeft = '65px';
-            }
-        }
-    }
+    let selectedStockInput = null;
+    let selectedStockOutput = null;
+            
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const openBtn = document.getElementById('sidebarToggleOpen');
+        const mainContent = document.querySelector('.main-content');
+        
+        if (sidebar.style.transform === 'translateX(-290px)') {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.opacity = '1';
+            openBtn.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.marginLeft = '290px';
+            }
+        } else {
+            sidebar.style.transform = 'translateX(-290px)';
+            sidebar.style.opacity = '0';
+            openBtn.style.display = 'flex';
+            if (mainContent) {
+                mainContent.style.marginLeft = '15px';
+            }
+        }
+    }
 
-    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-    
-    function gererAffichageNouveauFournisseur(valeur) {
-        const bloc = document.getElementById('blocNouveauFournisseur');
-        const input = document.getElementById('id_fournisseur_nouveau');
-        if (valeur === 'AUTRE') {
-            bloc.style.display = 'flex';
-            input.required = true;
-        } else {
-            bloc.style.display = 'none';
-            input.required = false;
-        }
-        liveRefGen();
-    }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    
+    function gererAffichageNouveauFournisseur(valeur) {
+        const bloc = document.getElementById('blocNouveauFournisseur');
+        const input = document.getElementById('id_fournisseur_nouveau');
+        if (valeur === 'AUTRE') {
+            bloc.style.display = 'flex';
+            input.required = true;
+        } else {
+            bloc.style.display = 'none';
+            input.required = false;
+        }
+        liveRefGen();
+    }
 
-    function triggerDoubleConfirmation() {
-        const ref = document.getElementById('hiddenProductDelete').value;
-        const name = document.getElementById('searchSelectDelete').value; 
-        if(!ref) {
-            alert("Veuillez sélectionner un produit à supprimer.");
-            return;
-        }
-        document.getElementById('confirmProductName').innerText = name;
-        document.getElementById('finalProductDeleteInput').value = ref;
-        openModal('doubleConfirmModal');
-    }
-            
-    function cleanThreeLetters(text) {
-        if (!text) return 'XXX';
-        let clean = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-        if (clean.length < 3) return clean.padEnd(3, 'X');
-        return clean.substring(0, 3);
-    }
+    function triggerDoubleConfirmation() {
+        const ref = document.getElementById('hiddenProductDelete').value;
+        const name = document.getElementById('searchSelectDelete').value; 
+        if(!ref) {
+            alert("Veuillez sélectionner un produit à supprimer.");
+            return;
+        }
+        document.getElementById('confirmProductName').innerText = name;
+        document.getElementById('finalProductDeleteInput').value = ref;
+        openModal('doubleConfirmModal');
+    }
+            
+    function cleanThreeLetters(text) {
+        if (!text) return 'XXX';
+        let clean = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+        if (clean.length < 3) return clean.padEnd(3, 'X');
+        return clean.substring(0, 3);
+    }
 
-    /* 🎴 METTEUR À JOUR EN DIRECT DE LA VIRTUAL CARD PREVIEW */
-    function liveRefGen() {
-        const selectElement = document.getElementById('id_categorie');
-        const categorieSelectionnee = selectElement.value;
+    /* 🎴 METTEUR À JOUR EN DIRECT DE LA VIRTUAL CARD PREVIEW */
+    function liveRefGen() {
+        const selectElement = document.getElementById('id_categorie');
+        const categorieSelectionnee = selectElement.value;
 
-        const codesCategories = {
-            'Écriture': 'ECR', 'Bureau': 'BUR', 'Papeterie': 'PAP', 'Classement': 'CLA',
-            'Consommable': 'CON', 'Informatique': 'INF', 'Enveloppe': 'ENV', 'Équipement': 'EQU'
-        };
-        
-        const catCode = codesCategories[categorieSelectionnee] || 'XXX';
-        const marqueCode = cleanThreeLetters(document.getElementById('inputMarque').value);
-        const specCode = cleanThreeLetters(document.getElementById('inputSpec').value);
-        
-        const generatedRef = `${catCode}-${marqueCode}-${specCode}-XX`;
-        document.getElementById('refPreview').innerText = generatedRef;
+        const codesCategories = {
+            'Écriture': 'ECR', 'Bureau': 'BUR', 'Papeterie': 'PAP', 'Classement': 'CLA',
+            'Consommable': 'CON', 'Informatique': 'INF', 'Enveloppe': 'ENV', 'Équipement': 'EQU'
+        };
+        
+        const catCode = codesCategories[categorieSelectionnee] || 'XXX';
+        const marqueCode = cleanThreeLetters(document.getElementById('inputMarque').value);
+        const specCode = cleanThreeLetters(document.getElementById('inputSpec').value);
+        
+        const generatedRef = `${catCode}-${marqueCode}-${specCode}-XX`;
+        document.getElementById('refPreview').innerText = generatedRef;
 
-        // Visual dynamic updates
-        const nom = document.getElementById('inputNom').value.trim() || 'Nouveau Produit';
-        const prix = document.getElementById('inputPrix').value;
-        const qty = document.getElementById('inputQuantiteInit').value || '0';
-        const loc = document.getElementById('selectedLocation').value || 'Armoire A';
-        
-        const fournisseurSel = document.getElementById('id_fournisseur_select').value;
-        const fournisseurNouv = document.getElementById('id_fournisseur_nouveau').value;
-        const fournisseurFinal = (fournisseurSel === 'AUTRE' && fournisseurNouv) ? fournisseurNouv : fournisseurSel;
+        // Visual dynamic updates
+        const nom = document.getElementById('inputNom').value.trim() || 'Nouveau Produit';
+        const prix = document.getElementById('inputPrix').value;
+        const qty = document.getElementById('inputQuantiteInit').value || '0';
+        const loc = document.getElementById('selectedLocation').value || 'Armoire A';
+        
+        const fournisseurSel = document.getElementById('id_fournisseur_select').value;
+        const fournisseurNouv = document.getElementById('id_fournisseur_nouveau').value;
+        const fournisseurFinal = (fournisseurSel === 'AUTRE' && fournisseurNouv) ? fournisseurNouv : fournisseurSel;
 
-        document.getElementById('previewTitle').innerText = nom;
-        document.getElementById('previewCategory').innerText = `Catégorie : ${categorieSelectionnee || 'Non définie'}`;
-        document.getElementById('previewSupplier').innerText = `Fournisseur : ${fournisseurFinal || 'Divers'}`;
-        document.getElementById('previewLocation').innerText = `Stock : ${qty} | ${loc}`;
-        document.getElementById('previewPrice').innerText = prix ? (parseFloat(prix).toFixed(2).replace('.', ',') + " €") : "0,00 €";
-    }
+        document.getElementById('previewTitle').innerText = nom;
+        document.getElementById('previewCategory').innerText = `Catégorie : ${categorieSelectionnee || 'Non définie'}`;
+        document.getElementById('previewSupplier').innerText = `Fournisseur : ${fournisseurFinal || 'Divers'}`;
+        document.getElementById('previewLocation').innerText = `Stock : ${qty} | ${loc}`;
+        document.getElementById('previewPrice').innerText = prix ? (parseFloat(prix).toFixed(2).replace('.', ',') + " €") : "0,00 €";
+    }
 
-    function selectLocationTile(element) {
-        const tiles = document.getElementsByClassName('location-tile');
-        for (let tile of tiles) { tile.classList.remove('selected'); }
-        element.classList.add('selected');
-        document.getElementById('selectedLocation').value = element.getAttribute('data-value');
-        liveRefGen();
-    }
-            
-    function showDropdown(type) { document.getElementById('selectDropdown' + type).style.display = 'block'; }
-        
-    function filterOptions(type) {
-        const input = document.getElementById('searchSelect' + type).value.toLowerCase();
-        const options = document.getElementById('selectDropdown' + type).getElementsByClassName('select-option');
-        for (let opt of options) {
-            const name = opt.getAttribute('data-name').toLowerCase();
-            const ref = opt.getAttribute('data-value').toLowerCase();
-            if (name.includes(input) || ref.includes(input)) { opt.style.display = 'flex'; } else { opt.style.display = 'none'; }
-        }    
-    }
+    function selectLocationTile(element) {
+        const tiles = document.getElementsByClassName('location-tile');
+        for (let tile of tiles) { tile.classList.remove('selected'); }
+        element.classList.add('selected');
+        document.getElementById('selectedLocation').value = element.getAttribute('data-value');
+        liveRefGen();
+    }
+            
+    function showDropdown(type) { document.getElementById('selectDropdown' + type).style.display = 'block'; }
+        
+    function filterOptions(type) {
+        const input = document.getElementById('searchSelect' + type).value.toLowerCase();
+        const options = document.getElementById('selectDropdown' + type).getElementsByClassName('select-option');
+        for (let opt of options) {
+            const name = opt.getAttribute('data-name').toLowerCase();
+            const ref = opt.getAttribute('data-value').toLowerCase();
+            if (name.includes(input) || ref.includes(input)) { opt.style.display = 'flex'; } else { opt.style.display = 'none'; }
+        }   
+    }
 
-    function selectOption(element, type) {
-        const name = element.getAttribute('data-name');
-        const ref = element.getAttribute('data-value');
-        const stock = parseInt(element.getAttribute('data-stock') || '0');
-      
-        document.getElementById('searchSelect' + type).value = `${name} [${ref}]`;
-        if (document.getElementById('hiddenProduct' + type)) document.getElementById('hiddenProduct' + type).value = ref;
-        document.getElementById('selectDropdown' + type).style.display = 'none';
-    
-        if (type === 'Input') {
-            selectedStockInput = stock; 
-            calculatePredictionInput();
-        } else if (type === 'Output') {
-            selectedStockOutput = stock;
-            calculatePredictionOutput();
-        } else if (type === 'Delete') {
-            document.getElementById('hiddenProductDelete').value = ref;
-        }
-    }  
-        
-    function calculatePredictionInput() {
-        const input = document.getElementById('quantiteInput');
-        const box = document.getElementById('predictionBoxInput');
-        const message = document.getElementById('predictionMessageInput');
-        const qty = parseInt(input.value);
-            
-        if (selectedStockInput !== null && qty > 0) {
-            box.style.display = 'block';
-            message.innerHTML = `Stock en réserve : <strong>${selectedStockInput}</strong> ➔ Stock prévisionnel après validation : <span class="prediction-highlight">${selectedStockInput + qty} unités</span>.`;
-        } else { box.style.display = 'none'; }
-    }
-        
-    function calculatePredictionOutput() {
-        const input = document.getElementById('quantiteOutput');
-        const box = document.getElementById('predictionBoxOutput');
-        const message = document.getElementById('predictionMessageOutput');
-        const qty = parseInt(input.value);
-        
-        if (selectedStockOutput !== null && qty > 0) {
-            box.style.display = 'block';
-            const delta = selectedStockOutput - qty;
-            if (delta < 0) {
-                message.innerHTML = `Quantité insuffisante en réserve ! Le stock disponible n'est que de <strong>${selectedStockOutput}</strong> unités.`;
-            } else {
-                message.innerHTML = `Stock en réserve : <strong>${selectedStockOutput}</strong> ➔ Stock restant estimé : <span class="prediction-highlight prediction-highlight-output">${delta} unités</span>.`;
-            }
-        } else { box.style.display = 'none'; }
-    }    
-    
-    function prepareSubmitInput(e) {
-        if(!document.getElementById('hiddenProductInput').value) {
-            e.preventDefault(); alert("Veuillez choisir un produit dans la liste.");
-        }
-    }      
-        
-    function prepareSubmitOutput(e) {   
-        const qty = parseInt(document.getElementById('quantiteOutput').value);
-        if(!document.getElementById('hiddenProductOutput').value) {
-            e.preventDefault(); alert("Veuillez choisir un produit dans la liste."); return;
-        }
-        if (selectedStockOutput !== null && qty > selectedStockOutput) {
-            e.preventDefault(); alert("Action refusée : le stock disponible est insuffisant.");
-        }
-    }
+    function selectOption(element, type) {
+        const name = element.getAttribute('data-name');
+        const ref = element.getAttribute('data-value');
+        const stock = parseInt(element.getAttribute('data-stock') || '0');
+      
+        document.getElementById('searchSelect' + type).value = `${name} [${ref}]`;
+        if (document.getElementById('hiddenProduct' + type)) document.getElementById('hiddenProduct' + type).value = ref;
+        document.getElementById('selectDropdown' + type).style.display = 'none';
+    
+        if (type === 'Input') {
+            selectedStockInput = stock; 
+            calculatePredictionInput();
+        } else if (type === 'Output') {
+            selectedStockOutput = stock;
+            calculatePredictionOutput();
+        } else if (type === 'Delete') {
+            document.getElementById('hiddenProductDelete').value = ref;
+        }
+    }   
+        
+    function calculatePredictionInput() {
+        const input = document.getElementById('quantiteInput');
+        const box = document.getElementById('predictionBoxInput');
+        const message = document.getElementById('predictionMessageInput');
+        const qty = parseInt(input.value);
+            
+        if (selectedStockInput !== null && qty > 0) {
+            box.style.display = 'block';
+            message.innerHTML = `Stock en réserve : <strong>${selectedStockInput}</strong> ➔ Stock prévisionnel après validation : <span class="prediction-highlight">${selectedStockInput + qty} unités</span>.`;
+        } else { box.style.display = 'none'; }
+    }
+        
+    function calculatePredictionOutput() {
+        const input = document.getElementById('quantiteOutput');
+        const box = document.getElementById('predictionBoxOutput');
+        const message = document.getElementById('predictionMessageOutput');
+        const qty = parseInt(input.value);
+        
+        if (selectedStockOutput !== null && qty > 0) {
+            box.style.display = 'block';
+            const delta = selectedStockOutput - qty;
+            if (delta < 0) {
+                message.innerHTML = `Quantité insuffisante en réserve ! Le stock disponible n'est que de <strong>${selectedStockOutput}</strong> unités.`;
+            } else {
+                message.innerHTML = `Stock en réserve : <strong>${selectedStockOutput}</strong> ➔ Stock restant estimé : <span class="prediction-highlight prediction-highlight-output">${delta} unités</span>.`;
+            }
+        } else { box.style.display = 'none'; }
+    }   
+    
+    function prepareSubmitInput(e) {
+        if(!document.getElementById('hiddenProductInput').value) {
+            e.preventDefault(); alert("Veuillez choisir un produit dans la liste.");
+        }
+    }       
+        
+    function prepareSubmitOutput(e) {   
+        const qty = parseInt(document.getElementById('quantiteOutput').value);
+        if(!document.getElementById('hiddenProductOutput').value) {
+            e.preventDefault(); alert("Veuillez choisir un produit dans la liste."); return;
+        }
+        if (selectedStockOutput !== null && qty > selectedStockOutput) {
+            e.preventDefault(); alert("Action refusée : le stock disponible est insuffisant.");
+        }
+    }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        buildCustomDropdowns();
-        
-        const messageBoxes = document.querySelectorAll('.flash-message-box');
-        messageBoxes.forEach(function(box) {
-            setTimeout(function() {
-                box.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-                box.style.opacity = "0";
-                box.style.transform = "translateY(-8px)";
-                
-                setTimeout(function() {
-                    box.remove();
-                    const container = document.getElementById('djangoMessagesContainer');
-                    if (container && container.children.length === 0) {
-                        container.remove();
-                    }
-                }, 500);
-            }, 3000);
-        });
-    });
+    document.addEventListener("DOMContentLoaded", function() {
+        buildCustomDropdowns();
+        
+        const messageBoxes = document.querySelectorAll('.flash-message-box');
+        messageBoxes.forEach(function(box) {
+            setTimeout(function() {
+                box.style.transition = "opacity 0.5s ease, transform 0.5s ease";
+                box.style.opacity = "0";
+                box.style.transform = "translateY(-8px)";
+                
+                setTimeout(function() {
+                    box.remove();
+                    const container = document.getElementById('djangoMessagesContainer');
+                    if (container && container.children.length === 0) {
+                        container.remove();
+                    }
+                }, 500);
+            }, 3000);
+        });
+    });
 </script>
-</body>     
+</body>    
 </html>
