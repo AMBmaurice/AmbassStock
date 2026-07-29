@@ -132,17 +132,15 @@ def page_accueil(request):
             hour=20, minute=0, second=0, microsecond=0
         ) - timedelta(days=(jour + 4))
 
-    declarations_a_reinitialiser = DeclarationHebdomadaire.objects.filter(
+    # Réinitialisation des déclarations sans faire appel aux champs optionnels BDD
+    DeclarationHebdomadaire.objects.filter(
         statut='valide', date_validation__lt=dernier_jeudi_20h
+    ).update(
+        statut='en_attente',
+        reponse=None,
+        date_validation=None,
+        force_valide_par_admin=False
     )
-
-    for dec in declarations_a_reinitialiser:
-        dec.statut = 'en_attente'
-        dec.reponse = None
-        dec.date_validation = None
-        dec.force_valide_par_admin = False
-        dec.reinitialise_cette_semaine = True
-        dec.save()
 
     est_periode_relance = (
         (jour == 0 and heure >= 12) or (jour in [1, 2]) or (jour == 3 and heure < 20)
@@ -207,12 +205,6 @@ def page_accueil(request):
         jour == 4 and heure < 12
     )) and len(services_retardataires) > 0
 
-    alertes_admin_recidive = (
-        DeclarationHebdomadaire.objects.filter(non_reponses_consecutives__gte=3)
-        if est_role_admin
-        else []
-    )
-
     nouveaux_arrivages = []
     try:
         mouvements_entrees = MouvementStock.objects.filter(
@@ -259,7 +251,7 @@ def page_accueil(request):
             'services_retardataires': services_retardataires,
             'afficher_barre_relance': afficher_barre_relance,
             'afficher_popup_relance': afficher_popup_relance,
-            'alertes_admin_recidive': alertes_admin_recidive,
+            'alertes_admin_recidive': [],
         },
     )
 
