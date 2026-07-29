@@ -2,216 +2,216 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AmbassStock - Inventaire</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
-        
-        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
-        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
-        .sidebar-menu { list-style: none; padding: 0 15px; }
-        .sidebar-item { margin-bottom: 4px; }
-        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
-        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AmbassStock - Inventaire</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        
+        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
+        .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 0; bottom: 0; left: 0; padding-top: 30px; z-index: 10; }
+        .sidebar-menu { list-style: none; padding: 0 15px; }
+        .sidebar-item { margin-bottom: 4px; }
+        .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
+        .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
+        .main-content { margin-left: 260px; flex-grow: 1; padding: 40px; width: calc(100% - 260px); transition: all 0.4s ease; position: relative; }
 
-        /* EN-TÊTE DE PAGE ET PANIER FLOTTANT */
-        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
-        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 750px; }
+        /* EN-TÊTE DE PAGE ET PANIER FLOTTANT */
+        .page-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-size: 2.2rem; font-weight: 800; color: #2C351C; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .welcome-text { font-size: 1rem; color: #7A8278; font-weight: 500; max-width: 750px; }
 
-        .header-actions-group { display: flex; align-items: center; gap: 15px; }
+        .header-actions-group { display: flex; align-items: center; gap: 15px; }
 
-        /* 🛒 DOCK PANIER FLOTTANT */
-        .amazon-cart-dock { 
-            display: flex; 
-            align-items: center; 
-            gap: 14px; 
-            padding: 8px 14px 8px 20px; 
-            background: rgba(255, 255, 255, 0.95); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px); 
-            border: 1px solid #E2E6E1; 
-            border-radius: 40px; 
-            box-shadow: 0 10px 30px rgba(73, 84, 48, 0.08); 
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-        }
-        .amazon-cart-dock:hover { 
-            transform: translateY(-2px); 
-            border-color: #5E6D3E; 
-            box-shadow: 0 15px 35px rgba(73, 84, 48, 0.15); 
-        }
-        
-        .dock-cart-icon-wrapper { 
-            position: relative; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            width: 42px; 
-            height: 42px; 
-            background: #EBF2E9; 
-            border-radius: 50%; 
-            color: #5E6D3E; 
-        }
-        .dock-badge-count { 
-            position: absolute; 
-            top: -4px; 
-            right: -4px; 
-            background: #BA3C2A; 
-            color: #ffffff; 
-            font-size: 0.75rem; 
-            font-weight: 800; 
-            min-width: 22px; 
-            height: 22px; 
-            padding: 0 6px; 
-            border-radius: 11px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            border: 2px solid #ffffff; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15); 
-        }
-        .dock-text-info { display: flex; flex-direction: column; gap: 1px; }
-        .dock-title { color: #2C351C; font-size: 0.9rem; font-weight: 800; letter-spacing: -0.2px; }
-        .dock-sub { color: #7A8278; font-size: 0.78rem; font-weight: 600; }
+        /* 🛒 DOCK PANIER FLOTTANT */
+        .amazon-cart-dock { 
+            display: flex; 
+            align-items: center; 
+            gap: 14px; 
+            padding: 8px 14px 8px 20px; 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px); 
+            border: 1px solid #E2E6E1; 
+            border-radius: 40px; 
+            box-shadow: 0 10px 30px rgba(73, 84, 48, 0.08); 
+            cursor: pointer; 
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        .amazon-cart-dock:hover { 
+            transform: translateY(-2px); 
+            border-color: #5E6D3E; 
+            box-shadow: 0 15px 35px rgba(73, 84, 48, 0.15); 
+        }
+        
+        .dock-cart-icon-wrapper { 
+            position: relative; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            width: 42px; 
+            height: 42px; 
+            background: #EBF2E9; 
+            border-radius: 50%; 
+            color: #5E6D3E; 
+        }
+        .dock-badge-count { 
+            position: absolute; 
+            top: -4px; 
+            right: -4px; 
+            background: #BA3C2A; 
+            color: #ffffff; 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            min-width: 22px; 
+            height: 22px; 
+            padding: 0 6px; 
+            border-radius: 11px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border: 2px solid #ffffff; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); 
+        }
+        .dock-text-info { display: flex; flex-direction: column; gap: 1px; }
+        .dock-title { color: #2C351C; font-size: 0.9rem; font-weight: 800; letter-spacing: -0.2px; }
+        .dock-sub { color: #7A8278; font-size: 0.78rem; font-weight: 600; }
 
-        @keyframes cartPulse { 
-            0% { transform: scale(1); } 
-            50% { transform: scale(1.08); border-color: #5E6D3E; } 
-            100% { transform: scale(1); } 
-        }
-        .dock-pulse-animation { animation: cartPulse 0.45s ease-in-out; }
+        @keyframes cartPulse { 
+            0% { transform: scale(1); } 
+            50% { transform: scale(1.08); border-color: #5E6D3E; } 
+            100% { transform: scale(1); } 
+        }
+        .dock-pulse-animation { animation: cartPulse 0.45s ease-in-out; }
 
-        .btn-pdf-export { height: 44px; padding: 0 20px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
-        .btn-pdf-export:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
+        .btn-pdf-export { height: 44px; padding: 0 20px; background-color: #FAFBF9; border: 1px solid #D0D6CE; color: #495430; border-radius: 12px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+        .btn-pdf-export:hover { background-color: #EBF2E9; border-color: #5E6D3E; color: #2C351C; }
 
-        /* 🔔 NOTIFICATIONS TOAST EN BAS D'ÉCRAN */
-        .toast-container {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
+        /* 🔔 NOTIFICATIONS TOAST EN BAS D'ÉCRAN */
+        .toast-container {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
 
-        .toast-message {
-            padding: 14px 24px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 0.92rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transition: all 0.3s ease;
-        }
-        .toast-success { background: rgba(235, 242, 233, 0.96); color: #5E6D3E; border: 1px solid #5E6D3E; }
-        .toast-danger { background: rgba(252, 234, 232, 0.96); color: #BA3C2A; border: 1px solid #BA3C2A; }
+        .toast-message {
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s ease;
+        }
+        .toast-success { background: rgba(235, 242, 233, 0.96); color: #5E6D3E; border: 1px solid #5E6D3E; }
+        .toast-danger { background: rgba(252, 234, 232, 0.96); color: #BA3C2A; border: 1px solid #BA3C2A; }
 
-        @keyframes toastIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
-        /* BANNIÈRES D'INFORMATION */
-        .info-banner { padding: 18px 24px; border-radius: 16px; font-weight: 600; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; }
-        .info-red-banner { background-color: #FCEAE8; border: 1px solid rgba(186, 60, 42, 0.25); border-left: 6px solid #BA3C2A; color: #7A2417; justify-content: space-between; flex-wrap: wrap; }
+        /* BANNIÈRES D'INFORMATION */
+        .info-banner { padding: 18px 24px; border-radius: 16px; font-weight: 600; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5; display: flex; align-items: center; gap: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .info-green-banner { background-color: #EBF2E9; border: 1px solid rgba(94, 109, 62, 0.25); color: #495430; }
+        .info-red-banner { background-color: #FCEAE8; border: 1px solid rgba(186, 60, 42, 0.25); border-left: 6px solid #BA3C2A; color: #7A2417; justify-content: space-between; flex-wrap: wrap; }
 
-        /* BARRE DE RECHERCHE & FILTRES */
-        .search-filter-card { background: #ffffff; padding: 20px 26px; border-radius: 20px; border: 1px solid #E2E6E1; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
-        .search-wrapper { position: relative; flex-grow: 1; max-width: 520px; }
-        .search-wrapper svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); stroke: #7A8278; }
-        .search-input { width: 100%; height: 46px; padding: 0 18px 0 46px; border: 1px solid #D0D6CE; border-radius: 12px; outline: none; background: #FAFBF9; font-size: 0.95rem; font-weight: 500; color: #2C351C; transition: all 0.2s; }
-        .search-input:focus { border-color: #5E6D3E; background: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
+        /* BARRE DE RECHERCHE & FILTRES */
+        .search-filter-card { background: #ffffff; padding: 20px 26px; border-radius: 20px; border: 1px solid #E2E6E1; box-shadow: 0 10px 30px rgba(73, 84, 48, 0.03); margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .search-wrapper { position: relative; flex-grow: 1; max-width: 520px; }
+        .search-wrapper svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); stroke: #7A8278; }
+        .search-input { width: 100%; height: 46px; padding: 0 18px 0 46px; border: 1px solid #D0D6CE; border-radius: 12px; outline: none; background: #FAFBF9; font-size: 0.95rem; font-weight: 500; color: #2C351C; transition: all 0.2s; }
+        .search-input:focus { border-color: #5E6D3E; background: #ffffff; box-shadow: 0 0 0 4px rgba(94, 109, 62, 0.1); }
 
-        .filter-tabs-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .btn-filter-tab { padding: 9px 18px; border-radius: 20px; font-size: 0.88rem; font-weight: 600; text-decoration: none; border: 1px solid #D0D6CE; background-color: #FAFBF9; color: #495430; cursor: pointer; transition: all 0.2s; }
-        .btn-filter-tab:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
-        .btn-filter-tab.active { background-color: #5E6D3E; color: #ffffff; border-color: #5E6D3E; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
+        .filter-tabs-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-filter-tab { padding: 9px 18px; border-radius: 20px; font-size: 0.88rem; font-weight: 600; text-decoration: none; border: 1px solid #D0D6CE; background-color: #FAFBF9; color: #495430; cursor: pointer; transition: all 0.2s; }
+        .btn-filter-tab:hover { background-color: #EBF2E9; border-color: #5E6D3E; }
+        .btn-filter-tab.active { background-color: #5E6D3E; color: #ffffff; border-color: #5E6D3E; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.2); }
 
-        /* LISTE DE CARTES PRODUIT */
-        .inventory-grid { display: flex; flex-direction: column; gap: 14px; }
-        .inventory-card { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 18px; padding: 20px 26px; display: flex; justify-content: space-between; align-items: center; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); gap: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
-        .inventory-card:hover { border-color: #5E6D3E; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(73, 84, 48, 0.06); }
-        
-        .card-details { display: flex; flex-direction: column; gap: 6px; cursor: pointer; flex-grow: 1; }
-        .product-ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.82rem; font-weight: 700; color: #5E6D3E; background: #EBF2E9; padding: 2px 8px; border-radius: 6px; width: fit-content; border: 1px solid rgba(94, 109, 62, 0.15); }
-        .product-title { font-size: 1.15rem; font-weight: 700; color: #2C351C; }
+        /* LISTE DE CARTES PRODUIT */
+        .inventory-grid { display: flex; flex-direction: column; gap: 14px; }
+        .inventory-card { background-color: #ffffff; border: 1px solid #E2E6E1; border-radius: 18px; padding: 20px 26px; display: flex; justify-content: space-between; align-items: center; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); gap: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .inventory-card:hover { border-color: #5E6D3E; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(73, 84, 48, 0.06); }
+        
+        .card-details { display: flex; flex-direction: column; gap: 6px; cursor: pointer; flex-grow: 1; }
+        .product-ref-code { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.82rem; font-weight: 700; color: #5E6D3E; background: #EBF2E9; padding: 2px 8px; border-radius: 6px; width: fit-content; border: 1px solid rgba(94, 109, 62, 0.15); }
+        .product-title { font-size: 1.15rem; font-weight: 700; color: #2C351C; }
 
-        .btn-add-inline { background-color: #5E6D3E; color: white; border: none; padding: 11px 22px; border-radius: 12px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.15); }
-        .btn-add-inline:hover { background-color: #495430; transform: scale(1.02); box-shadow: 0 6px 16px rgba(73, 84, 48, 0.25); }
-        .btn-add-inline:active { transform: scale(0.96); }
-        .btn-add-inline:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; transform: none !important; opacity: 0.8; }
+        .btn-add-inline { background-color: #5E6D3E; color: white; border: none; padding: 11px 22px; border-radius: 12px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(94, 109, 62, 0.15); }
+        .btn-add-inline:hover { background-color: #495430; transform: scale(1.02); box-shadow: 0 6px 16px rgba(73, 84, 48, 0.25); }
+        .btn-add-inline:active { transform: scale(0.96); }
+        .btn-add-inline:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; transform: none !important; opacity: 0.8; }
 
-        /* PUCES DE STATUT DE STOCK */
-        .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-        .status-green { background-color: #2BD14E; box-shadow: 0 0 0 3px rgba(43, 209, 78, 0.2); }
-        .status-yellow { background-color: #FFCC00; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2); }
-        .status-red { background-color: #FF3B30; animation: elegantPulse 2s infinite ease-in-out; }
-        @keyframes elegantPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
+        /* PUCES DE STATUT DE STOCK */
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .status-green { background-color: #2BD14E; box-shadow: 0 0 0 3px rgba(43, 209, 78, 0.2); }
+        .status-yellow { background-color: #FFCC00; box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2); }
+        .status-red { background-color: #FF3B30; animation: elegantPulse 2s infinite ease-in-out; }
+        @keyframes elegantPulse { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
 
-        /* PAGINATION */
-        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 35px; }
-        .page-link { padding: 9px 16px; border: 1px solid #D0D6CE; border-radius: 10px; text-decoration: none; color: #495430; background: #ffffff; font-size: 0.88rem; font-weight: 600; transition: all 0.2s; }
-        .page-link:hover { background: #EBF2E9; border-color: #5E6D3E; }
-        .page-current { padding: 9px 18px; border-radius: 10px; background: #5E6D3E; color: white; font-weight: 700; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.2); }
+        /* PAGINATION */
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 35px; }
+        .page-link { padding: 9px 16px; border: 1px solid #D0D6CE; border-radius: 10px; text-decoration: none; color: #495430; background: #ffffff; font-size: 0.88rem; font-weight: 600; transition: all 0.2s; }
+        .page-link:hover { background: #EBF2E9; border-color: #5E6D3E; }
+        .page-current { padding: 9px 18px; border-radius: 10px; background: #5E6D3E; color: white; font-weight: 700; font-size: 0.88rem; box-shadow: 0 4px 10px rgba(94, 109, 62, 0.2); }
 
-        /* MODALES UNIFIÉES */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
-        .modal-box { background: #ffffff; border-radius: 28px; width: 100%; max-width: 680px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 25px 60px rgba(0,0,0,0.22); animation: modalFadeIn 0.25s ease-out; }
-        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .modal-close { position: absolute; top: 25px; right: 25px; background: #FAFBF9; border: 1px solid #E2E6E1; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7A8278; transition: all 0.2s; }
-        .modal-close:hover { color: #2C351C; background: #EBF2E9; border-color: #5E6D3E; }
-        .modal-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; } 
+        /* MODALES UNIFIÉES */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 53, 28, 0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-box { background: #ffffff; border-radius: 28px; width: 100%; max-width: 680px; padding: 40px; position: relative; max-height: 88vh; overflow-y: auto; border: 1px solid #E2E6E1; box-shadow: 0 25px 60px rgba(0,0,0,0.22); animation: modalFadeIn 0.25s ease-out; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .modal-close { position: absolute; top: 25px; right: 25px; background: #FAFBF9; border: 1px solid #E2E6E1; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #7A8278; transition: all 0.2s; }
+        .modal-close:hover { color: #2C351C; background: #EBF2E9; border-color: #5E6D3E; }
+        .modal-title { font-size: 1.6rem; font-weight: 800; color: #2C351C; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; } 
 
-        .pdf-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 22px; margin-bottom: 25px; }
-        .checkbox-custom-label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; color: #2C351C; cursor: pointer; user-select: none; }
-        .checkbox-custom-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer; }
+        .pdf-options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 22px; margin-bottom: 25px; }
+        .checkbox-custom-label { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 600; color: #2C351C; cursor: pointer; user-select: none; }
+        .checkbox-custom-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #5E6D3E; cursor: pointer; }
 
-        /* FICHE DÉTAIL PRODUIT ÉPURÉE */
-        .product-hero-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 26px; margin-bottom: 22px; display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: center; }
-        .hero-ref-tag { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; font-weight: 800; color: #5E6D3E; background: #EBF2E9; padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(94, 109, 62, 0.2); }
-        .hero-product-title { font-size: 1.5rem; font-weight: 800; color: #2C351C; line-height: 1.3; }
-        .hero-price-tag { font-size: 2rem; font-weight: 800; color: #5E6D3E; letter-spacing: -0.5px; }
+        /* FICHE DÉTAIL PRODUIT ÉPURÉE */
+        .product-hero-card { background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 20px; padding: 26px; margin-bottom: 22px; display: flex; flex-direction: column; gap: 14px; text-align: center; align-items: center; }
+        .hero-ref-tag { font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9rem; font-weight: 800; color: #5E6D3E; background: #EBF2E9; padding: 4px 12px; border-radius: 8px; border: 1px solid rgba(94, 109, 62, 0.2); }
+        .hero-product-title { font-size: 1.5rem; font-weight: 800; color: #2C351C; line-height: 1.3; }
+        .hero-price-tag { font-size: 2rem; font-weight: 800; color: #5E6D3E; letter-spacing: -0.5px; }
 
-        /* PANIER MODALE */
-        .cart-items-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
-        .cart-item-card { display: flex; justify-content: space-between; align-items: center; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 16px; padding: 16px 20px; gap: 15px; }
-        .cart-item-info { display: flex; flex-direction: column; gap: 4px; }
-        .cart-item-title { font-size: 1.05rem; font-weight: 700; color: #2C351C; }
+        /* PANIER MODALE */
+        .cart-items-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .cart-item-card { display: flex; justify-content: space-between; align-items: center; background: #FAFBF9; border: 1px solid #E2E6E1; border-radius: 16px; padding: 16px 20px; gap: 15px; }
+        .cart-item-info { display: flex; flex-direction: column; gap: 4px; }
+        .cart-item-title { font-size: 1.05rem; font-weight: 700; color: #2C351C; }
 
-        .qty-controls { display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 4px 8px; border-radius: 10px; border: 1px solid #D0D6CE; }
-        .btn-qty-mini { width: 30px; height: 30px; border-radius: 8px; border: none; background: #FAFBF9; font-weight: 700; cursor: pointer; color: #2C351C; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .btn-qty-mini:hover { background: #EBF2E9; color: #5E6D3E; }
+        .qty-controls { display: flex; align-items: center; gap: 8px; background: #ffffff; padding: 4px 8px; border-radius: 10px; border: 1px solid #D0D6CE; }
+        .btn-qty-mini { width: 30px; height: 30px; border-radius: 8px; border: none; background: #FAFBF9; font-weight: 700; cursor: pointer; color: #2C351C; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-qty-mini:hover { background: #EBF2E9; color: #5E6D3E; }
 
-        .btn-submit-cart { height: 52px; padding: 0 28px; background-color: #5E6D3E; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 0.98rem; cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.25); }
-        .btn-submit-cart:hover:not(:disabled) { background-color: #495430; transform: translateY(-1px); }
-        .btn-submit-cart:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; }
-        
-        .select-custom, .input-custom { height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; outline: none; background: #FAFBF9; width: 100%; color: #2C351C; font-weight: 500; transition: border-color 0.2s; }
+        .btn-submit-cart { height: 52px; padding: 0 28px; background-color: #5E6D3E; color: white; border: none; border-radius: 14px; font-weight: 700; font-size: 0.98rem; cursor: pointer; transition: all 0.25s; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(94, 109, 62, 0.25); }
+        .btn-submit-cart:hover:not(:disabled) { background-color: #495430; transform: translateY(-1px); }
+        .btn-submit-cart:disabled { background-color: #E2E6E1 !important; color: #8A9288 !important; cursor: not-allowed !important; box-shadow: none !important; }
+        
+        .select-custom, .input-custom { height: 48px; padding: 0 16px; border: 1px solid #D0D6CE; border-radius: 12px; font-size: 0.95rem; outline: none; background: #FAFBF9; width: 100%; color: #2C351C; font-weight: 500; transition: border-color 0.2s; }
 
-        /* CADRE ADMIN ÉDITION AVEC PRIX ET QUOTA */
-        .admin-edit-panel { background: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 20px; padding: 24px; margin-top: 10px; display: flex; flex-direction: column; gap: 16px; }
-        .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .detail-item { display: flex; flex-direction: column; gap: 6px; }
-        .detail-label { font-size: 0.75rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .view-value { font-size: 0.95rem; font-weight: 700; color: #2C351C; padding: 8px 0; }
-        .edit-input { padding: 10px 14px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.92rem; outline: none; background: #ffffff; width: 100%; font-weight: 600; color: #2C351C; }
-        .edit-input:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
-    </style>
+        /* CADRE ADMIN ÉDITION AVEC PRIX ET QUOTA */
+        .admin-edit-panel { background: #FAFBF9; border: 1px solid #E6EAE4; border-radius: 20px; padding: 24px; margin-top: 10px; display: flex; flex-direction: column; gap: 16px; }
+        .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .detail-item { display: flex; flex-direction: column; gap: 6px; }
+        .detail-label { font-size: 0.75rem; color: #7A8278; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .view-value { font-size: 0.95rem; font-weight: 700; color: #2C351C; padding: 8px 0; }
+        .edit-input { padding: 10px 14px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 0.92rem; outline: none; background: #ffffff; width: 100%; font-weight: 600; color: #2C351C; }
+        .edit-input:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.1); }
+    </style>
 </head>
 <body>
 
@@ -219,828 +219,828 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <button id="sidebarToggleOpen" onclick="toggleSidebar()" style="position: fixed; top: 25px; left: 25px; z-index: 999; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="3" x2="21" y2="3"></line><line x1="3" y1="21" x2="21" y2="21"></line></svg>
 </button>
-        
+        
 <div class="sidebar" id="appSidebar" style="width: 260px; background: rgba(94, 109, 62, 0.94); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; display: flex; flex-direction: column; padding: 25px 0; z-index: 998; transform: translateX(0px); opacity: 1; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s; box-shadow: 0 20px 50px rgba(0,0,0,0.08);">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
-        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
-        <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
-    </div>
-        
-    <ul class="sidebar-menu">
-        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
-        <li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>
-        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
-        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
-        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
-        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
-        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
-        {% if is_admin or request.user.is_superuser %}
-        <li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>
-        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
-        {% endif %}
-    </ul>
-            
-    <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">
-            <a href="/mon-profil/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; flex-grow: 1;">
-                <div style="width: 36px; height: 36px; background-color: #FAFBF9; color: #495430; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
-                    {{ request.user.username|slice:":1"|upper }}
-                </div>
-                <div style="display: flex; flex-direction: column;">
-                    <span style="color: #ffffff; font-size: 0.88rem; font-weight: 600; line-height: 1.2;">{{ request.user.username }}</span>
-                    <span style="color: {% if request.path == '/mon-profil/' %}#ffffff{% else %}rgba(255, 255, 255, 0.5){% endif %}; font-size: 0.75rem;">Mon Profil</span>
-                </div>
-            </a>
-        </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 25px; margin-bottom: 20px;">
+        <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.5px;">AmbassStock</span>
+        <button onclick="toggleSidebar()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+    </div>
+        
+    <ul class="sidebar-menu">
+        <li class="sidebar-item"><a href="/accueil/" class="sidebar-link {% if request.path == '/accueil/' %}active{% endif %}">Accueil</a></li>
+        <li class="sidebar-item"><a href="/inventaire/" class="sidebar-link {% if request.path == '/inventaire/' %}active{% endif %}">Inventaire</a></li>
+        {% if profil_actif.acces_stocks %}<li class="sidebar-item"><a href="/gestion-stocks/" class="sidebar-link {% if request.path == '/gestion-stocks/' %}active{% endif %}">Gestion des stocks</a></li>{% endif %}
+        {% if profil_actif.acces_historique %}<li class="sidebar-item"><a href="/historique/" class="sidebar-link {% if request.path == '/historique/' %}active{% endif %}">Historique</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-demandes/" class="sidebar-link {% if request.path == '/gestion-demandes/' %}active{% endif %}">Gestion des demandes</a></li>{% endif %}
+        {% if profil_actif.acces_statistiques %}<li class="sidebar-item"><a href="/statistiques/" class="sidebar-link {% if request.path == '/statistiques/' %}active{% endif %}">Statistiques</a></li>{% endif %}
+        {% if profil_actif.acces_gestion_utilisateurs %}<li class="sidebar-item"><a href="/gestion-utilisateurs/" class="sidebar-link {% if request.path == '/gestion-utilisateurs/' %}active{% endif %}">Gestion des utilisateurs</a></li>{% endif %}
+        {% if profil_actif.acces_factures %}<li class="sidebar-item"><a href="/factures/" class="sidebar-link {% if request.path == '/factures/' %}active{% endif %}">Factures</a></li>{% endif %}
+        {% if is_admin or request.user.is_superuser %}
+        <li class="sidebar-item"><a href="/panier/" class="sidebar-link {% if request.path == '/panier/' %}active{% endif %}">Panier</a></li>
+        <li class="sidebar-item"><a href="/liste-courses/" class="sidebar-link {% if request.path == '/liste-courses/' %}active{% endif %}">Liste de courses</a></li>
+        {% endif %}
+    </ul>
+            
+    <div style="margin-top: auto; padding: 0 15px; display: flex; flex-direction: column; gap: 10px;">
+        <div style="padding: 15px; background: rgba(255, 255, 255, 0.08); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center;">
+            <a href="/mon-profil/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; flex-grow: 1;">
+                <div style="width: 36px; height: 36px; background-color: #FAFBF9; color: #495430; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">
+                    {{ request.user.username|slice:":1"|upper }}
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="color: #ffffff; font-size: 0.88rem; font-weight: 600; line-height: 1.2;">{{ request.user.username }}</span>
+                    <span style="color: {% if request.path == '/mon-profil/' %}#ffffff{% else %}rgba(255, 255, 255, 0.5){% endif %}; font-size: 0.75rem;">Mon Profil</span>
+                </div>
+            </a>
+        </div>
 
-        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 82, 82, 0.15)'" onmouseout="this.style.background='transparent'">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-            Déconnexion
-        </a>
-    </div>
+        <a href="{% url 'deconnexion' %}" class="sidebar-link" style="color: #ff5252; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; padding: 12px 20px; text-decoration: none; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255, 82, 82, 0.15)'" onmouseout="this.style.background='transparent'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Déconnexion
+        </a>
+    </div>
 </div>
 
 <div class="main-content">
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">Inventaire des Stocks</h1>
-            <p class="welcome-text">Consultez la disponibilité des fournitures en réserve et préparez directement vos demandes de réassort.</p>
-        </div>
-        
-        <div class="header-actions-group">
-            <!-- 🛒 DOCK FLOTTANT PANIER -->
-            <div class="amazon-cart-dock" id="btnPanierFlottant" onclick="ouvrirModalPanier()" title="Consulter et valider la commande">
-                <div class="dock-cart-icon-wrapper">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                    <div class="dock-badge-count" id="cartBadgeCount">0</div>
-                </div>
-                <div class="dock-text-info">
-                    <span class="dock-title">Votre Panier</span>
-                    <span class="dock-sub" id="cartBadgeText">0 article</span>
-                </div>
-            </div>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Inventaire des Stocks</h1>
+            <p class="welcome-text">Consultez la disponibilité des fournitures en réserve et préparez directement vos demandes de réassort.</p>
+        </div>
+        
+        <div class="header-actions-group">
+            <!-- 🛒 DOCK FLOTTANT PANIER -->
+            <div class="amazon-cart-dock" id="btnPanierFlottant" onclick="ouvrirModalPanier()" title="Consulter et valider la commande">
+                <div class="dock-cart-icon-wrapper">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <div class="dock-badge-count" id="cartBadgeCount">0</div>
+                </div>
+                <div class="dock-text-info">
+                    <span class="dock-title">Votre Panier</span>
+                    <span class="dock-sub" id="cartBadgeText">0 article</span>
+                </div>
+            </div>
 
-            <!-- 📄 BOUTON EXPORT PDF -->
-            <button type="button" class="btn-pdf-export" onclick="ouvrirModalConfigPDF()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-                PDF
-            </button>
-        </div>
-    </div>
+            <!-- 📄 BOUTON EXPORT PDF -->
+            <button type="button" class="btn-pdf-export" onclick="ouvrirModalConfigPDF()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                PDF
+            </button>
+        </div>
+    </div>
 
-    <!-- BANNIÈRES D'INFORMATION DU PANIER -->
-    {% if panier_bloque and not is_admin %}
-    <div class="info-banner info-red-banner">
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, veuillez effectuer une demande urgente.</span>
-        </div>
-        
-        <button type="button" onclick="ouvrirModalTicketUrgence()" style="background-color: #BA3C2A; color: #ffffff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(186, 60, 42, 0.3); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            Créer un ticket d'urgence
-        </button>
-    </div>
-    {% else %}
-    <div class="info-banner info-green-banner">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        <span><strong>Rappel d'usage :</strong> Une fois votre sélection terminée, ouvrez le panier situé en haut à droite pour valider définitivement votre commande. Dans le cas contraire, votre demande ne sera pas transmise.</span>
-    </div>
-    {% endif %}
+    <!-- BANNIÈRES D'INFORMATION DU PANIER -->
+    {% if panier_bloque and not is_admin %}
+    <div class="info-banner info-red-banner">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span><strong>Commandes hebdomadaires fermées :</strong> La préparation des listes standard est verrouillée du mercredi 12h00 au jeudi 17h00. Pour tout besoin impérieux, veuillez effectuer une demande urgente.</span>
+        </div>
+        
+        <button type="button" onclick="ouvrirModalTicketUrgence()" style="background-color: #BA3C2A; color: #ffffff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(186, 60, 42, 0.3); font-size: 0.9rem; display: inline-flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Créer un ticket d'urgence
+        </button>
+    </div>
+    {% else %}
+    <div class="info-banner info-green-banner">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span><strong>Rappel d'usage :</strong> Une fois votre sélection terminée, ouvrez le panier situé en haut à droite pour valider définitivement votre commande. Dans le cas contraire, votre demande ne sera pas transmise.</span>
+    </div>
+    {% endif %}
 
-    <!-- 🟢 CHARGEMENT DES MESSAGES FLASH DJANGO SOUS FORME DE TOASTS EN BAS -->
-    {% if messages %}
-        {% for message in messages %}
-            <script>
-                document.addEventListener("DOMContentLoaded", function() {
-                    afficherToast("{{ message|escapejs }}", "{% if message.tags == 'error' or message.tags == 'warning' %}danger{% else %}success{% endif %}");
-                });
-            </script>
-        {% endfor %}
-    {% endif %}
+    <!-- 🟢 CHARGEMENT DES MESSAGES FLASH DJANGO SOUS FORME DE TOASTS EN BAS -->
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    afficherToast("{{ message|escapejs }}", "{% if message.tags == 'error' or message.tags == 'warning' %}danger{% else %}success{% endif %}");
+                });
+            </script>
+        {% endfor %}
+    {% endif %}
 
-    <!-- BARRE DE RECHERCHE ET PILULES DE FILTRAGE PAR STATUT DE STOCK -->
-    <div class="search-filter-card">
-        <div class="search-wrapper">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" id="searchInput" class="search-input" placeholder="Rechercher par désignation, référence ou catégorie..." oninput="filtrerInventaireGlobal()">
-        </div>
-            
-        <div class="filter-tabs-group">
-            <a href="?statut=all" class="btn-filter-tab {% if not statut_filtre or statut_filtre == 'all' %}active{% endif %}">Tous les produits</a>
-            <a href="?statut=green" class="btn-filter-tab {% if statut_filtre == 'green' %}active{% endif %}">Stock suffisant</a>
-            <a href="?statut=yellow" class="btn-filter-tab {% if statut_filtre == 'yellow' %}active{% endif %}">Stock limite</a>
-            <a href="?statut=red" class="btn-filter-tab {% if statut_filtre == 'red' %}active{% endif %}">Alerte rupture</a>
-        </div>
-    </div>
-            
-    <!-- 🛒 GRILLE D'INVENTAIRE AVEC CORRECTION DE LA PROPAGATION DU CLIC -->
-    <div class="inventory-grid" id="inventoryList">
-        {% for produit in page_obj %}
-        <div class="inventory-card django-card" id="card-{{ produit.reference|escape }}">
-            
-            <div class="card-details action-card-trigger" 
-                 data-id="{{ produit.id }}" 
-                 data-ref="{{ produit.reference|escape }}" 
-                 data-nom="{{ produit.objet|escape }}" 
-                 data-cat="{{ produit.categorie|escape }}" 
-                 data-stock="{{ produit.quantite }}" 
-                 data-emp="{{ produit.emplacement|default:''|escape }}" 
-                 data-quota="{{ produit.quota_minimum|default:'' }}" 
-                 data-fournisseur="{{ produit.fournisseur|default:'Divers'|escape }}" 
-                 data-prix="{{ produit.prix|default:'' }}">
-                <span class="product-ref-code">{{ produit.reference }}</span>
-                <span class="product-title">{{ produit.objet }}</span>
-            </div> 
+    <!-- BARRE DE RECHERCHE ET PILULES DE FILTRAGE PAR STATUT DE STOCK -->
+    <div class="search-filter-card">
+        <div class="search-wrapper">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Rechercher par désignation, référence ou catégorie..." oninput="filtrerInventaireGlobal()">
+        </div>
+            
+        <div class="filter-tabs-group">
+            <a href="?statut=all" class="btn-filter-tab {% if not statut_filtre or statut_filtre == 'all' %}active{% endif %}">Tous les produits</a>
+            <a href="?statut=green" class="btn-filter-tab {% if statut_filtre == 'green' %}active{% endif %}">Stock suffisant</a>
+            <a href="?statut=yellow" class="btn-filter-tab {% if statut_filtre == 'yellow' %}active{% endif %}">Stock limite</a>
+            <a href="?statut=red" class="btn-filter-tab {% if statut_filtre == 'red' %}active{% endif %}">Alerte rupture</a>
+        </div>
+    </div>
+            
+    <!-- 🛒 GRILLE D'INVENTAIRE AVEC CORRECTION DE LA PROPAGATION DU CLIC -->
+    <div class="inventory-grid" id="inventoryList">
+        {% for produit in page_obj %}
+        <div class="inventory-card django-card" id="card-{{ produit.reference|escape }}">
+            
+            <div class="card-details action-card-trigger" 
+                 data-id="{{ produit.id }}" 
+                 data-ref="{{ produit.reference|escape }}" 
+                 data-nom="{{ produit.objet|escape }}" 
+                 data-cat="{{ produit.categorie|escape }}" 
+                 data-stock="{{ produit.quantite }}" 
+                 data-emp="{{ produit.emplacement|default:''|escape }}" 
+                 data-quota="{{ produit.quota_minimum|default:'' }}" 
+                 data-fournisseur="{{ produit.fournisseur|default:'Divers'|escape }}" 
+                 data-prix="{{ produit.prix|default:'' }}">
+                <span class="product-ref-code">{{ produit.reference }}</span>
+                <span class="product-title">{{ produit.objet }}</span>
+            </div> 
 
-            <!-- **MODIFICATION CORRIGÉE : RETRAIT DE EVENT.STOPPROPAGATION QUI BLOQUAIT LE CLIC** -->
-            <div>
-                {% if panier_bloque and not is_admin %}
-                <button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Cliquez sur 'Créer un ticket d'urgence' dans le bandeau rouge.">
-                    Fermé (Option d'urgence)
-                </button>
-                {% else %}
-                <button type="button" class="btn-add-inline btn-add-cart-trigger" 
-                        data-id="{{ produit.id }}" 
-                        data-nom="{{ produit.objet|escapejs }}" 
-                        data-ref="{{ produit.reference|escapejs }}" 
-                        data-stock="{{ produit.quantite }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    Ajouter au panier
-                </button>
-                {% endif %}
-            </div>
+            <!-- **MODIFICATION CORRIGÉE : RETRAIT DE EVENT.STOPPROPAGATION QUI BLOQUAIT LE CLIC** -->
+            <div>
+                {% if panier_bloque and not is_admin %}
+                <button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Cliquez sur 'Créer un ticket d'urgence' dans le bandeau rouge.">
+                    Fermé (Option d'urgence)
+                </button>
+                {% else %}
+                <button type="button" class="btn-add-inline btn-add-cart-trigger" 
+                        data-id="{{ produit.id }}" 
+                        data-nom="{{ produit.objet|escapejs }}" 
+                        data-ref="{{ produit.reference|escapejs }}" 
+                        data-stock="{{ produit.quantite }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    Ajouter au panier
+                </button>
+                {% endif %}
+            </div>
 
-            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}"></div>
-        </div>
-        {% empty %}
-        <div id="emptyDjangoMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px; background: #ffffff; border-radius: 18px; border: 1px dashed #D0D6CE;">Aucun produit trouvé dans cet inventaire.</div>
-        {% endfor %}
-        <div id="noResultMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px; background: #ffffff; border-radius: 18px; border: 1px dashed #D0D6CE; display: none;">Aucun produit ne correspond à votre recherche globale.</div>
-    </div>
+            <div class="status-dot status-{% if produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum %}red{% elif produit.quota_minimum is not None and produit.quantite <= produit.quota_minimum|add:10 %}yellow{% else %}green{% endif %}"></div>
+        </div>
+        {% empty %}
+        <div id="emptyDjangoMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px; background: #ffffff; border-radius: 18px; border: 1px dashed #D0D6CE;">Aucun produit trouvé dans cet inventaire.</div>
+        {% endfor %}
+        <div id="noResultMsg" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px; background: #ffffff; border-radius: 18px; border: 1px dashed #D0D6CE; display: none;">Aucun produit ne correspond à votre recherche globale.</div>
+    </div>
 
-    <!-- PAGINATION -->
-    {% if page_obj.paginator.num_pages > 1 %}
-    <div class="pagination-container" id="inventoryPagination">
-        {% if page_obj.has_previous %}
-            <a href="?page=1{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">‹‹ Début</a>
-            <a href="?page={{ page_obj.previous_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">‹ Précédent</a>
-        {% endif %}
-        
-        <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-        
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">Suivant ›</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">Fin ››</a>
-        {% endif %}
-    </div>
-    {% endif %}
+    <!-- PAGINATION -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination-container" id="inventoryPagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">‹‹ Début</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">‹ Précédent</a>
+        {% endif %}
+        
+        <span class="page-current">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">Suivant ›</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if statut_filtre %}&statut={{ statut_filtre }}{% endif %}" class="page-link">Fin ››</a>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 
 <!-- 📄 MODALE DE CONFIGURATION DE L'EXPORT PDF -->
 <div class="modal-overlay" id="pdfConfigModal" onclick="if(event.target === this) fermerModal('pdfConfigModal');">
-    <div class="modal-box">
-        <button class="modal-close" onclick="fermerModal('pdfConfigModal')">✕</button>
-        <h3 class="modal-title">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-            Personnaliser l'export PDF
-        </h3>
+    <div class="modal-box">
+        <button class="modal-close" onclick="fermerModal('pdfConfigModal')">✕</button>
+        <h3 class="modal-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            Personnaliser l'export PDF
+        </h3>
 
-        <p style="font-size: 0.95rem; color: #7A8278; margin-bottom: 20px;">
-            Sélectionnez les colonnes d'informations à inclure dans votre rapport PDF :
-        </p>
+        <p style="font-size: 0.95rem; color: #7A8278; margin-bottom: 20px;">
+            Sélectionnez les colonnes d'informations à inclure dans votre rapport PDF :
+        </p>
 
-        <form id="pdfExportForm" method="POST" action="" onsubmit="soumettreExportPDF(event)">
-            {% csrf_token %}
-            <input type="hidden" name="action_type" value="generer_recapitulatif_pdf">
+        <form id="pdfExportForm" method="POST" action="" onsubmit="soumettreExportPDF(event)">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="generer_recapitulatif_pdf">
 
-            <div class="pdf-options-grid">
-                <label class="checkbox-custom-label"><input type="checkbox" name="col_reference" checked> Référence produit</label>
-                <label class="checkbox-custom-label"><input type="checkbox" name="col_categorie" checked> Catégorie</label>
-                <label class="checkbox-custom-label"><input type="checkbox" name="col_fournisseur" checked> Fournisseur</label>
-                <label class="checkbox-custom-label"><input type="checkbox" name="col_prix" checked> Prix unitaire (€)</label>
-                <label class="checkbox-custom-label"><input type="checkbox" name="col_stock" checked> Quantité en stock</label>
-                <label class="checkbox-custom-label"><input type="checkbox" name="col_quota" checked> Quota alerte</label>
-                <label class="checkbox-custom-label"><input type="checkbox" name="col_emplacement" checked> Emplacement</label>
-            </div>
+            <div class="pdf-options-grid">
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_reference" checked> Référence produit</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_categorie" checked> Catégorie</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_fournisseur" checked> Fournisseur</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_prix" checked> Prix unitaire (€)</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_stock" checked> Quantité en stock</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_quota" checked> Quota alerte</label>
+                <label class="checkbox-custom-label"><input type="checkbox" name="col_emplacement" checked> Emplacement</label>
+            </div>
 
-            <button type="submit" class="btn-submit-cart" style="width: 100%;">
-                Télécharger le rapport PDF
-            </button>
-        </form>
-    </div>
+            <button type="submit" class="btn-submit-cart" style="width: 100%;">
+                Télécharger le rapport PDF
+            </button>
+        </form>
+    </div>
 </div>
 
 <!-- 🎴 MODALE FICHE DÉTAIL & ÉDITION PRODUIT (RÉSERVÉE STRICTEMENT ADMINS) -->
 {% if request.user.is_superuser or is_admin %}
 <div class="modal-overlay" id="productModal" onclick="if(event.target === this) fermerModal('productModal');">
-    <div class="modal-box">
-        <button class="modal-close" onclick="fermerModal('productModal')">✕</button>
-        <h3 class="modal-title">Fiche & Paramètres Administration</h3>
-                
-        <div class="product-hero-card">
-            <span class="hero-ref-tag" id="lblReference">REF-XXX</span>
-            <h2 class="hero-product-title" id="valNom">Désignation du produit</h2>
-            <div class="hero-price-tag" id="valPrixHeader">0,00 €</div>
-        </div>
+    <div class="modal-box">
+        <button class="modal-close" onclick="fermerModal('productModal')">✕</button>
+        <h3 class="modal-title">Fiche & Paramètres Administration</h3>
+                
+        <div class="product-hero-card">
+            <span class="hero-ref-tag" id="lblReference">REF-XXX</span>
+            <h2 class="hero-product-title" id="valNom">Désignation du produit</h2>
+            <div class="hero-price-tag" id="valPrixHeader">0,00 €</div>
+        </div>
 
-        <div class="admin-edit-panel">
-            <span style="font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">Caractéristiques du Produit</span>
-            
-            <div class="details-grid">
-                <div class="detail-item" style="grid-column: span 2;">
-                    <span class="detail-label">Désignation / Nom du produit</span>
-                    <span class="view-value" id="valNomDisplay">-</span>
-                    <input type="text" id="txtNom" form="editForm" name="objet" class="edit-input" required placeholder="Ex: Stylo Bille Bleu">
-                </div>
+        <div class="admin-edit-panel">
+            <span style="font-size: 0.8rem; font-weight: 800; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">Caractéristiques du Produit</span>
+            
+            <div class="details-grid">
+                <div class="detail-item" style="grid-column: span 2;">
+                    <span class="detail-label">Désignation / Nom du produit</span>
+                    <span class="view-value" id="valNomDisplay">-</span>
+                    <input type="text" id="txtNom" form="editForm" name="objet" class="edit-input" required placeholder="Ex: Stylo Bille Bleu">
+                </div>
 
-                <div class="detail-item">
-                    <span class="detail-label">Catégorie</span>
-                    <span class="view-value" id="valCategorie">-</span>
-                    <input type="text" id="txtCategorie" form="editForm" name="categorie" class="edit-input" required>
-                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Catégorie</span>
+                    <span class="view-value" id="valCategorie">-</span>
+                    <input type="text" id="txtCategorie" form="editForm" name="categorie" class="edit-input" required>
+                </div>
 
-                <div class="detail-item">
-                    <span class="detail-label">Emplacement</span>
-                    <span class="view-value" id="valEmplacement">-</span>
-                    <input type="text" id="txtEmplacement" form="editForm" name="emplacement" class="edit-input">
-                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Emplacement</span>
+                    <span class="view-value" id="valEmplacement">-</span>
+                    <input type="text" id="txtEmplacement" form="editForm" name="emplacement" class="edit-input">
+                </div>
 
-                <div class="detail-item">
-                    <span class="detail-label">Fournisseur</span>
-                    <span class="view-value" id="valFournisseur">-</span>
-                    <input type="text" id="txtFournisseur" form="editForm" name="fournisseur" class="edit-input" placeholder="Ex: Le Voltigeur, All Office...">
-                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Fournisseur</span>
+                    <span class="view-value" id="valFournisseur">-</span>
+                    <input type="text" id="txtFournisseur" form="editForm" name="fournisseur" class="edit-input" placeholder="Ex: Le Voltigeur, All Office...">
+                </div>
 
-                <div class="detail-item">
-                    <span class="detail-label">Stock Réel</span>
-                    <span class="view-value" id="valStock">-</span>
-                    <input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required min="0">
-                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Stock Réel</span>
+                    <span class="view-value" id="valStock">-</span>
+                    <input type="number" id="txtStock" form="editForm" name="quantite" class="edit-input" required min="0">
+                </div>
 
-                <div class="detail-item">
-                    <span class="detail-label">Prix Unitaire (€)</span>
-                    <span class="view-value" id="valPrix">-</span>
-                    <input type="number" step="0.01" id="txtPrix" form="editForm" name="prix" class="edit-input" placeholder="Ex: 4.90">
-                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Prix Unitaire (€)</span>
+                    <span class="view-value" id="valPrix">-</span>
+                    <input type="number" step="0.01" id="txtPrix" form="editForm" name="prix" class="edit-input" placeholder="Ex: 4.90">
+                </div>
 
-                <div class="detail-item">
-                    <span class="detail-label">Quota Alerte Rupture</span>
-                    <span class="view-value" id="valQuota">-</span>
-                    <input type="number" id="txtQuota" form="editForm" name="quota_minimum" class="edit-input" placeholder="Ex: 5" min="0">
-                </div>
-            </div>
+                <div class="detail-item">
+                    <span class="detail-label">Quota Alerte Rupture</span>
+                    <span class="view-value" id="valQuota">-</span>
+                    <input type="number" id="txtQuota" form="editForm" name="quota_minimum" class="edit-input" placeholder="Ex: 5" min="0">
+                </div>
+            </div>
 
-            <form id="editForm" method="POST" action="">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="modification">
-                <input type="hidden" name="produit_id" id="hiddenProduitId">
-                <input type="hidden" id="txtReference" name="reference">
+            <form id="editForm" method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="modification">
+                <input type="hidden" name="produit_id" id="hiddenProduitId">
+                <input type="hidden" id="txtReference" name="reference">
 
-                <div style="display: flex; gap: 12px; margin-top: 15px;">
-                    <button type="button" id="btnEdit" class="btn-add-inline" style="flex-grow:1; height: 46px; justify-content: center;" onclick="activerModeEdition()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        Modifier les paramètres
-                    </button>
-                    <button type="submit" id="btnSave" class="btn-add-inline" style="flex-grow:1; height: 46px; display:none; background-color:#2C351C; justify-content: center;">Enregistrer les modifications</button>
-                    {% if request.user.is_superuser %}
-                    <button type="button" style="background:#FAFBF9; border:1px solid #BA3C2A; color:#BA3C2A; padding:0 18px; border-radius:12px; font-weight:700; cursor:pointer;" onclick="supprimerProduit()">Supprimer</button>
-                    {% endif %}
-                </div>
-            </form>
-        </div>
-    </div>
+                <div style="display: flex; gap: 12px; margin-top: 15px;">
+                    <button type="button" id="btnEdit" class="btn-add-inline" style="flex-grow:1; height: 46px; justify-content: center;" onclick="activerModeEdition()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Modifier les paramètres
+                    </button>
+                    <button type="submit" id="btnSave" class="btn-add-inline" style="flex-grow:1; height: 46px; display:none; background-color:#2C351C; justify-content: center;">Enregistrer les modifications</button>
+                    {% if request.user.is_superuser %}
+                    <button type="button" style="background:#FAFBF9; border:1px solid #BA3C2A; color:#BA3C2A; padding:0 18px; border-radius:12px; font-weight:700; cursor:pointer;" onclick="supprimerProduit()">Supprimer</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endif %}
 
 <!-- 🛒 MODALE RÉCAPITULATIF DU PANIER FLOTTANT -->
 <div class="modal-overlay" id="cartModal" onclick="if(event.target === this) fermerModal('cartModal');">
-    <div class="modal-box">
-        <button class="modal-close" onclick="fermerModal('cartModal')">✕</button>
-        <h3 class="modal-title">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-            Récapitulatif de votre demande
-        </h3>
+    <div class="modal-box">
+        <button class="modal-close" onclick="fermerModal('cartModal')">✕</button>
+        <h3 class="modal-title">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5E6D3E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+            Récapitulatif de votre demande
+        </h3>
 
-        <div id="cartEmptyState" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px 20px; background: #FAFBF9; border-radius: 18px; border: 1px dashed #D0D6CE;">
-            Votre panier est actuellement vide. Cliquez sur "+ Ajouter au panier" à côté d'un article pour commencer.
-        </div>
+        <div id="cartEmptyState" style="text-align: center; color: #7A8278; font-style: italic; padding: 45px 20px; background: #FAFBF9; border-radius: 18px; border: 1px dashed #D0D6CE;">
+            Votre panier est actuellement vide. Cliquez sur "+ Ajouter au panier" à côté d'un article pour commencer.
+        </div>
 
-        <div id="cartFilledState" style="display: none;">
-            <div class="cart-items-container" id="cartItemsList"></div>
+        <div id="cartFilledState" style="display: none;">
+            <div class="cart-items-container" id="cartItemsList"></div>
 
-            <form method="POST" action="" onsubmit="return preparerSoumissionPanier(event)" style="display:flex; flex-direction:column; gap:20px; background:#FAFBF9; padding:25px; border-radius:20px; border:1px solid #E2E6E1; margin-top: 10px;">
-                {% csrf_token %}
-                <input type="hidden" name="action_type" value="ajouter_panier_groupe">
-                <input type="hidden" name="panier_json" id="cartJsonData">
-                <input type="hidden" name="est_urgente" id="hiddenEstUrgente" value="false">
+            <form method="POST" action="" onsubmit="return preparerSoumissionPanier(event)" style="display:flex; flex-direction:column; gap:20px; background:#FAFBF9; padding:25px; border-radius:20px; border:1px solid #E2E6E1; margin-top: 10px;">
+                {% csrf_token %}
+                <input type="hidden" name="action_type" value="ajouter_panier_groupe">
+                <input type="hidden" name="panier_json" id="cartJsonData">
+                <input type="hidden" name="est_urgente" id="hiddenEstUrgente" value="false">
 
-                <div>
-                    <label style="font-size: 0.8rem; font-weight: 700; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">À quel service sont destinés ces articles ? <span style="color:#BA3C2A;">*</span></label>
-                    <select name="service" id="selectServicePanier" onchange="verifierServicePanier()" class="select-custom" style="margin-top:8px;" required>
-                        <option value="" disabled selected>Sélectionner un service pour valider...</option>
-                        <option value="Consulaire">Consulaire</option>
-                        <option value="Secrétaire">Secrétaire</option>
-                        <option value="Assistant(e) AMB">Assistant(e) AMB</option>
-                        <option value="1ère Secrétaire">1ère Secrétaire</option>
-                        <option value="2ème Secrétaire">2ème Secrétaire</option>
-                        <option value="Diplomate">Diplomate</option>
-                        <option value="Administration">Administration</option>
-                        <option value="Sécurité">Sécurité</option>
-                    </select>
-                </div>
+                <div>
+                    <label style="font-size: 0.8rem; font-weight: 700; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">À quel service sont destinés ces articles ? <span style="color:#BA3C2A;">*</span></label>
+                    <select name="service" id="selectServicePanier" onchange="verifierServicePanier()" class="select-custom" style="margin-top:8px;" required>
+                        <option value="" disabled selected>Sélectionner un service pour valider...</option>
+                        <option value="Consulaire">Consulaire</option>
+                        <option value="Secrétaire">Secrétaire</option>
+                        <option value="Secrétaire AMB">Secrétaire AMB</option>
+                        <option value="1ère Secrétaire">1ère Secrétaire</option>
+                        <option value="2ème Secrétaire">2ème Secrétaire</option>
+                        <option value="Diplomate">Diplomate</option>
+                        <option value="Administration">Administration</option>
+                        <option value="Sécurité">Sécurité</option>
+                    </select>
+                </div>
 
-                <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px; margin-top: 5px;">
-                    <button type="button" onclick="viderPanier()" style="background:none; border:none; color:#BA3C2A; font-weight:700; cursor:pointer; font-size:0.9rem; display: flex; align-items: center; gap: 6px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        Vider le panier
-                    </button>
-                    <button type="submit" id="btnSubmitCart" class="btn-submit-cart" disabled>
-                        Valider et transmettre au panier global
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap: 15px; margin-top: 5px;">
+                    <button type="button" onclick="viderPanier()" style="background:none; border:none; color:#BA3C2A; font-weight:700; cursor:pointer; font-size:0.9rem; display: flex; align-items: center; gap: 6px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        Vider le panier
+                    </button>
+                    <button type="submit" id="btnSubmitCart" class="btn-submit-cart" disabled>
+                        Valider et transmettre au panier global
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- MODALE TICKET D'URGENCE DÉDIÉE -->
 <div class="modal-overlay" id="ticketUrgenceModal" onclick="if(event.target === this) fermerModal('ticketUrgenceModal');">
-    <div class="modal-box" style="max-width: 680px;">
-        <button class="modal-close" onclick="fermerModal('ticketUrgenceModal')">✕</button>
-        <h3 class="modal-title" style="color: #BA3C2A;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-            Créer un ticket d'urgence
-        </h3>
+    <div class="modal-box" style="max-width: 680px;">
+        <button class="modal-close" onclick="fermerModal('ticketUrgenceModal')">✕</button>
+        <h3 class="modal-title" style="color: #BA3C2A;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BA3C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            Créer un ticket d'urgence
+        </h3>
 
-        <form method="POST" action="" style="display:flex; flex-direction:column; gap:20px;">
-            {% csrf_token %}
-            <input type="hidden" name="action_type" value="ajouter_panier_groupe">
-            <input type="hidden" name="est_urgente" value="true">
-            <input type="hidden" name="panier_json" id="jsonTicketUrgence">
+        <form method="POST" action="" style="display:flex; flex-direction:column; gap:20px;">
+            {% csrf_token %}
+            <input type="hidden" name="action_type" value="ajouter_panier_groupe">
+            <input type="hidden" name="est_urgente" value="true">
+            <input type="hidden" name="panier_json" id="jsonTicketUrgence">
 
-            <div>
-                <label style="font-size: 0.8rem; font-weight: 700; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">Service demandeur <span style="color:#BA3C2A;">*</span></label>
-                <select name="service" id="selectServiceUrgent" class="select-custom" required style="margin-top: 6px;">
-                    <option value="" disabled selected>Sélectionner votre service...</option>
-                    <option value="Consulaire">Consulaire</option>
-                    <option value="Secrétaire">Secrétaire</option>
-                    <option value="Assistant(e) AMB">Assistant(e) AMB</option>
-                    <option value="1ère Secrétaire">1ère Secrétaire</option>
-                    <option value="2ème Secrétaire">2ème Secrétaire</option>
-                    <option value="Diplomate">Diplomate</option>
-                    <option value="Administration">Administration</option>
-                    <option value="Sécurité">Sécurité</option>
-                </select>
-            </div>
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 700; color: #495430; text-transform: uppercase; letter-spacing: 0.5px;">Service demandeur <span style="color:#BA3C2A;">*</span></label>
+                <select name="service" id="selectServiceUrgent" class="select-custom" required style="margin-top: 6px;">
+                    <option value="" disabled selected>Sélectionner votre service...</option>
+                    <option value="Consulaire">Consulaire</option>
+                    <option value="Secrétaire">Secrétaire</option>
+                    <option value="Secrétaire AMB">Secrétaire AMB</option>
+                    <option value="1ère Secrétaire">1ère Secrétaire</option>
+                    <option value="2ème Secrétaire">2ème Secrétaire</option>
+                    <option value="Diplomate">Diplomate</option>
+                    <option value="Administration">Administration</option>
+                    <option value="Sécurité">Sécurité</option>
+                </select>
+            </div>
 
-            <div>
-                <label style="font-size: 0.8rem; font-weight: 700; color: #BA3C2A; text-transform: uppercase; letter-spacing: 0.5px;">Objet / Motif de l'urgence <span style="color:#BA3C2A;">*</span></label>
-                <input type="text" name="motif_urgence" id="txtMotifUrgenceModal" required placeholder="Ex: Réunion ministérielle imprévue, rupture critique..." class="input-custom" style="margin-top: 6px; border-color: rgba(186, 60, 42, 0.4);">
-            </div>
+            <div>
+                <label style="font-size: 0.8rem; font-weight: 700; color: #BA3C2A; text-transform: uppercase; letter-spacing: 0.5px;">Objet / Motif de l'urgence <span style="color:#BA3C2A;">*</span></label>
+                <input type="text" name="motif_urgence" id="txtMotifUrgenceModal" required placeholder="Ex: Réunion ministérielle imprévue, rupture critique..." class="input-custom" style="margin-top: 6px; border-color: rgba(186, 60, 42, 0.4);">
+            </div>
 
-            <div style="background: #FAFBF9; padding: 22px; border-radius: 18px; border: 1px solid #E2E6E1;">
-                <label style="font-size: 0.8rem; font-weight: 700; color: #495430; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 12px;">Sélectionner les articles requis en réserve</label>
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <select id="selectProduitCatalogue" class="select-custom" style="flex-grow: 1; font-size: 0.9rem;">
-                        <option value="" disabled selected>Choisir un article...</option>
-                        {% for p in tous_les_produits_complets %}
-                            <option value="{{ p.id }}" data-nom="{{ p.objet|escapejs }}" data-ref="{{ p.reference|escapejs }}" data-max="{{ p.quantite }}">
-                                {{ p.objet }} (Stock disponible: {{ p.quantite }}) — [{{ p.reference }}]
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <input type="number" id="qtyProduitCatalogue" value="1" min="1" class="input-custom" style="width: 80px; text-align: center;">
-                    <button type="button" onclick="ajouterProduitTicketUrgent()" class="btn-add-inline" style="background-color: #BA3C2A; height: 46px; white-space: nowrap;">Ajouter</button>
-                </div>
+            <div style="background: #FAFBF9; padding: 22px; border-radius: 18px; border: 1px solid #E2E6E1;">
+                <label style="font-size: 0.8rem; font-weight: 700; color: #495430; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 12px;">Sélectionner les articles requis en réserve</label>
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <select id="selectProduitCatalogue" class="select-custom" style="flex-grow: 1; font-size: 0.9rem;">
+                        <option value="" disabled selected>Choisir un article...</option>
+                        {% for p in tous_les_produits_complets %}
+                            <option value="{{ p.id }}" data-nom="{{ p.objet|escapejs }}" data-ref="{{ p.reference|escapejs }}" data-max="{{ p.quantite }}">
+                                {{ p.objet }} (Stock disponible: {{ p.quantite }}) — [{{ p.reference }}]
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" id="qtyProduitCatalogue" value="1" min="1" class="input-custom" style="width: 80px; text-align: center;">
+                    <button type="button" onclick="ajouterProduitTicketUrgent()" class="btn-add-inline" style="background-color: #BA3C2A; height: 46px; white-space: nowrap;">Ajouter</button>
+                </div>
 
-                <div class="cart-items-container" id="tbodyTicketUrgent">
-                    <div style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</div>
-                </div>
-            </div>
+                <div class="cart-items-container" id="tbodyTicketUrgent">
+                    <div style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</div>
+                </div>
+            </div>
 
-            <button type="submit" onclick="return preparerSoumissionTicketUrgent()" class="btn-submit-cart" style="background-color: #BA3C2A; width: 100%; height: 52px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Valider et transmettre le ticket d'urgence
-            </button>
-        </form>
-    </div>
+            <button type="submit" onclick="return preparerSoumissionTicketUrgent()" class="btn-submit-cart" style="background-color: #BA3C2A; width: 100%; height: 52px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Valider et transmettre le ticket d'urgence
+            </button>
+        </form>
+    </div>
 </div>
 
 <script>
-    const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
-    const isUserAdmin = {% if request.user.is_superuser or is_admin %}true{% else %}false{% endif %};
+    const estBloqueSemaine = {% if panier_bloque and not is_admin %}true{% else %}false{% endif %};
+    const isUserAdmin = {% if request.user.is_superuser or is_admin %}true{% else %}false{% endif %};
 
-    const fullInventory = [
-        {% for produit in tous_les_produits_complets %}
-        {
-            id: "{{ produit.id }}",
-            reference: "{{ produit.reference|escapejs }}",
-            nom: "{{ produit.objet|escapejs }}",
-            categorie: "{{ produit.categorie|escapejs }}",
-            stock: "{{ produit.quantite }}",
-            emplacement: "{{ produit.emplacement|escapejs }}",
-            quota: "{{ produit.quota_minimum|default_if_none:'' }}",
-            fournisseur: "{{ produit.fournisseur|escapejs }}",
-            prix: "{{ produit.prix|default_if_none:'' }}"
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
+    const fullInventory = [
+        {% for produit in tous_les_produits_complets %}
+        {
+            id: "{{ produit.id }}",
+            reference: "{{ produit.reference|escapejs }}",
+            nom: "{{ produit.objet|escapejs }}",
+            categorie: "{{ produit.categorie|escapejs }}",
+            stock: "{{ produit.quantite }}",
+            emplacement: "{{ produit.emplacement|escapejs }}",
+            quota: "{{ produit.quota_minimum|default_if_none:'' }}",
+            fournisseur: "{{ produit.fournisseur|escapejs }}",
+            prix: "{{ produit.prix|default_if_none:'' }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
 
-    let panierLocal = {};
-    let articlesTicketUrgent = {};
+    let panierLocal = {};
+    let articlesTicketUrgent = {};
 
-    function afficherToast(message, type = 'success') {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast-message toast-${type}`;
-        
-        const iconSvg = type === 'success' 
-            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    function afficherToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast-message toast-${type}`;
+        
+        const iconSvg = type === 'success' 
+            ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
-        toast.innerHTML = `${iconSvg} <span>${message}</span>`;
-        container.appendChild(toast);
+        toast.innerHTML = `${iconSvg} <span>${message}</span>`;
+        container.appendChild(toast);
 
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateY(-10px)';
-            setTimeout(() => toast.remove(), 300);
-        }, 2500);
-    }
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
 
-    function toggleSidebar() {
-        const sidebar = document.getElementById('appSidebar');
-        const openBtn = document.getElementById('sidebarToggleOpen');
-        const mainContent = document.querySelector('.main-content');
-            
-        if (sidebar.style.transform === 'translateX(-290px)') {
-            sidebar.style.transform = 'translateX(0px)';
-            sidebar.style.opacity = '1';
-            openBtn.style.display = 'none';
-            if (mainContent) {
-                mainContent.style.marginLeft = '260px';
-                mainContent.style.paddingLeft = '40px';
-            }
-        } else {
-            sidebar.style.transform = 'translateX(-290px)';
-            sidebar.style.opacity = '0';
-            openBtn.style.display = 'flex';
-            if (mainContent) {
-                mainContent.style.marginLeft = '15px';
-                mainContent.style.paddingLeft = '65px';
-            }
-        }
-    }
+    function toggleSidebar() {
+        const sidebar = document.getElementById('appSidebar');
+        const openBtn = document.getElementById('sidebarToggleOpen');
+        const mainContent = document.querySelector('.main-content');
+            
+        if (sidebar.style.transform === 'translateX(-290px)') {
+            sidebar.style.transform = 'translateX(0px)';
+            sidebar.style.opacity = '1';
+            openBtn.style.display = 'none';
+            if (mainContent) {
+                mainContent.style.marginLeft = '260px';
+                mainContent.style.paddingLeft = '40px';
+            }
+        } else {
+            sidebar.style.transform = 'translateX(-290px)';
+            sidebar.style.opacity = '0';
+            openBtn.style.display = 'flex';
+            if (mainContent) {
+                mainContent.style.marginLeft = '15px';
+                mainContent.style.paddingLeft = '65px';
+            }
+        }
+    }
 
-    function normaliser(str) {
-        return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-    }
+    function normaliser(str) {
+        return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
 
-    function filtrerInventaireGlobal() {
-        const recherche = normaliser(document.getElementById('searchInput').value);
-        const container = document.getElementById('inventoryList');
-        const pagination = document.getElementById('inventoryPagination');
-        const noResultMsg = document.getElementById('noResultMsg');
+    function filtrerInventaireGlobal() {
+        const recherche = normaliser(document.getElementById('searchInput').value);
+        const container = document.getElementById('inventoryList');
+        const pagination = document.getElementById('inventoryPagination');
+        const noResultMsg = document.getElementById('noResultMsg');
 
-        if (recherche === "") {
-            document.querySelectorAll('.django-card').forEach(c => c.style.display = 'flex');
-            document.querySelectorAll('.temp-search-card').forEach(c => c.remove());
-            if (pagination) pagination.style.display = 'flex';
-            noResultMsg.style.display = 'none';
-            return;
-        }
+        if (recherche === "") {
+            document.querySelectorAll('.django-card').forEach(c => c.style.display = 'flex');
+            document.querySelectorAll('.temp-search-card').forEach(c => c.remove());
+            if (pagination) pagination.style.display = 'flex';
+            noResultMsg.style.display = 'none';
+            return;
+        }
 
-        document.querySelectorAll('.django-card').forEach(c => c.style.display = 'none');
-        document.querySelectorAll('.temp-search-card').forEach(c => c.remove());
-        if (pagination) pagination.style.display = 'none';
+        document.querySelectorAll('.django-card').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.temp-search-card').forEach(c => c.remove());
+        if (pagination) pagination.style.display = 'none';
 
-        let trouves = 0;
-        fullInventory.forEach(p => {
-            if (normaliser(p.nom).includes(recherche) || normaliser(p.reference).includes(recherche) || normaliser(p.categorie).includes(recherche)) {
-                trouves++;
-                let card = document.createElement('div');
-                card.className = 'inventory-card temp-search-card';
+        let trouves = 0;
+        fullInventory.forEach(p => {
+            if (normaliser(p.nom).includes(recherche) || normaliser(p.reference).includes(recherche) || normaliser(p.categorie).includes(recherche)) {
+                trouves++;
+                let card = document.createElement('div');
+                card.className = 'inventory-card temp-search-card';
 
-                let btnHtml = estBloqueSemaine 
-                    ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le ticket d'urgence.">Fermé (Option d'urgence)</button>`
-                    : `<button type="button" class="btn-add-inline btn-add-cart-trigger" data-id="${p.id}" data-nom="${p.nom}" data-ref="${p.reference}" data-stock="${p.stock}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter au panier</button>`;
+                let btnHtml = estBloqueSemaine 
+                    ? `<button type="button" class="btn-add-inline" disabled title="Les ajouts directs sont fermés. Passez par le ticket d'urgence.">Fermé (Option d'urgence)</button>`
+                    : `<button type="button" class="btn-add-inline btn-add-cart-trigger" data-id="${p.id}" data-nom="${p.nom}" data-ref="${p.reference}" data-stock="${p.stock}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Ajouter au panier</button>`;
 
-                card.innerHTML = `
-                    <div class="card-details action-card-trigger" data-id="${p.id}" data-ref="${p.reference}" data-nom="${p.nom}" data-cat="${p.categorie}" data-stock="${p.stock}" data-emp="${p.emplacement}" data-quota="${p.quota}" data-fournisseur="${p.fournisseur}" data-prix="${p.prix}">
-                        <span class="product-ref-code">${p.reference}</span>
-                        <span class="product-title">${p.nom}</span>
-                    </div>
-                    <div>
-                        ${btnHtml}
-                    </div>
-                    <div class="status-dot status-${parseInt(p.stock) <= parseInt(p.quota || 0) ? 'red' : 'green'}"></div>
-                `;
-                container.appendChild(card);
-            }
-        });
+                card.innerHTML = `
+                    <div class="card-details action-card-trigger" data-id="${p.id}" data-ref="${p.reference}" data-nom="${p.nom}" data-cat="${p.categorie}" data-stock="${p.stock}" data-emp="${p.emplacement}" data-quota="${p.quota}" data-fournisseur="${p.fournisseur}" data-prix="${p.prix}">
+                        <span class="product-ref-code">${p.reference}</span>
+                        <span class="product-title">${p.nom}</span>
+                    </div>
+                    <div>
+                        ${btnHtml}
+                    </div>
+                    <div class="status-dot status-${parseInt(p.stock) <= parseInt(p.quota || 0) ? 'red' : 'green'}"></div>
+                `;
+                container.appendChild(card);
+            }
+        });
 
-        noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
-    }
+        noResultMsg.style.display = trouves === 0 ? 'block' : 'none';
+    }
 
-    function ajouterAuPanier(id, nom, ref, stock) {
-        let max = parseInt(stock) || 999;
-        if (panierLocal[id]) {
-            if (panierLocal[id].qty < max) panierLocal[id].qty++;
-        } else {
-            panierLocal[id] = { id: id, nom: nom, ref: ref, qty: 1, max: max };
-        }
+    function ajouterAuPanier(id, nom, ref, stock) {
+        let max = parseInt(stock) || 999;
+        if (panierLocal[id]) {
+            if (panierLocal[id].qty < max) panierLocal[id].qty++;
+        } else {
+            panierLocal[id] = { id: id, nom: nom, ref: ref, qty: 1, max: max };
+        }
 
-        const dock = document.getElementById('btnPanierFlottant');
-        if (dock) {
-            dock.classList.remove('dock-pulse-animation');
-            void dock.offsetWidth;
-            dock.classList.add('dock-pulse-animation');
-        }
+        const dock = document.getElementById('btnPanierFlottant');
+        if (dock) {
+            dock.classList.remove('dock-pulse-animation');
+            void dock.offsetWidth;
+            dock.classList.add('dock-pulse-animation');
+        }
 
-        afficherToast('Article ajouté au panier', 'success');
-        actualiserPanierUI();
-    }
+        afficherToast('Article ajouté au panier', 'success');
+        actualiserPanierUI();
+    }
 
-    function retirerDuPanier(id) {
-        if (panierLocal[id]) {
-            delete panierLocal[id];
-            afficherToast('Article retiré du panier', 'danger');
-            actualiserPanierUI();
-        }
-    }
+    function retirerDuPanier(id) {
+        if (panierLocal[id]) {
+            delete panierLocal[id];
+            afficherToast('Article retiré du panier', 'danger');
+            actualiserPanierUI();
+        }
+    }
 
-    function modifierQty(id, delta) {
-        if (!panierLocal[id]) return;
-        let n = panierLocal[id].qty + delta;
-        if (n <= 0) {
-            retirerDuPanier(id);
-        } else if (n <= panierLocal[id].max) {
-            panierLocal[id].qty = n;
-            actualiserPanierUI();
-        }
-    }
+    function modifierQty(id, delta) {
+        if (!panierLocal[id]) return;
+        let n = panierLocal[id].qty + delta;
+        if (n <= 0) {
+            retirerDuPanier(id);
+        } else if (n <= panierLocal[id].max) {
+            panierLocal[id].qty = n;
+            actualiserPanierUI();
+        }
+    }
 
-    function viderPanier() {
-        panierLocal = {};
-        afficherToast('Le panier a été entièrement vidé', 'danger');
-        actualiserPanierUI();
-    }
+    function viderPanier() {
+        panierLocal = {};
+        afficherToast('Le panier a été entièrement vidé', 'danger');
+        actualiserPanierUI();
+    }
 
-    function actualiserPanierUI() {
-        let keys = Object.keys(panierLocal);
-        let total = 0;
-        keys.forEach(k => total += panierLocal[k].qty);
-        
-        document.getElementById('cartBadgeCount').textContent = total;
-        document.getElementById('cartBadgeText').textContent = total === 0 ? "0 article" : `${total} article${total > 1 ? 's' : ''}`;
-        
-        let empty = document.getElementById('cartEmptyState');
-        let filled = document.getElementById('cartFilledState');
-        let itemsContainer = document.getElementById('cartItemsList');
+    function actualiserPanierUI() {
+        let keys = Object.keys(panierLocal);
+        let total = 0;
+        keys.forEach(k => total += panierLocal[k].qty);
+        
+        document.getElementById('cartBadgeCount').textContent = total;
+        document.getElementById('cartBadgeText').textContent = total === 0 ? "0 article" : `${total} article${total > 1 ? 's' : ''}`;
+        
+        let empty = document.getElementById('cartEmptyState');
+        let filled = document.getElementById('cartFilledState');
+        let itemsContainer = document.getElementById('cartItemsList');
 
-        if (keys.length === 0) {
-            empty.style.display = 'block';
-            filled.style.display = 'none';
-        } else {
-            empty.style.display = 'none';
-            filled.style.display = 'block';
-            itemsContainer.innerHTML = '';
-            keys.forEach(k => {
-                let item = panierLocal[k];
-                itemsContainer.innerHTML += `
-                    <div class="cart-item-card">
-                        <div class="cart-item-info">
-                            <span class="product-ref-code">${item.ref}</span>
-                            <span class="cart-item-title">${item.nom}</span>
-                        </div>
-                        <div style="display:flex; align-items:center; gap:15px;">
-                            <div class="qty-controls">
-                                <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', -1)">-</button>
-                                <span style="padding:0 8px; font-weight:700; font-size:0.95rem;">${item.qty}</span>
-                                <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', 1)">+</button>
-                            </div>
-                            <button type="button" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:6px;" title="Retirer" onclick="retirerDuPanier('${item.id}')">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        verifierServicePanier();
-    }
+        if (keys.length === 0) {
+            empty.style.display = 'block';
+            filled.style.display = 'none';
+        } else {
+            empty.style.display = 'none';
+            filled.style.display = 'block';
+            itemsContainer.innerHTML = '';
+            keys.forEach(k => {
+                let item = panierLocal[k];
+                itemsContainer.innerHTML += `
+                    <div class="cart-item-card">
+                        <div class="cart-item-info">
+                            <span class="product-ref-code">${item.ref}</span>
+                            <span class="cart-item-title">${item.nom}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:15px;">
+                            <div class="qty-controls">
+                                <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', -1)">-</button>
+                                <span style="padding:0 8px; font-weight:700; font-size:0.95rem;">${item.qty}</span>
+                                <button type="button" class="btn-qty-mini" onclick="modifierQty('${item.id}', 1)">+</button>
+                            </div>
+                            <button type="button" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:6px;" title="Retirer" onclick="retirerDuPanier('${item.id}')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        verifierServicePanier();
+    }
 
-    function verifierServicePanier() {
-        let select = document.getElementById('selectServicePanier');
-        let btn = document.getElementById('btnSubmitCart');
-        let serviceValide = select && select.value !== "";
-        let panierRempli = Object.keys(panierLocal).length > 0;
+    function verifierServicePanier() {
+        let select = document.getElementById('selectServicePanier');
+        let btn = document.getElementById('btnSubmitCart');
+        let serviceValide = select && select.value !== "";
+        let panierRempli = Object.keys(panierLocal).length > 0;
 
-        if (estBloqueSemaine) {
-            btn.disabled = true;
-            btn.textContent = "Commandes fermées — Utilisez le 'Ticket d'urgence'";
-        } else {
-            btn.disabled = !(serviceValide && panierRempli);
-            btn.textContent = "Valider et transmettre au panier global";
-        }
-    }
+        if (estBloqueSemaine) {
+            btn.disabled = true;
+            btn.textContent = "Commandes fermées — Utilisez le 'Ticket d'urgence'";
+        } else {
+            btn.disabled = !(serviceValide && panierRempli);
+            btn.textContent = "Valider et transmettre au panier global";
+        }
+    }
 
-    function preparerSoumissionPanier(event) {
-        if (estBloqueSemaine) {
-            if (event) event.preventDefault();
-            afficherToast("Commandes fermées ! Utilisez le ticket d'urgence.", 'danger');
-            return false;
-        }
+    function preparerSoumissionPanier(event) {
+        if (estBloqueSemaine) {
+            if (event) event.preventDefault();
+            afficherToast("Commandes fermées ! Utilisez le ticket d'urgence.", 'danger');
+            return false;
+        }
 
-        const jsonString = JSON.stringify(panierLocal);
-        document.getElementById('cartJsonData').value = jsonString;
-        return true;
-    }
+        const jsonString = JSON.stringify(panierLocal);
+        document.getElementById('cartJsonData').value = jsonString;
+        return true;
+    }
 
-    function ouvrirModalConfigPDF() { document.getElementById('pdfConfigModal').style.display = 'flex'; }
-    function soumettreExportPDF(event) { setTimeout(() => { fermerModal('pdfConfigModal'); }, 500); return true; }
-    function ouvrirModalTicketUrgence() { const modal = document.getElementById('ticketUrgenceModal'); if (modal) modal.style.display = 'flex'; }
+    function ouvrirModalConfigPDF() { document.getElementById('pdfConfigModal').style.display = 'flex'; }
+    function soumettreExportPDF(event) { setTimeout(() => { fermerModal('pdfConfigModal'); }, 500); return true; }
+    function ouvrirModalTicketUrgence() { const modal = document.getElementById('ticketUrgenceModal'); if (modal) modal.style.display = 'flex'; }
 
-    function ajouterProduitTicketUrgent() {
-        const select = document.getElementById('selectProduitCatalogue');
-        const qtyInput = document.getElementById('qtyProduitCatalogue');
-        if (!select || !select.value) return;
+    function ajouterProduitTicketUrgent() {
+        const select = document.getElementById('selectProduitCatalogue');
+        const qtyInput = document.getElementById('qtyProduitCatalogue');
+        if (!select || !select.value) return;
 
-        const option = select.options[select.selectedIndex];
-        const id = select.value;
-        const nom = option.getAttribute('data-nom');
-        const ref = option.getAttribute('data-ref');
-        const max = parseInt(option.getAttribute('data-max')) || 999;
-        const qty = parseInt(qtyInput.value) || 1;
+        const option = select.options[select.selectedIndex];
+        const id = select.value;
+        const nom = option.getAttribute('data-nom');
+        const ref = option.getAttribute('data-ref');
+        const max = parseInt(option.getAttribute('data-max')) || 999;
+        const qty = parseInt(qtyInput.value) || 1;
 
-        if (articlesTicketUrgent[id]) {
-            articlesTicketUrgent[id].qty = Math.min(max, articlesTicketUrgent[id].qty + qty);
-        } else {
-            articlesTicketUrgent[id] = { id: id, nom: nom, ref: ref, qty: Math.min(max, qty) };
-        }
+        if (articlesTicketUrgent[id]) {
+            articlesTicketUrgent[id].qty = Math.min(max, articlesTicketUrgent[id].qty + qty);
+        } else {
+            articlesTicketUrgent[id] = { id: id, nom: nom, ref: ref, qty: Math.min(max, qty) };
+        }
 
-        renderTableauTicketUrgent();
-    }
+        renderTableauTicketUrgent();
+    }
 
-    function supprimerItemTicketUrgent(id) {
-        delete articlesTicketUrgent[id];
-        renderTableauTicketUrgent();
-    }
+    function supprimerItemTicketUrgent(id) {
+        delete articlesTicketUrgent[id];
+        renderTableauTicketUrgent();
+    }
 
-    function renderTableauTicketUrgent() {
-        const tbody = document.getElementById('tbodyTicketUrgent');
-        if (!tbody) return;
-        const keys = Object.keys(articlesTicketUrgent);
+    function renderTableauTicketUrgent() {
+        const tbody = document.getElementById('tbodyTicketUrgent');
+        if (!tbody) return;
+        const keys = Object.keys(articlesTicketUrgent);
 
-        if (keys.length === 0) {
-            tbody.innerHTML = '<div style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</div>';
-            return;
-        }
+        if (keys.length === 0) {
+            tbody.innerHTML = '<div style="text-align: center; color: #7A8278; font-style: italic; padding: 20px;">Aucun article sélectionné pour le moment.</div>';
+            return;
+        }
 
-        tbody.innerHTML = '';
-        keys.forEach(k => {
-            const item = articlesTicketUrgent[k];
-            tbody.innerHTML += `
-                <div class="cart-item-card" style="margin-bottom: 8px;">
-                    <div class="cart-item-info">
-                        <span class="product-ref-code">${item.ref}</span>
-                        <span class="cart-item-title">${item.nom}</span>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <span style="font-weight:700; font-size:1rem; color:#2C351C;">x${item.qty}</span>
-                        <button type="button" onclick="supprimerItemTicketUrgent('${item.id}')" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:4px;" title="Retirer">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            `;
-        });
-    }
+        tbody.innerHTML = '';
+        keys.forEach(k => {
+            const item = articlesTicketUrgent[k];
+            tbody.innerHTML += `
+                <div class="cart-item-card" style="margin-bottom: 8px;">
+                    <div class="cart-item-info">
+                        <span class="product-ref-code">${item.ref}</span>
+                        <span class="cart-item-title">${item.nom}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <span style="font-weight:700; font-size:1rem; color:#2C351C;">x${item.qty}</span>
+                        <button type="button" onclick="supprimerItemTicketUrgent('${item.id}')" style="background:none; border:none; color:#BA3C2A; cursor:pointer; padding:4px;" title="Retirer">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
 
-    function preparerSoumissionTicketUrgent() {
-        const keys = Object.keys(articlesTicketUrgent);
-        if (keys.length === 0) {
-            afficherToast("Ajoutez au moins un article dans votre ticket d'urgence.", 'danger');
-            return false;
-        }
-        document.getElementById('jsonTicketUrgence').value = JSON.stringify(articlesTicketUrgent);
-        return true;
-    }
+    function preparerSoumissionTicketUrgent() {
+        const keys = Object.keys(articlesTicketUrgent);
+        if (keys.length === 0) {
+            afficherToast("Ajoutez au moins un article dans votre ticket d'urgence.", 'danger');
+            return false;
+        }
+        document.getElementById('jsonTicketUrgence').value = JSON.stringify(articlesTicketUrgent);
+        return true;
+    }
 
-    function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
-    function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
+    function ouvrirModalPanier() { document.getElementById('cartModal').style.display = 'flex'; verifierServicePanier(); }
+    function fermerModal(id) { const modal = document.getElementById(id); if (modal) modal.style.display = 'none'; }
 
-    /* FICHE PRODUIT & ÉDITION (SEULEMENT POUR ADMINISTRATEURS) */
-    function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
-        if (!isUserAdmin) return; 
+    /* FICHE PRODUIT & ÉDITION (SEULEMENT POUR ADMINISTRATEURS) */
+    function openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix) {
+        if (!isUserAdmin) return; 
 
-        document.getElementById('lblReference').textContent = ref;
-        document.getElementById('valNom').textContent = nom;
-        
-        const cleanPrixStr = String(prix || "").replace(',', '.').trim();
-        const prixNum = parseFloat(cleanPrixStr);
-        const prixFormatted = (!isNaN(prixNum) && cleanPrixStr !== "") ? (prixNum.toFixed(2).replace('.', ',') + " €") : "Non défini";
-        
-        document.getElementById('valPrixHeader').textContent = prixFormatted;
+        document.getElementById('lblReference').textContent = ref;
+        document.getElementById('valNom').textContent = nom;
+        
+        const cleanPrixStr = String(prix || "").replace(',', '.').trim();
+        const prixNum = parseFloat(cleanPrixStr);
+        const prixFormatted = (!isNaN(prixNum) && cleanPrixStr !== "") ? (prixNum.toFixed(2).replace('.', ',') + " €") : "Non défini";
+        
+        document.getElementById('valPrixHeader').textContent = prixFormatted;
 
-        if (document.getElementById('hiddenProduitId')) document.getElementById('hiddenProduitId').value = id;
-        if (document.getElementById('valNomDisplay')) document.getElementById('valNomDisplay').textContent = nom || "-";
-        if (document.getElementById('valCategorie')) document.getElementById('valCategorie').textContent = cat || "-";
-        if (document.getElementById('valEmplacement')) document.getElementById('valEmplacement').textContent = emp || "-";
-        if (document.getElementById('valFournisseur')) document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
-        if (document.getElementById('valStock')) document.getElementById('valStock').textContent = stock;
-        
-        if (document.getElementById('valPrix')) document.getElementById('valPrix').textContent = prixFormatted;
-        if (document.getElementById('valQuota')) document.getElementById('valQuota').textContent = (quota !== "" && quota !== "None") ? quota : "10 (Par défaut)";
+        if (document.getElementById('hiddenProduitId')) document.getElementById('hiddenProduitId').value = id;
+        if (document.getElementById('valNomDisplay')) document.getElementById('valNomDisplay').textContent = nom || "-";
+        if (document.getElementById('valCategorie')) document.getElementById('valCategorie').textContent = cat || "-";
+        if (document.getElementById('valEmplacement')) document.getElementById('valEmplacement').textContent = emp || "-";
+        if (document.getElementById('valFournisseur')) document.getElementById('valFournisseur').textContent = fournisseur || "Divers";
+        if (document.getElementById('valStock')) document.getElementById('valStock').textContent = stock;
+        
+        if (document.getElementById('valPrix')) document.getElementById('valPrix').textContent = prixFormatted;
+        if (document.getElementById('valQuota')) document.getElementById('valQuota').textContent = (quota !== "" && quota !== "None") ? quota : "10 (Par défaut)";
 
-        if (document.getElementById('txtReference')) document.getElementById('txtReference').value = ref;
-        if (document.getElementById('txtNom')) document.getElementById('txtNom').value = nom;
-        if (document.getElementById('txtCategorie')) document.getElementById('txtCategorie').value = cat;
-        if (document.getElementById('txtEmplacement')) document.getElementById('txtEmplacement').value = emp;
-        if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
-        if (document.getElementById('txtStock')) document.getElementById('txtStock').value = stock;
-        
-        if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = (!isNaN(prixNum) && cleanPrixStr !== "") ? prixNum.toFixed(2) : "";
-        if (document.getElementById('txtQuota')) document.getElementById('txtQuota').value = (quota && quota !== "None") ? quota : "10";
+        if (document.getElementById('txtReference')) document.getElementById('txtReference').value = ref;
+        if (document.getElementById('txtNom')) document.getElementById('txtNom').value = nom;
+        if (document.getElementById('txtCategorie')) document.getElementById('txtCategorie').value = cat;
+        if (document.getElementById('txtEmplacement')) document.getElementById('txtEmplacement').value = emp;
+        if (document.getElementById('txtFournisseur')) document.getElementById('txtFournisseur').value = fournisseur || "Divers";
+        if (document.getElementById('txtStock')) document.getElementById('txtStock').value = stock;
+        
+        if (document.getElementById('txtPrix')) document.getElementById('txtPrix').value = (!isNaN(prixNum) && cleanPrixStr !== "") ? prixNum.toFixed(2) : "";
+        if (document.getElementById('txtQuota')) document.getElementById('txtQuota').value = (quota && quota !== "None") ? quota : "10";
 
-        desactiverEdition();
-        document.getElementById('productModal').style.display = 'flex';
-    }
+        desactiverEdition();
+        document.getElementById('productModal').style.display = 'flex';
+    }
 
-    function activerModeEdition() {
-        document.querySelectorAll('.view-value').forEach(v => v.style.display = 'none');
-        document.querySelectorAll('.edit-input').forEach(i => i.style.display = 'block');
-        if(document.getElementById('btnEdit')) document.getElementById('btnEdit').style.display = 'none';
-        if(document.getElementById('btnSave')) document.getElementById('btnSave').style.display = 'flex';
-    }
+    function activerModeEdition() {
+        document.querySelectorAll('.view-value').forEach(v => v.style.display = 'none');
+        document.querySelectorAll('.edit-input').forEach(i => i.style.display = 'block');
+        if(document.getElementById('btnEdit')) document.getElementById('btnEdit').style.display = 'none';
+        if(document.getElementById('btnSave')) document.getElementById('btnSave').style.display = 'flex';
+    }
 
-    function desactiverEdition() {
-        document.querySelectorAll('.view-value').forEach(v => v.style.display = 'block');
-        document.querySelectorAll('.edit-input').forEach(i => i.style.display = 'none');
-        if(document.getElementById('btnEdit')) document.getElementById('btnEdit').style.display = 'flex';
-        if(document.getElementById('btnSave')) document.getElementById('btnSave').style.display = 'none';
-    }
+    function desactiverEdition() {
+        document.querySelectorAll('.view-value').forEach(v => v.style.display = 'block');
+        document.querySelectorAll('.edit-input').forEach(i => i.style.display = 'none');
+        if(document.getElementById('btnEdit')) document.getElementById('btnEdit').style.display = 'flex';
+        if(document.getElementById('btnSave')) document.getElementById('btnSave').style.display = 'none';
+    }
 
-    function supprimerProduit() {
-        if (confirm("Êtes-vous sûr de vouloir supprimer définitivement ce produit de l'inventaire ?")) {
-            let form = document.getElementById('editForm');
-            form.querySelector('input[name="action_type"]').value = 'suppression_definitive';
-            form.submit();
-        }
-    }
+    function supprimerProduit() {
+        if (confirm("Êtes-vous sûr de vouloir supprimer définitivement ce produit de l'inventaire ?")) {
+            let form = document.getElementById('editForm');
+            form.querySelector('input[name="action_type"]').value = 'suppression_definitive';
+            form.submit();
+        }
+    }
 
-    <!-- **MODIFICATION CORRIGÉE : ORDRE DES CLIKS DÉLÉGUÉS POUR DÉTECTER EN PREMIER LE BOUTON PANIER** -->
-    document.addEventListener("DOMContentLoaded", function() {
-        verifierServicePanier();
+    <!-- **MODIFICATION CORRIGÉE : ORDRE DES CLIKS DÉLÉGUÉS POUR DÉTECTER EN PREMIER LE BOUTON PANIER** -->
+    document.addEventListener("DOMContentLoaded", function() {
+        verifierServicePanier();
 
-        document.addEventListener('click', function(e) {
-            /* 1. Détection prioritaire du clic sur le bouton Ajouter au Panier */
-            const btnCartTrigger = e.target.closest('.btn-add-cart-trigger');
-            if (btnCartTrigger) {
-                const id = btnCartTrigger.getAttribute('data-id');
-                const nom = btnCartTrigger.getAttribute('data-nom');
-                const ref = btnCartTrigger.getAttribute('data-ref');
-                const stock = btnCartTrigger.getAttribute('data-stock');
+        document.addEventListener('click', function(e) {
+            /* 1. Détection prioritaire du clic sur le bouton Ajouter au Panier */
+            const btnCartTrigger = e.target.closest('.btn-add-cart-trigger');
+            if (btnCartTrigger) {
+                const id = btnCartTrigger.getAttribute('data-id');
+                const nom = btnCartTrigger.getAttribute('data-nom');
+                const ref = btnCartTrigger.getAttribute('data-ref');
+                const stock = btnCartTrigger.getAttribute('data-stock');
 
-                ajouterAuPanier(id, nom, ref, stock);
-                return;
-            }
+                ajouterAuPanier(id, nom, ref, stock);
+                return;
+            }
 
-            /* 2. Clic secondaire sur la carte entière pour les administrateurs */
-            const cardTrigger = e.target.closest('.action-card-trigger');
-            if (cardTrigger) {
-                const id = cardTrigger.getAttribute('data-id');
-                const ref = cardTrigger.getAttribute('data-ref');
-                const nom = cardTrigger.getAttribute('data-nom');
-                const cat = cardTrigger.getAttribute('data-cat');
-                const stock = cardTrigger.getAttribute('data-stock');
-                const emp = cardTrigger.getAttribute('data-emp');
-                const quota = cardTrigger.getAttribute('data-quota');
-                const fournisseur = cardTrigger.getAttribute('data-fournisseur');
-                const prix = cardTrigger.getAttribute('data-prix');
+            /* 2. Clic secondaire sur la carte entière pour les administrateurs */
+            const cardTrigger = e.target.closest('.action-card-trigger');
+            if (cardTrigger) {
+                const id = cardTrigger.getAttribute('data-id');
+                const ref = cardTrigger.getAttribute('data-ref');
+                const nom = cardTrigger.getAttribute('data-nom');
+                const cat = cardTrigger.getAttribute('data-cat');
+                const stock = cardTrigger.getAttribute('data-stock');
+                const emp = cardTrigger.getAttribute('data-emp');
+                const quota = cardTrigger.getAttribute('data-quota');
+                const fournisseur = cardTrigger.getAttribute('data-fournisseur');
+                const prix = cardTrigger.getAttribute('data-prix');
 
-                if (isUserAdmin) {
-                    openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix);
-                } else {
-                    ajouterAuPanier(id, nom, ref, stock);
-                }
-                return;
-            }
-        });
-    });
+                if (isUserAdmin) {
+                    openProductDetails(id, ref, nom, cat, stock, emp, quota, fournisseur, prix);
+                } else {
+                    ajouterAuPanier(id, nom, ref, stock);
+                }
+                return;
+            }
+        });
+    });
 </script>
 </body>
 </html>
