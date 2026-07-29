@@ -20,7 +20,6 @@ from reportlab.lib import colors
 
 from .models import Produit, ProfilUtilisateur, DeclarationHebdomadaire, DemandeService, Facture, MouvementStock
 
-
 def get_profil_actif(user):
     if not user.is_authenticated:
         return None
@@ -40,7 +39,6 @@ def get_profil_actif(user):
         return ProfilUtilisateur.objects.get(user=user)
     except ProfilUtilisateur.DoesNotExist:
         return None
-
 
 def page_connexion(request):
     if request.user.is_authenticated: 
@@ -62,7 +60,6 @@ def page_connexion(request):
             return render(request, 'connexion.html', {'erreur': 'Identifiant ou mot de passe incorrect.'})
             
     return render(request, 'connexion.html')
-
 
 def page_accueil(request):
     if not request.user.is_authenticated:
@@ -172,7 +169,6 @@ def page_accueil(request):
         'demandes': DemandeService.objects.all().order_by('-id'),
         'produits_alerte': page_obj_alerte
     })
-
 
 def page_inventaire(request):
     profil_actif = get_profil_actif(request.user)
@@ -371,7 +367,6 @@ def page_inventaire(request):
         'tri_filtre': tri_filtre   
     })
 
-
 def page_gestion_stocks(request): 
     profil_actif = get_profil_actif(request.user)
     if not request.user.is_authenticated:
@@ -416,11 +411,12 @@ def page_gestion_stocks(request):
                 
             reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
             
-            i = 1
-            while Produit.objects.filter(reference=reference_finale).exists():
-                suffixe_numerique = f"{prochain_numero + i:02d}"
-                reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
-                i += 1
+            **# Gestion d'unicité de la référence**
+            **i = 1**
+            **while Produit.objects.filter(reference=reference_finale).exists():**
+                **suffixe_numerique = f"{prochain_numero + i:02d}"**
+                **reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"**
+                **i += 1**
 
             quantite_initiale = int(request.POST.get('quantite') or request.POST.get('quantite_initiale') or 0)
                     
@@ -432,7 +428,7 @@ def page_gestion_stocks(request):
                     emplacement=request.POST.get('emplacement') or "Réserve",
                     quantite=quantite_initiale,
                     quota_minimum=int(request.POST.get('quota_minimum', 0)),
-                    derniere_activite=timezone.now()
+                    **derniere_activite=timezone.now()**
                 )
                 
                 if quantite_initiale > 0:
@@ -442,7 +438,7 @@ def page_gestion_stocks(request):
                         produit=nouveau_produit,
                         quantite=quantite_initiale,
                         service="Administration",
-                        date_mouvement=date.today()
+                        **date_mouvement=date.today()**
                     )
                     
                 messages.success(request, f"Le produit '{objet_nom}' a été ajouté à l'inventaire.")
@@ -455,20 +451,20 @@ def page_gestion_stocks(request):
             ref_produit = request.POST.get('produit') 
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             
-            date_entree_raw = request.POST.get('date_entree')
-            try:
-                date_mvt = datetime.strptime(date_entree_raw, '%Y-%m-%d').date() if date_entree_raw else date.today()
-            except Exception:
-                date_mvt = date.today()
+            **date_entree_raw = request.POST.get('date_entree')**
+            **try:**
+                **date_mvt = datetime.strptime(date_entree_raw, '%Y-%m-%d').date() if date_entree_raw else date.today()**
+            **except Exception:**
+                **date_mvt = date.today()**
 
             try:
-                if str(ref_produit).isdigit():
-                    produit = Produit.objects.get(id=int(ref_produit))
-                else:
-                    produit = Produit.objects.get(reference=ref_produit)
+                **if str(ref_produit).isdigit():**
+                    **produit = Produit.objects.get(id=int(ref_produit))**
+                **else:**
+                    **produit = Produit.objects.get(reference=ref_produit)**
 
                 produit.quantite += quantite_ajoutee 
-                produit.derniere_activite = timezone.now()
+                **produit.derniere_activite = timezone.now()**
                 produit.save()
                 
                 MouvementStock.objects.create(
@@ -477,7 +473,7 @@ def page_gestion_stocks(request):
                     produit=produit,
                     quantite=quantite_ajoutee,
                     service="Administration",
-                    date_mouvement=date_mvt
+                    **date_mouvement=date_mvt**
                 )
                 messages.success(request, f"Entrée enregistrée pour {produit.objet}.")
             except Produit.DoesNotExist:
@@ -492,21 +488,21 @@ def page_gestion_stocks(request):
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = request.POST.get('service') or "Administration"
         
-            date_sortie_raw = request.POST.get('date_sortie')
-            try:
-                date_mvt = datetime.strptime(date_sortie_raw, '%Y-%m-%d').date() if date_sortie_raw else date.today()
-            except Exception:
-                date_mvt = date.today()
+            **date_sortie_raw = request.POST.get('date_sortie')**
+            **try:**
+                **date_mvt = datetime.strptime(date_sortie_raw, '%Y-%m-%d').date() if date_sortie_raw else date.today()**
+            **except Exception:**
+                **date_mvt = date.today()**
 
             try:
-                if str(ref_produit).isdigit():
-                    produit = Produit.objects.get(id=int(ref_produit))
-                else:
-                    produit = Produit.objects.get(reference=ref_produit)
+                **if str(ref_produit).isdigit():**
+                    **produit = Produit.objects.get(id=int(ref_produit))**
+                **else:**
+                    **produit = Produit.objects.get(reference=ref_produit)**
 
                 if produit.quantite >= quantite_retiree:
                     produit.quantite -= quantite_retiree
-                    produit.derniere_activite = timezone.now()
+                    **produit.derniere_activite = timezone.now()**
                     produit.save()
                 
                     MouvementStock.objects.create(   
@@ -515,7 +511,7 @@ def page_gestion_stocks(request):
                         produit=produit,
                         quantite=quantite_retiree,
                         service=service_demandeur,
-                        date_mouvement=date_mvt
+                        **date_mouvement=date_mvt**
                     )
                     messages.success(request, f"Sortie de {quantite_retiree} {produit.objet} enregistrée.")
                 else:
@@ -530,10 +526,10 @@ def page_gestion_stocks(request):
         elif action_type == "archivage_produit":
             ref_produit = request.POST.get('produit_a_archiver')
             try:    
-                if str(ref_produit).isdigit():
-                    produit = Produit.objects.get(id=int(ref_produit))
-                else:
-                    produit = Produit.objects.get(reference=ref_produit)
+                **if str(ref_produit).isdigit():**
+                    **produit = Produit.objects.get(id=int(ref_produit))**
+                **else:**
+                    **produit = Produit.objects.get(reference=ref_produit)**
 
                 produit.delete()
                 messages.success(request, "Produit supprimé.")
@@ -552,7 +548,6 @@ def page_gestion_stocks(request):
         'produits': liste_produits,
         'date_du_jour': aujourd_hui
     })
-
 
 def page_historique(request):
     profil_actif = get_profil_actif(request.user) 
@@ -599,7 +594,6 @@ def page_historique(request):
         'sorties': liste_sorties
     })
 
-
 @require_POST
 def supprimer_mouvement(request, mouvement_id):
     if not request.user.is_authenticated:
@@ -609,13 +603,11 @@ def supprimer_mouvement(request, mouvement_id):
     messages.success(request, "Mouvement de test supprimé de l'historique.")
     return redirect('/historique/')
 
-
 def page_statistiques(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
     return render(request, 'statistiques.html', {'profil_actif': profil_actif})
-
 
 def page_factures(request):
     if not request.user.is_authenticated:
@@ -623,13 +615,11 @@ def page_factures(request):
     profil_actif = get_profil_actif(request.user)
     return render(request, 'factures.html', {'profil_actif': profil_actif})
 
-
 def page_gestion_demandes(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
     return render(request, 'gestion_demandes.html', {'profil_actif': profil_actif})
-
 
 def page_gestion_utilisateurs(request):
     if not request.user.is_authenticated:
@@ -637,13 +627,33 @@ def page_gestion_utilisateurs(request):
     profil_actif = get_profil_actif(request.user)
     return render(request, 'gestion_utilisateurs.html', {'profil_actif': profil_actif})
 
-
 def page_mon_profil(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
     profil_actif = get_profil_actif(request.user)
     return render(request, 'mon_profil.html', {'profil_actif': profil_actif})
 
+def afficher_facture(request, facture_id):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    facture = get_object_or_404(Facture, id=facture_id)
+    if facture.fichier_facture:
+        response = HttpResponse(
+            facture.fichier_facture, content_type='application/pdf'
+        )
+        response['Content-Disposition'] = (
+            f'inline; filename="{facture.fichier_facture.name}"'
+        )
+        return response
+    return HttpResponse('Fichier introuvable', status=404)
+
+def supprimer_facture(request, facture_id):
+    if not request.user.is_authenticated:
+        return redirect('/connexion/')
+    facture = get_object_or_404(Facture, id=facture_id)
+    facture.delete()
+    messages.success(request, 'Facture supprimée.')
+    return redirect('/factures/')
 
 def page_deconnexion(request):
     logout(request)
