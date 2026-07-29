@@ -411,12 +411,12 @@ def page_gestion_stocks(request):
                 
             reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
             
-            **# Gestion d'unicité de la référence**
-            **i = 1**
-            **while Produit.objects.filter(reference=reference_finale).exists():**
-                **suffixe_numerique = f"{prochain_numero + i:02d}"**
-                **reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"**
-                **i += 1**
+            # Gestion d'unicité de la référence
+            i = 1
+            while Produit.objects.filter(reference=reference_finale).exists():
+                suffixe_numerique = f"{prochain_numero + i:02d}"
+                reference_finale = f"{code_categorie}-{code_marque}-{code_spec}-{suffixe_numerique}"
+                i += 1
 
             quantite_initiale = int(request.POST.get('quantite') or request.POST.get('quantite_initiale') or 0)
                     
@@ -428,7 +428,7 @@ def page_gestion_stocks(request):
                     emplacement=request.POST.get('emplacement') or "Réserve",
                     quantite=quantite_initiale,
                     quota_minimum=int(request.POST.get('quota_minimum', 0)),
-                    **derniere_activite=timezone.now()**
+                    derniere_activite=timezone.now()
                 )
                 
                 if quantite_initiale > 0:
@@ -438,7 +438,7 @@ def page_gestion_stocks(request):
                         produit=nouveau_produit,
                         quantite=quantite_initiale,
                         service="Administration",
-                        **date_mouvement=date.today()**
+                        date_mouvement=date.today()
                     )
                     
                 messages.success(request, f"Le produit '{objet_nom}' a été ajouté à l'inventaire.")
@@ -451,20 +451,20 @@ def page_gestion_stocks(request):
             ref_produit = request.POST.get('produit') 
             quantite_ajoutee = int(request.POST.get('quantite', 0))
             
-            **date_entree_raw = request.POST.get('date_entree')**
-            **try:**
-                **date_mvt = datetime.strptime(date_entree_raw, '%Y-%m-%d').date() if date_entree_raw else date.today()**
-            **except Exception:**
-                **date_mvt = date.today()**
+            date_entree_raw = request.POST.get('date_entree')
+            try:
+                date_mvt = datetime.strptime(date_entree_raw, '%Y-%m-%d').date() if date_entree_raw else date.today()
+            except Exception:
+                date_mvt = date.today()
 
             try:
-                **if str(ref_produit).isdigit():**
-                    **produit = Produit.objects.get(id=int(ref_produit))**
-                **else:**
-                    **produit = Produit.objects.get(reference=ref_produit)**
+                if str(ref_produit).isdigit():
+                    produit = Produit.objects.get(id=int(ref_produit))
+                else:
+                    produit = Produit.objects.get(reference=ref_produit)
 
                 produit.quantite += quantite_ajoutee 
-                **produit.derniere_activite = timezone.now()**
+                produit.derniere_activite = timezone.now()
                 produit.save()
                 
                 MouvementStock.objects.create(
@@ -473,7 +473,7 @@ def page_gestion_stocks(request):
                     produit=produit,
                     quantite=quantite_ajoutee,
                     service="Administration",
-                    **date_mouvement=date_mvt**
+                    date_mouvement=date_mvt
                 )
                 messages.success(request, f"Entrée enregistrée pour {produit.objet}.")
             except Produit.DoesNotExist:
@@ -488,21 +488,21 @@ def page_gestion_stocks(request):
             quantite_retiree = int(request.POST.get('quantite', 0))
             service_demandeur = request.POST.get('service') or "Administration"
         
-            **date_sortie_raw = request.POST.get('date_sortie')**
-            **try:**
-                **date_mvt = datetime.strptime(date_sortie_raw, '%Y-%m-%d').date() if date_sortie_raw else date.today()**
-            **except Exception:**
-                **date_mvt = date.today()**
+            date_sortie_raw = request.POST.get('date_sortie')
+            try:
+                date_mvt = datetime.strptime(date_sortie_raw, '%Y-%m-%d').date() if date_sortie_raw else date.today()
+            except Exception:
+                date_mvt = date.today()
 
             try:
-                **if str(ref_produit).isdigit():**
-                    **produit = Produit.objects.get(id=int(ref_produit))**
-                **else:**
-                    **produit = Produit.objects.get(reference=ref_produit)**
+                if str(ref_produit).isdigit():
+                    produit = Produit.objects.get(id=int(ref_produit))
+                else:
+                    produit = Produit.objects.get(reference=ref_produit)
 
                 if produit.quantite >= quantite_retiree:
                     produit.quantite -= quantite_retiree
-                    **produit.derniere_activite = timezone.now()**
+                    produit.derniere_activite = timezone.now()
                     produit.save()
                 
                     MouvementStock.objects.create(   
@@ -511,7 +511,7 @@ def page_gestion_stocks(request):
                         produit=produit,
                         quantite=quantite_retiree,
                         service=service_demandeur,
-                        **date_mouvement=date_mvt**
+                        date_mouvement=date_mvt
                     )
                     messages.success(request, f"Sortie de {quantite_retiree} {produit.objet} enregistrée.")
                 else:
@@ -526,10 +526,10 @@ def page_gestion_stocks(request):
         elif action_type == "archivage_produit":
             ref_produit = request.POST.get('produit_a_archiver')
             try:    
-                **if str(ref_produit).isdigit():**
-                    **produit = Produit.objects.get(id=int(ref_produit))**
-                **else:**
-                    **produit = Produit.objects.get(reference=ref_produit)**
+                if str(ref_produit).isdigit():
+                    produit = Produit.objects.get(id=int(ref_produit))
+                else:
+                    produit = Produit.objects.get(reference=ref_produit)
 
                 produit.delete()
                 messages.success(request, "Produit supprimé.")
