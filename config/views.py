@@ -1215,31 +1215,40 @@ def page_statistiques(request):
 def page_factures(request):
     if not request.user.is_authenticated:
         return redirect('/connexion/')
+
     profil_actif = get_profil_actif(request.user)
+
     if request.method == "POST":
         date_commande = request.POST.get('date_facture')
         montant_total = request.POST.get('montant')
         fichier_facture = request.FILES.get('fichier_facture')
-        
+
         if not date_commande:
             date_commande = date.today()
-        
+
         if montant_total and fichier_facture:
             try:
+                # Conversion sécurisée du montant
+                montant_clean = float(str(montant_total).replace(',', '.').strip())
+                
                 nouvelle_facture = Facture(
                     date_commande=date_commande,
-                    montant_total=float(montant_total)
+                    montant_total=montant_clean,
+                    fichier_facture=fichier_facture
                 )
-                nouvelle_facture.fichier_facture = fichier_facture
                 nouvelle_facture.save()
-            except Exception:
-                pass
+                messages.success(request, "Facture ajoutée avec succès.")
+            except Exception as e:
+                messages.error(request, f"Erreur lors de l'ajout de la facture : {e}")
+            
             return redirect('/factures/')
 
+    # Récupération directe sans exclusion de champ problématique
     try:
-        tous_les_factures = Facture.objects.defer('devise').order_by('-date_commande', '-id')
-    except Exception:
         tous_les_factures = Facture.objects.all().order_by('-date_commande', '-id')
+    except Exception as e:
+        tous_les_factures = []
+        messages.error(request, f"Erreur lors du chargement des factures : {e}")
 
     return render(request, 'factures.html', {
         'profil_actif': profil_actif,
