@@ -32,4 +32,5 @@ urlpatterns = [
     path('generer-pdf-statistiques/', views.generer_pdf_statistiques, name='generer_pdf_statistiques'),
     path('liste-courses/', views.page_liste_courses, name='liste_courses'),
     path('panier/', views.page_panier, name='panier'),
+    path('rattrapage-historique/', views.page_rattrapage_historique, name='rattrapage_historique'),
 ]
