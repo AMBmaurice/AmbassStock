@@ -20,7 +20,6 @@ ALLOWED_HOSTS = [
 
 INSTALLED_APPS = [
     'config',
-    'registry',  # Ajout de l'application registry
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -130,9 +129,6 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'AmbassStock <admin@amb-maurice.fr>'
 
-# URL de redirection de connexion
-LOGIN_URL = 'login'
-
 # CSRF & SÉCURITÉ RENDER
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
@@ -142,26 +138,6 @@ RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
-# CONFIGURATION DE SÉCURITÉ DES SESSIONS
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False
-SESSION_COOKIE_AGE = 2592000
-SESSION_SAVE_EVERY_REQUEST = True
-
-# MAPPING DES RESTRICTIONS PAR UTILISATEUR POUR LES DOSSIERS
-USER_CATEGORY_MAPPING = {
-    'SEassistante': ['MEP/OIF', 'MEP/INT'],
-    'finance': 'MEP/FIN',
-    'consulaire': 'MEP/CONSU',
-    'unesco': 'MEP/UNESCO',
-    'Confisecretary': ['MEP/UNESCO', 'MEP/CONSU', 'MEP/HC', 'MEP/ADM', 'MEP/DIP', 'MEP/MIN', 'MEP/INT', 'MEP/OIF'],
-    'assiscultu': ['MEP/ADM', 'MEP/FIN'],  # Accès Administration et Finances uniquement
-}
-
-RESTRICTED_USERS = list(USER_CATEGORY_MAPPING.keys())
-
 # STOCKAGE DES FICHIERS MÉDIA ET FACTURES (SUPABASE S3 BUCKET)
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
@@ -170,4 +146,4 @@ AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
 
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_QUERYSTRING_AUTH = False
+    AWS_QUERYSTRING_AUTH = False 
