@@ -372,7 +372,7 @@
                 <label class="form-label">Quantité Retirée *</label>
                 <input type="number" name="quantite" id="quantiteOutput" class="form-input" min="1" placeholder="Nombre d'unités prélevées..." required oninput="calculatePredictionOutput()">
             </div>
-                                                            
+                                                                
             <div class="form-group">
                 <label class="form-label">Date du Prélèvement *</label>
                 <input type="date" name="date_sortie" class="form-input" value="{{ date_du_jour }}" required>
@@ -384,7 +384,7 @@
                     <span id="predictionMessageOutput">Stock restant prévisionnel en attente...</span>
                 </div>
             </div>
-                                                            
+                                                                
             <button type="submit" class="btn-submit btn-submit-output">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                 <strong>Valider la sortie du stock</strong>
@@ -439,7 +439,7 @@
                 <label class="form-label">Désignation / Nom de l'objet *</label>
                 <input type="text" id="inputNom" name="nom" class="form-input" placeholder="Ex: Ramette de papier A4 80g..." required oninput="liveRefGen()">
             </div>
-                                                                                                                        
+                                                                        
             <div class="form-group">
                 <label class="form-label">Marque *</label>
                 <input type="text" id="inputMarque" name="marque_texte" class="form-input" placeholder="Ex: CLAIRFONTAINE, BIC..." required oninput="liveRefGen()">
@@ -497,7 +497,7 @@
             <button type="submit" class="btn-submit" style="margin-top: 10px;">
                 <strong>Enregistrer et ajouter au catalogue</strong>
             </button>
-        </form>                  
+        </form>                
     </div>
 </div>
 
@@ -555,7 +555,7 @@
 
 <script>
     /* ------------------------------------------------------------- */
-    /* 👑 MOTEUR DE MENUS DÉROULANTS SUR-MESURE GLASSMORPHISM JS     */
+    /* 👑 MOTEUR DE MENUS DÉROULANTS SUR-MESURE GLASSMORPHISM JS    */
     /* ------------------------------------------------------------- */
     function buildCustomDropdowns() {
         document.querySelectorAll('select.select-custom, select.form-select').forEach(selectEl => {
@@ -753,7 +753,7 @@
             const name = opt.getAttribute('data-name').toLowerCase();
             const ref = opt.getAttribute('data-value').toLowerCase();
             if (name.includes(input) || ref.includes(input)) { opt.style.display = 'flex'; } else { opt.style.display = 'none'; }
-        }    
+        }   
     }
 
     function selectOption(element, type) {
@@ -774,7 +774,7 @@
         } else if (type === 'Delete') {
             document.getElementById('hiddenProductDelete').value = ref;
         }
-    }  
+    }   
         
     function calculatePredictionInput() {
         const input = document.getElementById('quantiteInput');
@@ -803,13 +803,13 @@
                 message.innerHTML = `Stock en réserve : <strong>${selectedStockOutput}</strong> ➔ Stock restant estimé : <span class="prediction-highlight prediction-highlight-output">${delta} unités</span>.`;
             }
         } else { box.style.display = 'none'; }
-    }    
+    }   
     
     function prepareSubmitInput(e) {
         if(!document.getElementById('hiddenProductInput').value) {
             e.preventDefault(); alert("Veuillez choisir un produit dans la liste.");
         }
-    }      
+    }       
         
     function prepareSubmitOutput(e) {   
         const qty = parseInt(document.getElementById('quantiteOutput').value);
@@ -842,5 +842,5 @@
         });
     });
 </script>
-</body>     
+</body>    
 </html>
