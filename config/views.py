@@ -1563,7 +1563,21 @@ def page_liste_courses(request):
     if request.method == 'POST':
         action_type = request.POST.get('action_type')
 
-        if action_type == 'valider_reception_commande':
+        # Ajout d'un besoin personnalisé à la liste de courses
+        if action_type == 'ajouter_besoin_libre':
+            nom_besoin = request.POST.get('nom_besoin', '').strip()
+            quantite = int(request.POST.get('quantite', 1))
+
+            if nom_besoin:
+                ArticleListeCourses.objects.create(
+                    nom_personnalise=nom_besoin,
+                    quantite=quantite,
+                    statut='a_acheter'
+                )
+                messages.success(request, f"Besoin '{nom_besoin}' ajouté à la liste de courses.")
+            return redirect('/liste-courses/')
+
+        elif action_type == 'valider_reception_commande':
             demande_id = request.POST.get('demande_id')
             quantite_recue = int(request.POST.get('quantite_recue', 0))
             prix_reel_paye = float(request.POST.get('prix_reel_paye', 0.0))
@@ -1792,7 +1806,6 @@ def page_liste_courses(request):
             'commandes_en_cours': commandes_en_cours,
         },
     )
-
 @login_required(login_url='/connexion/')
 def page_mon_profil(request):
     profil_actif = get_profil_actif(request.user)
