@@ -15,6 +15,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '.onrender.com',
+    '.railway.app',  # 👈 Ajouté pour autoriser tous les domaines Railway
     '*',
 ]
 
@@ -129,14 +130,20 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = 'AmbassStock <admin@amb-maurice.fr>'
 
-# CSRF & SÉCURITÉ RENDER
+# CSRF & SÉCURITÉ HÉBERGEMENT (RENDER / RAILWAY)
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
+    'https://*.railway.app',  # 👈 Ajouté pour valider les requêtes POST/formulaires sur Railway
 ]
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+
+# Support optionnel pour une variable d'hôte personnalisée sur Railway si besoin
+RAILWAY_STATIC_URL = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_STATIC_URL:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_STATIC_URL}')
 
 # STOCKAGE DES FICHIERS MÉDIA ET FACTURES (SUPABASE S3 BUCKET)
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
@@ -146,4 +153,4 @@ AWS_S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL')
 
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_QUERYSTRING_AUTH = False 
+    AWS_QUERYSTRING_AUTH = False
