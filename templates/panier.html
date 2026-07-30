@@ -6,16 +6,17 @@
     <title>AmbassStock - Panier & Commandes</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; }
+        body { display: flex; min-height: 100vh; background-color: #F4F6F3; color: #2C351C; overflow-x: hidden; }
         
-        /* SIDEBAR UNIFIÉE GLASSMORPHISM */
+        /* SIDEBAR UNIFIÉE FIXE */
         .sidebar { width: 260px; background-color: #5E6D3E; flex-shrink: 0; position: fixed; top: 15px; bottom: 15px; left: 15px; border-radius: 24px; padding-top: 25px; z-index: 998; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.08); }
         .sidebar-menu { list-style: none; padding: 0 15px; }
         .sidebar-item { margin-bottom: 4px; }
         .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
         .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        .main-content { margin-left: 290px; flex-grow: 1; padding: 40px; width: calc(100% - 290px); transition: all 0.4s ease; position: relative; }
+        /* CORRECTIF D'AFFICHAGE : MARGE GAUCHE FORCÉE À 300PX */
+        .main-content { margin-left: 300px !important; flex-grow: 1; padding: 40px; width: calc(100% - 300px) !important; transition: all 0.4s ease; position: relative; }
 
         /* EN-TÊTE DE PAGE */
         .page-header { margin-bottom: 30px; }
@@ -49,7 +50,7 @@
         .btn-action-refuse { background-color: #FAFBF9; color: #BA3C2A; border: 1px solid rgba(186, 60, 42, 0.4); padding: 9px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-action-refuse:hover { background-color: #BA3C2A; color: #ffffff; border-color: #BA3C2A; }
 
-        /* CHAMP DE QUANTITÉ ÉPURÉ SANS BOUTON PARASITE */
+        /* CHAMP DE QUANTITÉ ÉPURÉ */
         .qty-input-edit { width: 80px; height: 40px; padding: 0 10px; border: 1px solid #D0D6CE; border-radius: 10px; font-size: 1rem; font-weight: 800; color: #2C351C; text-align: center; background: #ffffff; outline: none; transition: all 0.2s; }
         .qty-input-edit:focus { border-color: #5E6D3E; box-shadow: 0 0 0 3px rgba(94, 109, 62, 0.12); }
 
@@ -68,7 +69,6 @@
         }
 
         .badge-urgent-tag { background: #BA3C2A; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; letter-spacing: 0.4px; text-transform: uppercase; }
-
         .empty-state-card { text-align: center; color: #7A8278; font-style: italic; padding: 60px 20px; background: #ffffff; border-radius: 24px; border: 1px dashed #D0D6CE; font-size: 0.98rem; }
     </style>
 </head>
@@ -122,7 +122,7 @@
     </div>
 </div>
 
-<div class="main-content" style="margin-left: 290px !important; width: calc(100% - 290px) !important;">
+<div class="main-content">
     <div class="page-header">
         <h1 class="page-title">Traitement des Commandes Interne</h1>
         <p class="welcome-text">Validez les demandes de fournitures par service, ajustez directement les quantités accordées et enregistrez les sorties effectives de la réserve.</p>
@@ -312,14 +312,14 @@
             sidebar.style.opacity = '1';
             openBtn.style.display = 'none';
             if (mainContent) {
-                mainContent.style.marginLeft = '290px !important';
+                mainContent.style.marginLeft = '300px';
             }
         } else {
             sidebar.style.transform = 'translateX(-290px)';
             sidebar.style.opacity = '0';
             openBtn.style.display = 'flex';
             if (mainContent) {
-                mainContent.style.marginLeft = '15px !important';
+                mainContent.style.marginLeft = '15px';
             }
         }
     }
