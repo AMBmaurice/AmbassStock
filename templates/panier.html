@@ -15,8 +15,8 @@
         .sidebar-link { display: block; padding: 12px 20px; color: rgba(255, 255, 255, 0.8); text-decoration: none; border-radius: 12px; font-weight: 500; transition: all 0.25s ease; }
         .sidebar-link:hover, .sidebar-link.active { background-color: rgba(255, 255, 255, 0.18); color: #ffffff; }
 
-        /* CORRECTIF D'AFFICHAGE : MARGE GAUCHE FORCÉE À 300PX */
-        .main-content { margin-left: 300px !important; flex-grow: 1; padding: 40px; width: calc(100% - 300px) !important; transition: all 0.4s ease; position: relative; }
+        /* CORRECTIF D'AFFICHAGE : MARGE GAUCHE FORCÉE À 310PX */
+        .main-content { margin-left: 310px !important; flex-grow: 1; padding: 40px; width: calc(100% - 310px) !important; transition: all 0.4s ease; position: relative; }
 
         /* EN-TÊTE DE PAGE */
         .page-header { margin-bottom: 30px; }
@@ -312,7 +312,7 @@
             sidebar.style.opacity = '1';
             openBtn.style.display = 'none';
             if (mainContent) {
-                mainContent.style.marginLeft = '300px';
+                mainContent.style.marginLeft = '310px';
             }
         } else {
             sidebar.style.transform = 'translateX(-290px)';
